@@ -7,10 +7,10 @@ import { useEvents, useCreateEvent, useUpdateEvent } from "../hooks/useEvents";
 
 const TYPE_COLORS: Record<string, string> = {
   lecture: "#3070b3",
-  study: "#22c55e",
-  meal: "#f97316",
-  club: "#a855f7",
-  recreation: "#ec4899",
+  study: "#16a34a",
+  meal: "#d97706",
+  club: "#7c3aed",
+  recreation: "#db2777",
   custom: "#6b7280",
 };
 

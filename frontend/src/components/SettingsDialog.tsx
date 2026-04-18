@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useSettings, useSaveSetting } from "../hooks/useSettings";
 
 const inputClass =
-  "w-full bg-zinc-800/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-tum-blue/50";
+  "w-full bg-surface border border-border rounded-(--radius-md) px-3 py-2 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors";
 
 const buttonClass =
-  "bg-zinc-800 hover:bg-zinc-700 text-sm px-3 py-2 rounded-lg transition-colors";
+  "bg-surface-hover hover:bg-surface-active text-(--text-sm) px-3 py-2 rounded-(--radius-md) font-medium transition-colors";
 
 function Section({
   title,
@@ -17,10 +17,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-(--spacing-element)">
       <div className="flex items-center gap-2">
-        <h3 className="text-sm font-medium text-zinc-400">{title}</h3>
-        {connected && <span className="text-xs text-green-400">Connected</span>}
+        <h3 className="text-(--text-sm) font-medium text-ink-secondary">{title}</h3>
+        {connected && <span className="text-(--text-xs) text-success">Connected</span>}
       </div>
       {children}
     </div>
@@ -59,18 +59,17 @@ export function SettingsDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center"
+      className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center"
       onClick={onClose}
     >
       <div
-        className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-[520px] max-h-[80vh] overflow-y-auto space-y-5"
+        className="bg-surface border border-border rounded-(--radius-lg) p-(--spacing-panel) w-[520px] max-h-[80vh] overflow-y-auto space-y-(--spacing-section) shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold">Settings</h2>
+        <h2 className="text-(--text-lg) font-semibold text-ink">Settings</h2>
 
-        {/* TUM Online API */}
         <Section title="TUM Online API" connected={!!settings?.["tum_id"]}>
-          <div className="flex gap-2">
+          <div className="flex gap-(--spacing-element)">
             <input
               className={inputClass}
               placeholder="TUM ID (e.g. ge12abc)"
@@ -86,9 +85,8 @@ export function SettingsDialog({
           </div>
         </Section>
 
-        {/* TUM Calendar (iCal) */}
         <Section title="TUM Calendar (iCal)" connected={!!settings?.["tum_ical_url"]}>
-          <div className="flex gap-2">
+          <div className="flex gap-(--spacing-element)">
             <input
               className={inputClass}
               placeholder="iCal URL"
@@ -104,9 +102,8 @@ export function SettingsDialog({
           </div>
         </Section>
 
-        {/* Moodle */}
         <Section title="Moodle" connected={!!settings?.["moodle_token"]}>
-          <div className="space-y-2">
+          <div className="space-y-(--spacing-element)">
             <input
               className={inputClass}
               placeholder="Moodle username"
@@ -129,9 +126,8 @@ export function SettingsDialog({
           </div>
         </Section>
 
-        {/* TUM Email */}
         <Section title="TUM Email" connected={!!settings?.["tum_email_user"]}>
-          <div className="space-y-2">
+          <div className="space-y-(--spacing-element)">
             <input
               className={inputClass}
               placeholder="TUM ID"
@@ -158,7 +154,7 @@ export function SettingsDialog({
         </Section>
 
         <button
-          className="w-full bg-zinc-800 hover:bg-zinc-700 text-sm py-2.5 rounded-lg transition-colors"
+          className="w-full bg-surface-hover hover:bg-surface-active text-(--text-sm) py-2.5 rounded-(--radius-md) font-medium transition-colors"
           onClick={onClose}
         >
           Close
