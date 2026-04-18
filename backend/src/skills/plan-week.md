@@ -123,55 +123,80 @@ Tell the user: "Almost done — let me check for conflicts and summarize your we
 3. Check for overlapping events (where one event's start < another's end and vice versa).
 4. Deliver the summary using the EXACT format below. Use bullet points, not paragraphs. Group by section with bold headings. Omit a section if it has no items.
 
-### Summary format (follow this exactly):
+### Summary format
 
-**Schedule: N lectures, N commute blocks, N lunch breaks, N club events**
+CRITICAL: Follow this format EXACTLY. Use the precise heading syntax, priority tags, and bullet structure shown. Do NOT write paragraphs — every item is a bullet. Do NOT merge observations into run-on sentences — one bullet per observation.
 
-**Todos:**
+---
 
-*Email actions (N high-priority):*
-- "[Title]" — due **[Day Mon DD, HH:MM]**
-- "[Title]" — due **[Day Mon DD, HH:MM]**
+**📋 Schedule: N lectures · N commute blocks · N lunch breaks · N club events**
 
-*Assignments (N):*
-- "[Title]" — due **[Day Mon DD, HH:MM]** (before [related event if any])
+---
 
-*Revision (N):*
-- "[Title]" — due **[Day Mon DD]**
+**📌 Todos**
 
-**Conflicts detected:**
+`[HIGH]` Email actions (N):
+- "Title" — due **Day Mon DD, HH:MM**
+- "Title" — due **Day Mon DD, HH:MM**
 
-- **[Day HH:MM–HH:MM]**: [Event A] ends at HH:MM, [Event B] starts at HH:MM — **[N-minute overlap]**. [One sentence: is it manageable or does something need to move?]
+`[MEDIUM]` Assignments (N):
+- "Title" — due **Day Mon DD, HH:MM** · before [related event if any]
 
-**Observations:**
+`[MEDIUM]` Revision (N):
+- "Title" — due **Day Mon DD**
 
-- [Day] is an intense day — you leave home at **HH:MM** and get back around **HH:MM**. Very long day.
-- [Day] and [Day] are free — good for studying or catching up.
-- [Any other pattern: first sessions of a course, clusters, early mornings, etc.]
+`[LOW]` Personal (N):
+- "Title" — due **Day Mon DD**
 
-### Example output:
+---
 
-**Schedule: 8 lectures, 3 commute blocks, 4 lunch breaks, 1 club event**
+**⚠️ Conflicts detected**
 
-**Todos:**
+- **Day HH:MM–HH:MM**: [Event A] overlaps [Event B] — **N-min overlap**. [One short sentence: impact + suggestion.]
 
-*Email actions (3 high-priority):*
-- "Check room change for Agentic AI Seminar" — due **Mon Apr 20 tonight**
-- "Review course start email – Wealth, Justice & AI" — due **Mon Apr 20 tonight**
+---
+
+**💡 Observations**
+
+- **[Day]** is intense — leave home **HH:MM**, back around **HH:MM**.
+- **[Day]** and **[Day]** are free — good for studying or catching up.
+- [Short observation about patterns, first sessions, early mornings, etc.]
+
+---
+
+### Example output
+
+---
+
+**📋 Schedule: 8 lectures · 3 commute blocks · 4 lunch breaks · 1 club event**
+
+---
+
+**📌 Todos**
+
+`[HIGH]` Email actions (3):
+- "Check room change for Agentic AI Seminar" — due **Mon Apr 20, 20:00**
+- "Review course start email – Wealth, Justice & AI" — due **Mon Apr 20, 20:00**
 - "Read seminar details email – Agentic AI (Durt)" — due **Tue Apr 21, 11:00**
 
-*Assignments (1):*
-- "Work through Exercise Sheet 0 – Diskrete Wahrscheinlichkeitstheorie" — due **Wed Apr 22, 8:00** (before exercise session)
+`[MEDIUM]` Assignments (1):
+- "Exercise Sheet 0 – Diskrete Wahrscheinlichkeitstheorie" — due **Wed Apr 22, 8:00** · before exercise session
 
-**Conflicts detected:**
+---
 
-- **Tue 14:30–14:45**: Agentic AI SE ends at 14:45, Wealth AI SE starts at 14:30 — **15-minute overlap**. Both are at Stammgelände so the transition is manageable, but you'll arrive ~15 minutes late to the Wealth seminar.
+**⚠️ Conflicts detected**
 
-**Observations:**
+- **Tue 14:30–14:45**: Agentic AI SE overlaps Wealth AI SE — **15-min overlap**. Both at Stammgelände, manageable but you'll be ~15 min late to Wealth seminar.
 
-- Wednesday is an intense day — you leave home at **5:30** and get back around 18:00+. Very long day.
-- Monday and Friday are completely free — good for studying or catching up.
-- All three Tuesday seminars are first sessions (course start week), so arriving on time and reviewing those emails tonight matters.
+---
+
+**💡 Observations**
+
+- **Wednesday** is brutal — leave home at **05:30**, back around **18:00+**.
+- **Monday** and **Friday** are completely free — ideal for catching up.
+- All three Tuesday seminars are first sessions this semester — first impressions matter, prep tonight.
+
+---
 
 ## Phase 8: Prep for Tomorrow
 
