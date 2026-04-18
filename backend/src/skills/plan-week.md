@@ -99,12 +99,13 @@ Using the campus location map from Phase 1:
    - If in Garching: call `canteen_menu` with location "mensa-garching"
    - If at Stammgelände: call `canteen_menu` with location "mensa-arcisstr"
 3. From the menu, find a meal option matching the student's dietary preferences. Look for items tagged accordingly or items that clearly fit.
-3. Call `create_event` with:
+4. Find a FREE slot for lunch — NEVER place a lunch on top of an existing lecture or event. Check all events already created for that day and find a gap of at least 30 minutes. If there is no gap between 11:00 and 14:00, skip lunch for that day and mention it in the summary.
+5. Call `create_event` with:
    - type: "meal", color "#f97316"
    - title: "Lunch @ Mensa Garching" or "Lunch @ Mensa Arcisstraße" depending on campus
    - description: include the meal pick based on dietary preferences, e.g., "Veggie pick: Spinach Lasagna (€3.20)"
-   - time: slot into the gap between morning and afternoon lectures. If no clear gap, use 12:00-13:00.
-5. Report: "Added lunch breaks with meal picks for N campus days."
+   - time: the free slot found in step 4.
+6. Report: "Added lunch breaks with meal picks for N campus days."
 
 ## Phase 6: Club Events
 
@@ -127,7 +128,9 @@ Tell the user: "Almost done — let me check for conflicts and summarize your we
 1. Call `query_events` for the full Monday-Sunday range.
 2. Call `query_todos` to get all pending todos.
 3. Check for overlapping events (where one event's start < another's end and vice versa).
-4. Deliver the summary using the EXACT format below.
+4. **Fix flexible conflicts automatically:** If an overlap involves a flexible event (lunch, commute, study session) and a fixed event (lecture, club event, seminar), move or delete the flexible event to resolve it. Call `update_event` or `delete_event` as needed. Report what you changed.
+5. **Flag fixed-vs-fixed conflicts for user review:** If two fixed events overlap (e.g., two lectures, a lecture and a club event), do NOT resolve them — list them in the Conflicts section and ask the user to decide.
+6. Deliver the summary using the EXACT format below.
 
 ### Summary format
 

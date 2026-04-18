@@ -399,7 +399,8 @@ export function registerFetchTools(server: McpServer) {
 
           const fetchQuery = {
             envelope: true,
-            source: { start: 0, maxLength: 4096 } as { start: number; maxLength: number },
+            bodyStructure: true,
+            source: { start: 0, maxLength: 16384 } as { start: number; maxLength: number },
           };
 
           let count = 0;
@@ -414,13 +415,23 @@ export function registerFetchTools(server: McpServer) {
                 : senderAddr.address ?? "unknown"
               : "unknown";
 
-            let bodySnippet = "";
+            let bodyText = "";
             if (msg.source) {
               const raw = msg.source.toString("utf-8");
-              // Extract body after headers (double newline)
               const bodyStart = raw.indexOf("\r\n\r\n");
               if (bodyStart !== -1) {
-                bodySnippet = raw.slice(bodyStart + 4, bodyStart + 504).trim();
+                let body = raw.slice(bodyStart + 4);
+                const ctHeader = raw.slice(0, bodyStart).match(/Content-Transfer-Encoding:\s*(\S+)/i);
+                const encoding = ctHeader?.[1]?.toLowerCase();
+                if (encoding === "base64") {
+                  try {
+                    body = Buffer.from(body.replace(/\s/g, ""), "base64").toString("utf-8");
+                  } catch { /* keep raw */ }
+                } else if (encoding === "quoted-printable") {
+                  body = body.replace(/=\r?\n/g, "").replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+                }
+                body = body.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+                bodyText = body.slice(0, 2000);
               }
             }
 
@@ -429,7 +440,7 @@ export function registerFetchTools(server: McpServer) {
               subject: envelope?.subject ?? "",
               sender,
               date: envelope?.date?.toISOString?.() ?? "",
-              body_snippet: bodySnippet,
+              body_snippet: bodyText,
             });
 
             count++;

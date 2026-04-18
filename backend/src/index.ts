@@ -40,7 +40,7 @@ const __frontendDist = resolve(
 
 if (existsSync(__frontendDist)) {
   app.use(express.static(__frontendDist));
-  app.get("*", (_req, res) => {
+  app.get("/{*path}", (_req, res) => {
     res.sendFile(resolve(__frontendDist, "index.html"));
   });
 }
