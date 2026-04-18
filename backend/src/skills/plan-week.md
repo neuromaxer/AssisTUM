@@ -121,27 +121,76 @@ Tell the user: "Almost done — let me check for conflicts and summarize your we
 1. Call `query_events` for the full Monday-Sunday range.
 2. Call `query_todos` to get all pending todos.
 3. Check for overlapping events (where one event's start < another's end and vice versa).
-4. Deliver a summary that includes:
-   - **Schedule overview**: "N lectures, N commute blocks, N lunch breaks, N club events"
-   - **Todo summary**: group pending todos by type:
-     - "Assignments: [list with deadlines]"
-     - "Email replies: [list with deadlines]"
-   - **Conflicts**: if any overlaps, describe each one clearly
-   - **Observations**: note busy vs. free days, clusters, warnings about early mornings or late evenings
+4. Deliver the summary using the EXACT format below. Use bullet points, not paragraphs. Group by section with bold headings. Omit a section if it has no items.
+
+### Summary format (follow this exactly):
+
+**Schedule: N lectures, N commute blocks, N lunch breaks, N club events**
+
+**Todos:**
+
+*Email actions (N high-priority):*
+- "[Title]" — due **[Day Mon DD, HH:MM]**
+- "[Title]" — due **[Day Mon DD, HH:MM]**
+
+*Assignments (N):*
+- "[Title]" — due **[Day Mon DD, HH:MM]** (before [related event if any])
+
+*Revision (N):*
+- "[Title]" — due **[Day Mon DD]**
+
+**Conflicts detected:**
+
+- **[Day HH:MM–HH:MM]**: [Event A] ends at HH:MM, [Event B] starts at HH:MM — **[N-minute overlap]**. [One sentence: is it manageable or does something need to move?]
+
+**Observations:**
+
+- [Day] is an intense day — you leave home at **HH:MM** and get back around **HH:MM**. Very long day.
+- [Day] and [Day] are free — good for studying or catching up.
+- [Any other pattern: first sessions of a course, clusters, early mornings, etc.]
+
+### Example output:
+
+**Schedule: 8 lectures, 3 commute blocks, 4 lunch breaks, 1 club event**
+
+**Todos:**
+
+*Email actions (3 high-priority):*
+- "Check room change for Agentic AI Seminar" — due **Mon Apr 20 tonight**
+- "Review course start email – Wealth, Justice & AI" — due **Mon Apr 20 tonight**
+- "Read seminar details email – Agentic AI (Durt)" — due **Tue Apr 21, 11:00**
+
+*Assignments (1):*
+- "Work through Exercise Sheet 0 – Diskrete Wahrscheinlichkeitstheorie" — due **Wed Apr 22, 8:00** (before exercise session)
+
+**Conflicts detected:**
+
+- **Tue 14:30–14:45**: Agentic AI SE ends at 14:45, Wealth AI SE starts at 14:30 — **15-minute overlap**. Both are at Stammgelände so the transition is manageable, but you'll arrive ~15 minutes late to the Wealth seminar.
+
+**Observations:**
+
+- Wednesday is an intense day — you leave home at **5:30** and get back around 18:00+. Very long day.
+- Monday and Friday are completely free — good for studying or catching up.
+- All three Tuesday seminars are first sessions (course start week), so arriving on time and reviewing those emails tonight matters.
 
 ## Phase 8: Prep for Tomorrow
 
-Tell the user: "Here's your briefing for tomorrow..."
+Tell the user with a bold heading:
 
-Look at tomorrow's schedule and todos:
+**Tomorrow's Briefing ([Day name, Month DD])**
 
-1. What's the first event? Note the time, location, and course.
-2. If it's in Garching, calculate the departure time (event start minus 1 hour): "Leave by HH:MM for your HH:MM lecture in Garching."
-3. What assignments or email replies are due tomorrow or the day after? List them.
-4. Where is lunch? Note the mensa and the veggie pick.
-5. Any resources to review or bring? Reference the todo resources.
+Then deliver a SHORT paragraph (3-5 sentences max) covering:
 
-Deliver this as a concise briefing paragraph, not a bullet list.
+1. Whether there are lectures tomorrow, and if so when/where the first one is.
+2. If Garching: "Leave by HH:MM" with departure time.
+3. Any high-priority todos due tomorrow or the day after — name them specifically.
+4. One actionable tip: what to prep tonight, what to bring, or what to read.
+
+### Example output:
+
+**Tomorrow's Briefing (Sunday Apr 19)**
+
+Tomorrow is a free day with no lectures — use it well. Your three high-priority email todos are all due **Monday evening** at the latest. Check the Durt room change email first thing to confirm Tuesday's venue — if the room changed from N3815, you need to know before you set off. Start working through Exercise Sheet 0 (6 probability problems) so it's fresh before Wednesday's 10:00 exercise session.
 
 ## Phase 9: Ad-Hoc Events
 
