@@ -3,26 +3,92 @@ name: plan-week
 description: Plan the student's upcoming week by fetching all data sources and populating the calendar and todo list
 ---
 
-You are planning a student's week. Follow these steps:
+When the user asks to plan their week, follow these phases IN ORDER.
+Between each phase, write a short 1-2 sentence status update.
+Never skip the narration — the user is watching events appear in
+real-time and needs context for what's happening.
 
-1. **Fetch lectures:** Call `tum_lectures` to get enrolled lectures. For each lecture, call `create_event` with type "lecture" and color "#3070b3".
+Use the CURRENT DATE to determine the upcoming Monday–Sunday range.
+All events must use exact ISO 8601 datetimes within that range.
 
-2. **Fetch calendar:** Call `tum_calendar` to get iCal events. For each event not already added as a lecture, call `create_event` with the appropriate type.
+## Phase 1: Lectures & Calendar
 
-3. **Fetch Moodle data:** Call `moodle_courses` to get enrolled courses. For each course, call `create_course`. Then call `moodle_assignments` to get deadlines. For each assignment, call `create_todo` with type "assignment" and link to the course.
+Tell the user: "Let me start by pulling your lecture schedule..."
 
-4. **Fetch emails:** Call `tum_email_read` to get recent emails. Summarize important emails and create `email_action` todos for any that need a response.
+1. Call `tum_calendar` to get iCal events.
+2. Call `tum_lectures` to get enrolled courses.
+3. For each lecture/event in the upcoming week:
+   - Call `create_course` if the course doesn't exist yet
+   - Call `create_event` with type "lecture", color "#3070b3",
+     linked to the course
+4. Report: "Found N lectures across N courses this week —
+   they're on your calendar now."
 
-5. **Fetch canteen menus:** Call `canteen_menu` for the student's preferred canteen. Suggest lunch events between lectures.
+## Phase 2: Assignments & Deadlines
 
-6. **Fetch club events:** Call `club_events`. For each relevant event, call `create_event` with type "club" and color "#a855f7".
+Tell the user: "Now checking Moodle for upcoming deadlines..."
 
-7. **Detect conflicts:** Call `query_events` for the week. Check for overlapping events. Report any conflicts to the user and suggest resolutions.
+1. Call `moodle_courses` to get enrolled Moodle courses.
+2. Call `moodle_assignments` for those courses.
+3. For each assignment with a deadline in the next 14 days:
+   - Call `create_todo` with type "assignment", linked to course
+   - Priority: due within 3 days = high, 7 days = medium, else low
+4. Report: "You have N assignments coming up. I've added them
+   to your task list."
 
-8. **Summarize:** Tell the user what you've added: N lectures, N todos, N lunch suggestions, any conflicts found.
+If Moodle is unavailable, say "Couldn't reach Moodle right now —
+I'll skip that for now" and continue.
 
-Important:
-- Use `create_event` and `create_todo` tool calls for every item — these persist to the database and show in the UI immediately.
-- Set appropriate colors: lectures blue (#3070b3), study green (#22c55e), meals orange (#f97316), clubs purple (#a855f7).
-- Link todos and events to courses via course_id when applicable.
-- Set todo priorities: assignments due within 3 days = high, within 7 days = medium, else low.
+## Phase 3: Email
+
+Tell the user: "Checking your inbox for anything that needs attention..."
+
+1. Call `tum_email_read` with limit 15, since_days 7.
+2. Scan for actionable items (reply needed, event invites, deadlines).
+3. For each actionable email, call `create_todo` with type
+   "email_action" and include sender + subject in the title.
+4. Report: "Scanned N recent emails — created N action items."
+
+If email is unavailable, skip gracefully and continue.
+
+## Phase 4: Canteen & Meals
+
+Tell the user: "Let me check what's for lunch this week..."
+
+1. Call `canteen_menu` for "mensa-garching".
+2. Look at the user's lecture schedule — find days with
+   back-to-back morning + afternoon classes.
+3. For those days, call `create_event` with type "meal",
+   color "#f97316", title like "Lunch @ Mensa Garching",
+   slotted in the gap between classes (or 12:00-13:00 default).
+4. Report briefly: "Added lunch breaks on the days you're on campus."
+
+## Phase 5: Club Events
+
+Tell the user: "Checking your student club events..."
+
+1. Call `club_events` to fetch from configured club URLs.
+2. For any events in the upcoming week, call `create_event`
+   with type "club", color "#a855f7".
+3. Report what was found (or "No club events this week").
+
+If no clubs configured, skip silently.
+
+## Phase 6: Conflicts & Summary
+
+Tell the user: "Almost done — let me check for any scheduling
+conflicts..."
+
+1. Call `query_events` for the full week range.
+2. Check for any overlapping events (where one event's start
+   is before another's end and vice versa).
+3. If conflicts found, describe each one clearly:
+   "Heads up: [Event A] overlaps with [Event B] on [day] —
+   want me to move one?"
+4. Deliver a final summary:
+   "Here's your week: N lectures, N assignments due, N lunch
+   breaks planned. [Any observations about the week — e.g.,
+   'Wednesday looks packed but Thursday is wide open', or
+   'you've got an assignment due Monday morning']."
+   End with: "Want me to schedule study sessions, or anything
+   else you'd like to add?"

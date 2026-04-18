@@ -58,3 +58,8 @@ tasks:
         curl -s -X PUT http://localhost:3001/api/settings/tum_ical_url -H 'Content-Type: application/json' -d '{"value":"PASTE_ICAL_URL_HERE"}'
         curl -s -X POST http://localhost:3001/api/clubs -H 'Content-Type: application/json' -d '{"name":"TUM.ai","url":"https://www.tum-ai.com/events"}'
         echo "\nDone. Edit Taskfile.yml to set real credential values."
+
+  reset:
+    desc: Clear all events, todos, and courses for a clean demo rerun
+    cmds:
+      - curl -s -X DELETE http://localhost:3001/api/reset
