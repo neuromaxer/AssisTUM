@@ -1,46 +1,62 @@
-import { useState } from "react";
-import { useSkills } from "../hooks/useSkills";
+import { useEffect, useRef } from "react";
+import type { Skill } from "../hooks/useSkills";
 
-interface SkillBarProps {
-  ensureSession: () => Promise<string>;
+interface SlashCommandPaletteProps {
+  skills: Skill[];
+  selectedIndex: number;
+  onSelect: (skill: Skill) => void;
+  onClose: () => void;
 }
 
-export function SkillBar({ ensureSession }: SkillBarProps) {
-  const { data: skills = [] } = useSkills();
-  const [invoking, setInvoking] = useState<string | null>(null);
+export function SlashCommandPalette({
+  skills,
+  selectedIndex,
+  onSelect,
+  onClose,
+}: SlashCommandPaletteProps) {
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = listRef.current?.children[selectedIndex] as HTMLElement | undefined;
+    el?.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (listRef.current && !listRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
 
   if (skills.length === 0) return null;
 
-  const handleInvoke = async (skillName: string) => {
-    setInvoking(skillName);
-    try {
-      const sid = await ensureSession();
-      await fetch(`/api/skills/${encodeURIComponent(skillName)}/invoke`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: sid }),
-      });
-    } catch (err) {
-      console.error("Failed to invoke skill:", err);
-    } finally {
-      setInvoking(null);
-    }
-  };
-
-  const displayName = (name: string) =>
-    name.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-
   return (
-    <div className="flex gap-1.5 overflow-x-auto py-1.5 px-(--spacing-panel) border-t border-border-subtle">
-      {skills.map((skill) => (
+    <div
+      ref={listRef}
+      className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-(--radius-md) shadow-sm z-20 max-h-[200px] overflow-y-auto"
+    >
+      {skills.map((skill, i) => (
         <button
           key={skill.name}
-          className="bg-surface border border-border rounded-(--radius-sm) px-2 py-1 text-(--text-xs) text-ink-secondary hover:bg-surface-hover whitespace-nowrap cursor-pointer transition-colors disabled:opacity-50"
-          onClick={() => handleInvoke(skill.name)}
-          disabled={invoking !== null}
-          title={skill.description}
+          className={`flex flex-col w-full px-3 py-2 text-left border-none cursor-pointer transition-colors ${
+            i === selectedIndex
+              ? "bg-accent-subtle"
+              : "bg-transparent hover:bg-surface-hover"
+          }`}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            onSelect(skill);
+          }}
         >
-          {invoking === skill.name ? "..." : displayName(skill.name)}
+          <span className="text-(--text-xs) font-medium text-ink">
+            /{skill.name}
+          </span>
+          <span className="text-[10px] text-ink-muted truncate">
+            {skill.description}
+          </span>
         </button>
       ))}
     </div>
