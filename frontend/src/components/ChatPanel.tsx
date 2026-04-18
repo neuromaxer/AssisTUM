@@ -33,6 +33,25 @@ function renderPart(part: Part) {
   }
 }
 
+function getSkillName(parts: Part[]): string | null {
+  const firstText = parts.find((p) => p.type === "text") as TextPart | undefined;
+  if (!firstText) return null;
+  const match = firstText.text.match(/^\[Skill:\s*([^\]]+)\]/);
+  return match ? match[1].trim() : null;
+}
+
+function SkillBadge({ name }: { name: string }) {
+  const display = name
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+  return (
+    <span className="inline-flex items-center gap-1 text-(--text-xs) font-mono text-accent bg-accent-subtle border border-accent/20 rounded-(--radius-sm) px-2 py-0.5">
+      /{name} <span className="text-ink-muted">{display}</span>
+    </span>
+  );
+}
+
 export function ChatPanel() {
   const {
     state,
@@ -41,6 +60,7 @@ export function ChatPanel() {
     createSession,
     sendMessage,
     ensureSession,
+    abortSession,
   } = useAgentStream();
   const { data: allSkills = [] } = useSkills();
 
@@ -111,7 +131,7 @@ export function ChatPanel() {
   const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || sending || isRunning) return;
+    if (!text || sending) return;
     setInput("");
     setSlashOpen(false);
     setSending(true);
@@ -194,26 +214,33 @@ export function ChatPanel() {
           <div key={turn.user.id} className="space-y-(--spacing-section)">
             <div className="space-y-1">
               <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider">You</span>
-              {(state.parts[turn.user.id] ?? []).map(renderPart)}
-              {!(state.parts[turn.user.id]?.length) && (
-                <p className="text-ink-secondary text-(--text-sm) font-mono whitespace-pre-wrap">(prompt)</p>
-              )}
+              {(() => {
+                const userParts = state.parts[turn.user.id] ?? [];
+                const skillName = getSkillName(userParts);
+                if (skillName) return <SkillBadge name={skillName} />;
+                if (userParts.length > 0) return userParts.map(renderPart);
+                return <p className="text-ink-secondary text-(--text-sm) font-mono whitespace-pre-wrap">(prompt)</p>;
+              })()}
             </div>
 
-            {turn.assistants.map((asst) => (
-              <div key={asst.id} className="space-y-1">
-                <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  AssisTUM
-                </span>
-                {(state.parts[asst.id] ?? []).map(renderPart)}
-                {asst.error ? (
-                  <div className="font-mono text-(--text-xs) text-danger bg-danger/10 rounded-(--radius-sm) px-2 py-1.5">
-                    {JSON.stringify(asst.error)}
-                  </div>
-                ) : null}
-              </div>
-            ))}
+            {turn.assistants.map((asst) => {
+              const parts = state.parts[asst.id] ?? [];
+              if (parts.length === 0 && !asst.error) return null;
+              return (
+                <div key={asst.id} className="space-y-1">
+                  <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    AssisTUM
+                  </span>
+                  {parts.map(renderPart)}
+                  {asst.error ? (
+                    <div className="font-mono text-(--text-xs) text-danger bg-danger/10 rounded-(--radius-sm) px-2 py-1.5">
+                      {JSON.stringify(asst.error)}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         ))}
 
@@ -252,16 +279,26 @@ export function ChatPanel() {
             onKeyDown={handleKeyDown}
             placeholder={isRunning ? "Agent is working..." : "Ask AssisTUM... (/ for skills)"}
             rows={1}
-            disabled={sending || isRunning}
+            disabled={sending}
             className="flex-1 bg-surface border border-border rounded-(--radius-md) px-3 py-2.5 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors resize-none max-h-[200px] overflow-y-auto"
           />
-          <button
-            type="submit"
-            disabled={!input.trim() || sending || isRunning}
-            className="bg-accent hover:bg-accent-hover disabled:opacity-40 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors self-end"
-          >
-            {sending ? "..." : "Send"}
-          </button>
+          {isRunning ? (
+            <button
+              type="button"
+              onClick={abortSession}
+              className="bg-danger hover:bg-danger/80 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors self-end"
+            >
+              Stop
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!input.trim() || sending}
+              className="bg-accent hover:bg-accent-hover disabled:opacity-40 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors self-end"
+            >
+              {sending ? "..." : "Send"}
+            </button>
+          )}
         </form>
       </div>
     </div>

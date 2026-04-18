@@ -152,6 +152,22 @@ agentRouter.get("/events", async (req: Request, res: Response) => {
   }
 });
 
+/* POST /session/:id/abort — abort a running session */
+agentRouter.post("/session/:id/abort", async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const client = await getOpenCodeClient();
+    const result = await client.session.abort({ path: { id } });
+    if (result.error) {
+      res.status(500).json({ error: JSON.stringify(result.error) });
+      return;
+    }
+    res.json(result.data);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 /* DELETE /session/:id — delete a session */
 agentRouter.delete("/session/:id", async (req: Request, res: Response) => {
   try {

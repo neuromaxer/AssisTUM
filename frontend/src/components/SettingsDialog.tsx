@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthStatus } from "../hooks/useSettings";
 import { useSyncCourses } from "../hooks/useCourses";
+import { useClubs, useAddClub, useDeleteClub } from "../hooks/useClubs";
 
 const inputClass =
   "w-full bg-surface border border-border rounded-(--radius-md) px-3 py-2 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors";
@@ -46,6 +47,13 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
 
   const syncCourses = useSyncCourses();
   const [syncMsg, setSyncMsg] = useState<{ text: string; error: boolean } | null>(null);
+
+  const { data: clubs } = useClubs();
+  const addClub = useAddClub();
+  const deleteClub = useDeleteClub();
+  const [clubName, setClubName] = useState("");
+  const [clubUrl, setClubUrl] = useState("");
+  const [clubMsg, setClubMsg] = useState<{ text: string; error: boolean } | null>(null);
 
   if (!open) return null;
 
@@ -249,6 +257,68 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
             {emailLoading ? "Verifying..." : "Connect"}
           </button>
           <Feedback message={emailMsg?.text ?? null} isError={emailMsg?.error} />
+        </div>
+
+        <div className="space-y-(--spacing-element)">
+          <div className="flex items-center gap-2">
+            <h3 className="text-(--text-sm) font-medium text-ink-secondary">Student Clubs</h3>
+            <span className="text-(--text-xs) text-ink-faint">{clubs?.length ?? 0} configured</span>
+          </div>
+          {clubs && clubs.length > 0 && (
+            <div className="space-y-1">
+              {clubs.map((club) => (
+                <div key={club.id} className="flex items-center gap-2 bg-surface-hover rounded-(--radius-md) px-3 py-1.5">
+                  <span className="text-(--text-sm) font-medium text-ink flex-1 truncate">{club.name}</span>
+                  <span className="text-(--text-xs) text-ink-faint truncate max-w-[200px]">{club.url}</span>
+                  <button
+                    className="text-(--text-xs) text-error hover:text-error/80 transition-colors shrink-0"
+                    onClick={async () => {
+                      try {
+                        await deleteClub.mutateAsync(club.id);
+                      } catch (err: any) {
+                        setClubMsg({ text: err.message, error: true });
+                      }
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              className={inputClass}
+              placeholder="Club name"
+              value={clubName}
+              onChange={(e) => setClubName(e.target.value)}
+              style={{ flex: "0 0 35%" }}
+            />
+            <input
+              className={inputClass}
+              placeholder="Events page URL"
+              value={clubUrl}
+              onChange={(e) => setClubUrl(e.target.value)}
+            />
+            <button
+              className={buttonClass}
+              disabled={addClub.isPending || !clubName || !clubUrl}
+              onClick={async () => {
+                setClubMsg(null);
+                try {
+                  await addClub.mutateAsync({ name: clubName, url: clubUrl });
+                  setClubName("");
+                  setClubUrl("");
+                  setClubMsg({ text: "Club added!", error: false });
+                } catch (err: any) {
+                  setClubMsg({ text: err.message, error: true });
+                }
+              }}
+            >
+              {addClub.isPending ? "..." : "Add"}
+            </button>
+          </div>
+          <Feedback message={clubMsg?.text ?? null} isError={clubMsg?.error} />
         </div>
 
         <button

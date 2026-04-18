@@ -127,6 +127,12 @@ export function useAgentStream() {
     });
   }, [ensureSession]);
 
+  const abortSession = useCallback(async () => {
+    const sid = sessionIdRef.current;
+    if (!sid) return;
+    await fetch(`/api/agent/session/${sid}/abort`, { method: "POST" });
+  }, []);
+
   const createSession = useCallback(async () => {
     const res = await fetch("/api/agent/session", { method: "POST" });
     if (!res.ok) throw new Error("Failed to create session");
@@ -143,6 +149,7 @@ export function useAgentStream() {
     createSession,
     sendMessage,
     ensureSession,
+    abortSession,
     connectionStatus,
   };
 }
