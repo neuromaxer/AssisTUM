@@ -9,7 +9,7 @@ agentRouter.post("/session", async (_req: Request, res: Response) => {
     const client = await getOpenCodeClient();
     const result = await client.session.create();
     if (result.error) {
-      res.status(500).json({ error: String(result.error) });
+      res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
@@ -36,7 +36,7 @@ agentRouter.post("/session/:id/message", async (req: Request, res: Response) => 
       },
     });
     if (result.error) {
-      res.status(500).json({ error: String(result.error) });
+      res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
@@ -63,7 +63,7 @@ agentRouter.post("/session/:id/message/async", async (req: Request, res: Respons
       },
     });
     if (result.error) {
-      res.status(500).json({ error: String(result.error) });
+      res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.status(204).end();
@@ -81,7 +81,7 @@ agentRouter.get("/session/:id/messages", async (req: Request, res: Response) => 
       path: { id },
     });
     if (result.error) {
-      res.status(500).json({ error: String(result.error) });
+      res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
@@ -96,7 +96,7 @@ agentRouter.get("/session/:id/status", async (_req: Request, res: Response) => {
     const client = await getOpenCodeClient();
     const result = await client.session.status();
     if (result.error) {
-      res.status(500).json({ error: String(result.error) });
+      res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
