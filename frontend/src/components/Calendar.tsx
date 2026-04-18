@@ -18,7 +18,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 
-export function Calendar() {
+export function Calendar({ onOpenTodo }: { onOpenTodo?: (id: string) => void }) {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
   const updateEvent = useUpdateEvent();
@@ -50,15 +50,17 @@ export function Calendar() {
     },
   }));
 
-  // Add incomplete todos with deadlines as all-day items
+  // Add incomplete todos with deadlines
   for (const todo of todos ?? []) {
     if (todo.completed || !todo.deadline) continue;
+    const hasTime = todo.deadline.includes("T") && !todo.deadline.endsWith("T23:59:00");
     const datePart = todo.deadline.includes("T") ? todo.deadline.split("T")[0] : todo.deadline;
     fcEvents.push({
       id: `todo-${todo.id}`,
       title: todo.title,
-      start: datePart,
-      allDay: true,
+      start: hasTime ? todo.deadline : datePart,
+      end: hasTime ? new Date(new Date(todo.deadline).getTime() + 30 * 60 * 1000).toISOString() : undefined,
+      allDay: !hasTime,
       backgroundColor: "transparent",
       borderColor: "transparent",
       editable: false,
@@ -226,9 +228,25 @@ export function Calendar() {
       });
     }
 
+    function handleDblClick(e: MouseEvent) {
+      const eventEl = (e.target as HTMLElement).closest(".fc-event");
+      if (!eventEl) return;
+      const titleEl = eventEl.querySelector(".fc-event-title, .fc-event-title-container, .fc-todo-title");
+      const titleText = titleEl?.textContent?.trim();
+      const matchedTodo = todos?.find((t) => t.title === titleText && !t.completed);
+      if (matchedTodo && onOpenTodo) {
+        e.preventDefault();
+        onOpenTodo(matchedTodo.id);
+      }
+    }
+
     el.addEventListener("contextmenu", handleContextMenu);
-    return () => el.removeEventListener("contextmenu", handleContextMenu);
-  }, [events]);
+    el.addEventListener("dblclick", handleDblClick);
+    return () => {
+      el.removeEventListener("contextmenu", handleContextMenu);
+      el.removeEventListener("dblclick", handleDblClick);
+    };
+  }, [events, todos, onOpenTodo]);
 
   function handleEventDrop(info: EventDropArg) {
     if (info.event.id === "__preview__") return;

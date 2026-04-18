@@ -89,6 +89,9 @@ body {
   --fc-event-border-color: transparent;
   --fc-small-font-size: var(--text-xs);
 }
+.fc .fc-timegrid-axis-cushion {
+  display: none;
+}
 .fc .fc-col-header-cell-cushion,
 .fc .fc-timegrid-slot-label-cushion {
   color: var(--color-ink-secondary);
@@ -171,11 +174,7 @@ body {
   flex-shrink: 0;
 }
 .fc-todo-dot::after {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-accent);
+  content: none;
 }
 .fc-todo-title {
   font-size: var(--text-xs);

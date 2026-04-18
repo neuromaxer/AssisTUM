@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "amazon-bedrock/anthropic.claude-sonnet-4-6",
   "mcp": {
     "assistum-tools": {
       "type": "local",

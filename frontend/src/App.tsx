@@ -26,7 +26,7 @@ export function App() {
               onBack={() => setSelectedTodoId(null)}
             />
           ) : (
-            <Calendar />
+            <Calendar onOpenTodo={setSelectedTodoId} />
           )
         }
         chat={<ChatPanel />}
