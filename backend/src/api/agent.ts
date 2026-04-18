@@ -1,22 +1,5 @@
 import { Router, Request, Response } from "express";
 import { getOpenCodeClient } from "../agent/opencode.js";
-import { readFile } from "fs/promises";
-import { dirname, resolve } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const skillsDir = resolve(__dirname, "../skills");
-
-let cachedMemoryGuidelines: string | null = null;
-async function getMemoryGuidelines(): Promise<string> {
-  if (cachedMemoryGuidelines !== null) return cachedMemoryGuidelines;
-  try {
-    cachedMemoryGuidelines = await readFile(resolve(skillsDir, "memory-guidelines.md"), "utf-8");
-  } catch {
-    cachedMemoryGuidelines = "";
-  }
-  return cachedMemoryGuidelines;
-}
 
 export const agentRouter = Router();
 
@@ -60,12 +43,11 @@ agentRouter.post("/session/:id/message", async (req: Request, res: Response) => 
       return;
     }
 
-    const memoryGuidelines = await getMemoryGuidelines();
     const client = await getOpenCodeClient();
     const result = await client.session.prompt({
       path: { id },
       body: {
-        parts: [{ type: "text", text: `${memoryGuidelines}\n\n${message}` }],
+        parts: [{ type: "text", text: message }],
       },
     });
     if (result.error) {
@@ -88,12 +70,11 @@ agentRouter.post("/session/:id/message/async", async (req: Request, res: Respons
       return;
     }
 
-    const memoryGuidelines = await getMemoryGuidelines();
     const client = await getOpenCodeClient();
     const result = await client.session.promptAsync({
       path: { id },
       body: {
-        parts: [{ type: "text", text: `${memoryGuidelines}\n\n${message}` }],
+        parts: [{ type: "text", text: message }],
       },
     });
     if (result.error) {
