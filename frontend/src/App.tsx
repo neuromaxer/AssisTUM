@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "./components/Layout";
 import { Calendar } from "./components/Calendar";
 import { TodoPanel } from "./components/TodoPanel";
+import { ChatPanel } from "./components/ChatPanel";
 
 const queryClient = new QueryClient();
 
@@ -12,11 +13,7 @@ export function App() {
       <Layout
         sidebar={<TodoPanel />}
         main={<Calendar />}
-        chat={
-          <div className="p-4 text-zinc-500 text-sm font-mono">
-            <p className="text-zinc-600">Type a message to start planning...</p>
-          </div>
-        }
+        chat={<ChatPanel />}
         statusBar={
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
