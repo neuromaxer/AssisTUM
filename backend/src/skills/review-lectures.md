@@ -10,6 +10,7 @@ When the user asks to schedule lecture reviews, or after running plan-week:
 1. Call `query_events` for the upcoming Monday-Sunday range with type "lecture".
 2. Call `query_courses` to get course metadata (especially moodle_course_id).
 3. Group lectures by course — each course gets ONE review todo per day it has a lecture.
+4. When summarizing lectures to the user, show ONLY a simple table with three columns: **Course**, **Day**, **Time**. Do NOT show internal IDs (course_id, moodle_course_id) — those are implementation details.
 
 ## Step 2: Create review todos with materials
 
