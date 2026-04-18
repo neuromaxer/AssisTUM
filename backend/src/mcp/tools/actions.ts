@@ -161,6 +161,8 @@ export function registerActionTools(server: McpServer) {
       deadline: z.string().optional().describe("ISO 8601 datetime"),
       priority: z.enum(priorities),
       course_id: z.string().optional(),
+      source_link: z.string().optional().describe("URL to the origin (Moodle page, email reference)"),
+      resources: z.string().optional().describe("JSON array of {title, url, summary?} for related files/links"),
     },
     (args) => {
       const db = getDb();
@@ -171,8 +173,8 @@ export function registerActionTools(server: McpServer) {
 
       const id = uuid();
       db.prepare(
-        `INSERT INTO todos (id, title, description, type, deadline, priority, course_id, source)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'agent')`
+        `INSERT INTO todos (id, title, description, type, deadline, priority, course_id, source, source_link, resources)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'agent', ?, ?)`
       ).run(
         id,
         args.title,
@@ -181,6 +183,8 @@ export function registerActionTools(server: McpServer) {
         args.deadline ?? null,
         args.priority,
         args.course_id ?? null,
+        args.source_link ?? null,
+        args.resources ?? null,
       );
 
       const row = db.prepare("SELECT * FROM todos WHERE id = ?").get(id);
@@ -203,6 +207,8 @@ export function registerActionTools(server: McpServer) {
       priority: z.enum(priorities).optional(),
       completed: z.boolean().optional().describe("Completion status"),
       course_id: z.string().nullable().optional(),
+      source_link: z.string().optional().describe("URL to the origin (Moodle page, email reference)"),
+      resources: z.string().optional().describe("JSON array of {title, url, summary?} for related files/links"),
     },
     (args) => {
       const db = getDb();
@@ -216,7 +222,7 @@ export function registerActionTools(server: McpServer) {
         return err(`Course not found: ${args.course_id}`);
       }
 
-      const allowedFields = ["title", "description", "type", "deadline", "priority", "completed", "course_id"] as const;
+      const allowedFields = ["title", "description", "type", "deadline", "priority", "completed", "course_id", "source_link", "resources"] as const;
       const updates: string[] = [];
       const params: unknown[] = [];
 

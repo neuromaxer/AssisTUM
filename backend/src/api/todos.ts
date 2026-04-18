@@ -46,7 +46,7 @@ todosRouter.get("/:id", (req, res) => {
 
 /* POST / — create todo */
 todosRouter.post("/", (req, res) => {
-  const { title, type, description, deadline, priority, course_id, source, session_id } = req.body;
+  const { title, type, description, deadline, priority, course_id, source, session_id, source_link, resources } = req.body;
 
   if (!title || !type) {
     res.status(400).json({ error: "Missing required fields: title, type" });
@@ -56,9 +56,9 @@ todosRouter.post("/", (req, res) => {
   const db = getDb();
   const id = uuid();
   db.prepare(
-    `INSERT INTO todos (id, title, description, type, deadline, priority, course_id, source, session_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, title, description ?? null, type, deadline ?? null, priority ?? null, course_id ?? null, source ?? "user", session_id ?? null);
+    `INSERT INTO todos (id, title, description, type, deadline, priority, course_id, source, session_id, source_link, resources)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, title, description ?? null, type, deadline ?? null, priority ?? null, course_id ?? null, source ?? "user", session_id ?? null, source_link ?? null, resources ?? null);
 
   const row = db.prepare(`SELECT * FROM todos WHERE id = ?`).get(id);
   broadcast("todo_created", row);
@@ -74,7 +74,7 @@ todosRouter.patch("/:id", (req, res) => {
     return;
   }
 
-  const allowedFields = ["title", "description", "type", "deadline", "priority", "completed", "course_id"];
+  const allowedFields = ["title", "description", "type", "deadline", "priority", "completed", "course_id", "source_link", "resources"];
   const updates: string[] = [];
   const params: unknown[] = [];
 

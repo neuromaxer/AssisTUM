@@ -40,6 +40,19 @@ function getSkillName(parts: Part[]): string | null {
   return match ? match[1].trim() : null;
 }
 
+function isAbortError(error: unknown): boolean {
+  if (typeof error === "object" && error !== null) {
+    const e = error as Record<string, unknown>;
+    if (e.name === "MessageAbortedError") return true;
+    if (typeof e.message === "string" && /abort/i.test(e.message)) return true;
+    if (typeof e.data === "object" && e.data !== null) {
+      const d = e.data as Record<string, unknown>;
+      if (typeof d.message === "string" && /abort/i.test(d.message)) return true;
+    }
+  }
+  return false;
+}
+
 function SkillBadge({ name }: { name: string }) {
   const display = name
     .split("-")
@@ -234,9 +247,15 @@ export function ChatPanel() {
                   </span>
                   {parts.map(renderPart)}
                   {asst.error ? (
-                    <div className="font-mono text-(--text-xs) text-danger bg-danger/10 rounded-(--radius-sm) px-2 py-1.5">
-                      {JSON.stringify(asst.error)}
-                    </div>
+                    isAbortError(asst.error) ? (
+                      <p className="text-(--text-xs) text-ink-muted font-mono italic">Response stopped.</p>
+                    ) : (
+                      <div className="font-mono text-(--text-xs) text-danger bg-danger/10 rounded-(--radius-sm) px-2 py-1.5">
+                        {typeof asst.error === "object" && "message" in asst.error
+                          ? (asst.error as { message: string }).message
+                          : JSON.stringify(asst.error)}
+                      </div>
+                    )
                   ) : null}
                 </div>
               );

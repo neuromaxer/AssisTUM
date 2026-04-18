@@ -84,6 +84,16 @@ export function runMigrations(db: Database.Database) {
     );
   `);
 
+  // Seed default clubs (idempotent — only inserts if table is empty)
+  const clubCount = (db.prepare(`SELECT COUNT(*) as c FROM clubs`).get() as { c: number }).c;
+  if (clubCount === 0) {
+    const insertClub = db.prepare(`INSERT INTO clubs (id, name, url) VALUES (?, ?, ?)`);
+    insertClub.run("club-tumai", "TUM.ai", "https://www.tum-ai.com/events");
+    insertClub.run("club-robotum", "RoboTUM", "https://www.robotum.info/events");
+    insertClub.run("club-cdtm", "CDTM", "https://luma.com/user/usr-155pp5bEZxqeQBp");
+    insertClub.run("club-venturelabs", "TUM Venture Labs", "https://www.tum-venture-labs.de/events");
+  }
+
   // Add new course metadata columns (idempotent)
   const newCols = [
     { table: "courses", col: "module_code", type: "TEXT" },
@@ -93,6 +103,8 @@ export function runMigrations(db: Database.Database) {
     { table: "courses", col: "semester_name", type: "TEXT" },
     { table: "courses", col: "department", type: "TEXT" },
     { table: "courses", col: "lecturers", type: "TEXT" },
+    { table: "todos", col: "source_link", type: "TEXT" },
+    { table: "todos", col: "resources", type: "TEXT" },
   ];
   for (const { table, col, type } of newCols) {
     try {
