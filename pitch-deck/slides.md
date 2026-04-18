@@ -65,13 +65,7 @@ Systems don't talk to each other. Students are the glue.
 
 # **30 seconds later**
 
-<div class="text-center mt-4 p-6 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
-
-SCREENSHOT NEEDED: Run `/plan-week`, wait for cascade to finish. Capture the fully populated state — calendar with color-coded events, todos with deadline badges, agent summary in chat.
-
-Save as `pitch-deck/images/3_populated_screen.png`
-
-</div>
+<img src="/images/2_populated_calendar.png" class="mx-auto mt-4 rounded-lg shadow-lg" style="max-height: 75%; object-fit: contain;" />
 
 ---
 
@@ -201,7 +195,7 @@ graph LR
 # One interface. **Zero learning curve.**
 
 <div class="relative mt-2">
-  <img src="/images/2_populated_ui.png" class="mx-auto rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
+  <img src="/images/2_populated_calendar.png" class="mx-auto rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
   <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-size: 0.8rem;">
     <div style="text-align: center; flex: 1; color: #3070b3; font-weight: 600;">Tasks with deadlines & Moodle resources</div>
     <div style="text-align: center; flex: 2; color: #3070b3; font-weight: 600;">Real-time calendar with color-coded events</div>
