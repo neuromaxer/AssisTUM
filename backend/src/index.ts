@@ -1,5 +1,8 @@
 import express from "express";
 import cors from "cors";
+import { existsSync } from "fs";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 import { config } from "./config.js";
 import { getDb } from "./db/client.js";
 import { eventsRouter } from "./api/events.js";
@@ -29,6 +32,18 @@ app.use("/api/clubs", clubsRouter);
 app.use("/api/agent", agentRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/skills", skillsRouter);
+
+const __frontendDist = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../frontend/dist"
+);
+
+if (existsSync(__frontendDist)) {
+  app.use(express.static(__frontendDist));
+  app.get("*", (_req, res) => {
+    res.sendFile(resolve(__frontendDist, "index.html"));
+  });
+}
 
 getDb();
 console.log("Database initialized");
