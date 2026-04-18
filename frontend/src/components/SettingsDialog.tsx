@@ -173,7 +173,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           <ServiceRow label="Moodle" connected={!!status?.moodle} result={results?.moodle} />
           <ServiceRow label="Email" connected={!!status?.email} result={results?.email} />
           <ServiceRow label="Calendar" connected={!!status?.tum_calendar} result={results?.calendar} />
-          <ServiceRow label="Memory" connected={!!status?.cognee} result={results?.cognee} />
+          <ServiceRow label="Cognee" connected={!!status?.cognee} result={results?.cognee} />
           {results?.general && (
             <Feedback message={results.general.message} isError={!results.general.ok} />
           )}
