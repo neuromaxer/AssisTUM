@@ -5,6 +5,7 @@ import {
   useDeleteTodo,
   type TodoResource,
 } from "../hooks/useTodos";
+import { useCourse } from "../hooks/useCourses";
 
 const priorityColors: Record<string, { bg: string; text: string }> = {
   high: { bg: "bg-danger/10", text: "text-danger" },
@@ -16,7 +17,32 @@ const typeColors: Record<string, { bg: string; text: string }> = {
   assignment: { bg: "bg-accent-subtle", text: "text-accent" },
   reading: { bg: "bg-success/10", text: "text-success" },
   exam: { bg: "bg-danger/10", text: "text-danger" },
+  email_action: { bg: "bg-accent-subtle", text: "text-accent" },
 };
+
+const typeLabels: Record<string, string> = {
+  email_action: "Email",
+  assignment: "Assignment",
+  reading: "Reading",
+  exam: "Exam",
+  study: "Study",
+  personal: "Personal",
+  revision: "Revision",
+};
+
+function formatSourceLink(link: string): { label: string; href: string } {
+  if (link.startsWith("mailto:")) {
+    const subjectMatch = link.match(/subject=([^&]*)/);
+    const subject = subjectMatch ? decodeURIComponent(subjectMatch[1]) : null;
+    return { label: subject || "Email", href: link };
+  }
+  try {
+    const url = new URL(link);
+    return { label: url.hostname + url.pathname, href: link };
+  } catch {
+    return { label: link, href: link };
+  }
+}
 
 function formatDate(dateStr: string): string {
   const normalized = dateStr.replace(" ", "T");
@@ -56,14 +82,17 @@ function formatDeadline(dateStr: string): { text: string; urgent: boolean } {
 export function TodoDetail({
   todoId,
   onBack,
+  onOpenCourse,
 }: {
   todoId: string;
   onBack: () => void;
+  onOpenCourse?: (id: string) => void;
 }) {
   const { data: todo, isLoading } = useTodo(todoId);
   const toggleTodo = useToggleTodo();
   const deleteTodo = useDeleteTodo();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { data: course } = useCourse(todo?.course_id ?? null);
 
   if (isLoading || !todo) {
     return (
@@ -120,18 +149,13 @@ export function TodoDetail({
             <span
               className={`text-(--text-xs) px-2.5 py-1 rounded-full font-medium ${tc.bg} ${tc.text}`}
             >
-              {todo.type}
+              {typeLabels[todo.type] ?? todo.type}
             </span>
             {pc && (
               <span
                 className={`text-(--text-xs) px-2.5 py-1 rounded-full font-medium ${pc.bg} ${pc.text}`}
               >
                 {todo.priority} priority
-              </span>
-            )}
-            {todo.course_id && (
-              <span className="text-(--text-xs) px-2.5 py-1 rounded-full font-medium bg-success/10 text-success">
-                {todo.course_id}
               </span>
             )}
           </div>
@@ -168,9 +192,18 @@ export function TodoDetail({
               <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">
                 Course
               </div>
-              <div className="text-(--text-sm) font-medium text-ink">
-                {todo.course_id ?? "—"}
-              </div>
+              {todo.course_id && course ? (
+                <button
+                  onClick={() => onOpenCourse?.(todo.course_id!)}
+                  className="text-(--text-sm) font-medium text-accent hover:underline cursor-pointer text-left"
+                >
+                  {course.name}
+                </button>
+              ) : (
+                <div className="text-(--text-sm) font-medium text-ink">
+                  {todo.course_id ? "Loading..." : "\u2014"}
+                </div>
+              )}
             </div>
 
             <div>
@@ -200,24 +233,27 @@ export function TodoDetail({
               </div>
             </div>
 
-            {todo.source_link && (
-              <div>
-                <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">
-                  Source
+            {todo.source_link && (() => {
+              const src = formatSourceLink(todo.source_link);
+              return (
+                <div>
+                  <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">
+                    Source
+                  </div>
+                  <a
+                    href={src.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-(--text-sm) font-medium text-accent hover:underline flex items-center gap-1 break-all"
+                  >
+                    {src.label}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 flex-shrink-0">
+                      <path d="M8.914 6.025a.75.75 0 0 1 1.06 0 3.5 3.5 0 0 1 0 4.95l-2 2a3.5 3.5 0 0 1-5.054-4.838.75.75 0 0 1 1.06 1.06 2 2 0 0 0 2.934 2.718l2-2a2 2 0 0 0 0-2.83.75.75 0 0 1 0-1.06Zm1.172-2.95a3.5 3.5 0 0 1 0 4.95.75.75 0 0 1-1.06-1.06 2 2 0 0 0-2.934-2.718l-2 2a2 2 0 0 0 0 2.83.75.75 0 0 1-1.06 1.06 3.5 3.5 0 0 1 0-4.95l2-2a3.5 3.5 0 0 1 4.95 0l.104.088Z" />
+                    </svg>
+                  </a>
                 </div>
-                <a
-                  href={todo.source_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-(--text-sm) font-medium text-accent hover:underline flex items-center gap-1"
-                >
-                  Open source
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
-                    <path d="M8.914 6.025a.75.75 0 0 1 1.06 0 3.5 3.5 0 0 1 0 4.95l-2 2a3.5 3.5 0 0 1-5.054-4.838.75.75 0 0 1 1.06 1.06 2 2 0 0 0 2.934 2.718l2-2a2 2 0 0 0 0-2.83.75.75 0 0 1 0-1.06Zm1.172-2.95a3.5 3.5 0 0 1 0 4.95.75.75 0 0 1-1.06-1.06 2 2 0 0 0-2.934-2.718l-2 2a2 2 0 0 0 0 2.83.75.75 0 0 1-1.06 1.06 3.5 3.5 0 0 1 0-4.95l2-2a3.5 3.5 0 0 1 4.95 0l.104.088Z" />
-                  </svg>
-                </a>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
 

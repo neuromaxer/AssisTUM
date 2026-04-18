@@ -1,15 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEvents } from "../hooks/useEvents";
 import { useTodos } from "../hooks/useTodos";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-
-function isoWeek(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - y.getTime()) / 86400000 + 1) / 7);
-}
 
 function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -34,48 +26,38 @@ const TYPE_COLORS: Record<string, string> = {
   custom: "#6b7280",
 };
 
-// ── mensa hook ────────────────────────────────────────────────────────────────
-
-type Dish = { name: string; prices?: { students?: number } };
-type DayMenu = { date: string; categories: Array<{ category: string; dishes: Dish[] }> };
-type WeekMenu = { days: DayMenu[] };
-
-function useMensaToday() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const week = String(isoWeek(now)).padStart(2, "0");
-  return useQuery<WeekMenu>({
-    queryKey: ["mensa", year, week],
-    queryFn: async () => {
-      const res = await fetch(
-        `https://tum-dev.github.io/eat-api/mensa-garching/${year}/${week}.json`
-      );
-      if (!res.ok) throw new Error("no menu");
-      return res.json();
-    },
-    staleTime: 1000 * 60 * 30,
-  });
-}
+const PRIORITY_COLORS: Record<string, string> = {
+  high: "#ef4444",
+  medium: "#f59e0b",
+  low: "#9ca3af",
+};
 
 // ── component ─────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
-  const { data: menu } = useMensaToday();
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
 
-  const pendingCount = (todos ?? []).filter((t) => !t.completed).length;
+  const pending = (todos ?? []).filter((t) => !t.completed);
+  const pendingCount = pending.length;
 
   const upcoming = (events ?? [])
     .filter((e) => new Date(e.start) > now)
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
     .slice(0, 5);
 
-  const todayMenu = menu?.days?.find((d) => d.date === todayStr);
-  const menuByCategory = todayMenu?.categories ?? [];
+  const upcomingAssignments = pending
+    .filter((t) => t.type === "assignment")
+    .sort((a, b) => {
+      if (!a.deadline && !b.deadline) return 0;
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return a.deadline.localeCompare(b.deadline);
+    })
+    .slice(0, 6);
 
   return (
     <div className="h-full overflow-y-auto bg-page p-(--spacing-panel)">
@@ -109,7 +91,7 @@ export function Dashboard() {
         {/* Upcoming events — takes 2 cols */}
         <div className="col-span-2 bg-surface border border-border rounded-(--radius-lg) p-4">
           <h3 className="text-(--text-xs) font-mono uppercase tracking-widest text-ink-muted mb-3">
-            Upcoming
+            Upcoming Events
           </h3>
           {upcoming.length === 0 ? (
             <p className="text-(--text-sm) text-ink-faint font-mono">Nothing scheduled</p>
@@ -133,31 +115,26 @@ export function Dashboard() {
           )}
         </div>
 
-        {/* Mensa — takes 3 cols, bigger */}
+        {/* Upcoming assignments — takes 3 cols */}
         <div className="col-span-3 bg-surface border border-border rounded-(--radius-lg) p-4">
           <h3 className="text-(--text-xs) font-mono uppercase tracking-widest text-ink-muted mb-3">
-            Today's Lunch · Mensa Garching
+            Upcoming Assignments
           </h3>
-          {menuByCategory.length === 0 ? (
-            <p className="text-(--text-sm) text-ink-faint font-mono">No menu available today</p>
+          {upcomingAssignments.length === 0 ? (
+            <p className="text-(--text-sm) text-ink-faint font-mono">All caught up</p>
           ) : (
-            <div className="space-y-4">
-              {menuByCategory.map((cat) => (
-                <div key={cat.category}>
-                  <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-wide mb-1.5">
-                    {cat.category}
-                  </p>
-                  <div className="space-y-1.5">
-                    {cat.dishes.map((dish, i) => (
-                      <div key={i} className="flex items-start justify-between gap-3">
-                        <p className="text-(--text-sm) text-ink leading-snug">{dish.name}</p>
-                        {dish.prices?.students != null && (
-                          <span className="text-(--text-xs) font-mono text-ink-muted whitespace-nowrap flex-shrink-0">
-                            €{dish.prices.students.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+            <div className="space-y-3">
+              {upcomingAssignments.map((t) => (
+                <div key={t.id} className="flex gap-2.5 items-start">
+                  <div
+                    className="w-0.5 self-stretch rounded-full flex-shrink-0 mt-0.5"
+                    style={{ backgroundColor: PRIORITY_COLORS[t.priority ?? ""] ?? "#e0ddd7" }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-(--text-sm) font-medium text-ink">{t.title}</p>
+                    <p className="text-(--text-xs) font-mono text-ink-muted">
+                      {t.deadline ? fmtRelDay(t.deadline) : "No deadline"}
+                    </p>
                   </div>
                 </div>
               ))}

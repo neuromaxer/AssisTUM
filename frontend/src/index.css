@@ -79,33 +79,6 @@ body {
   animation: fade-in-up 0.25s ease-out forwards;
 }
 
-/* Card flip — calendar (back) ↔ dashboard (front) */
-.flip-scene {
-  perspective: 1200px;
-}
-.flip-card {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
-}
-.flip-card-calendar {
-  transform: rotateX(0deg);
-}
-.flip-card-dashboard {
-  transform: rotateX(-180deg);
-}
-.flip-face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  will-change: transform;
-}
-.flip-face-dashboard {
-  transform: rotateX(-180deg);
-}
 
 /* FullCalendar — paper theme */
 .fc {

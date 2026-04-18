@@ -146,16 +146,15 @@ export function TodoPanel({
                     {items.map((todo, i) => (
                       <div
                         key={todo.id}
-                        className={`flex items-center gap-2.5 py-2.5 cursor-pointer hover:bg-surface-hover -mx-1.5 px-1.5 rounded-(--radius-sm) transition-colors duration-100 ${
+                        className={`flex items-start gap-2.5 py-2.5 cursor-pointer hover:bg-surface-hover -mx-1.5 px-1.5 rounded-(--radius-sm) transition-colors duration-100 ${
                           i < items.length - 1
                             ? "border-b border-border-subtle"
                             : ""
                         }`}
                         onClick={() => onOpenTodo(todo.id)}
                       >
-                        {/* Checkbox circle */}
                         <button
-                          className={`w-[18px] h-[18px] rounded-full border-2 flex-shrink-0 transition-colors duration-100 ${
+                          className={`w-[18px] h-[18px] rounded-full border-2 flex-shrink-0 mt-0.5 transition-colors duration-100 ${
                             priorityBorder[todo.priority ?? ""] ??
                             "border-border"
                           }`}
@@ -168,42 +167,41 @@ export function TodoPanel({
                           }}
                         />
 
-                        {/* Title */}
-                        <span className="text-(--text-sm) font-medium text-ink flex-1 truncate">
-                          {todo.title}
-                        </span>
-
-                        {/* Source link */}
-                        {todo.source_link && (
-                          <a
-                            href={todo.source_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex-shrink-0 text-ink-muted hover:text-accent transition-colors duration-100"
-                            title="Open source"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-                              <path d="M8.914 6.025a.75.75 0 0 1 1.06 0 3.5 3.5 0 0 1 0 4.95l-2 2a3.5 3.5 0 0 1-5.054-4.838.75.75 0 0 1 1.06 1.06 2 2 0 0 0 2.934 2.718l2-2a2 2 0 0 0 0-2.83.75.75 0 0 1 0-1.06Zm1.172-2.95a3.5 3.5 0 0 1 0 4.95.75.75 0 0 1-1.06-1.06 2 2 0 0 0-2.934-2.718l-2 2a2 2 0 0 0 0 2.83.75.75 0 0 1-1.06 1.06 3.5 3.5 0 0 1 0-4.95l2-2a3.5 3.5 0 0 1 4.95 0l.104.088Z" />
-                            </svg>
-                          </a>
-                        )}
-
-                        {/* Deadline badge */}
-                        {todo.deadline && (() => {
-                          const dl = deadlineLabel(todo.deadline);
-                          return (
-                            <span
-                              className={`text-(--text-xs) px-1.5 py-0.5 rounded flex-shrink-0 font-medium ${
-                                dl.urgent
-                                  ? "bg-danger/10 text-danger"
-                                  : "text-ink-muted"
-                              }`}
-                            >
-                              {dl.text}
-                            </span>
-                          );
-                        })()}
+                        <div className="flex-1 min-w-0">
+                          <span className="text-(--text-sm) font-medium text-ink">
+                            {todo.title}
+                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {todo.source_link && (
+                              <a
+                                href={todo.source_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-shrink-0 text-ink-muted hover:text-accent transition-colors duration-100"
+                                title="Open source"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                                  <path d="M8.914 6.025a.75.75 0 0 1 1.06 0 3.5 3.5 0 0 1 0 4.95l-2 2a3.5 3.5 0 0 1-5.054-4.838.75.75 0 0 1 1.06 1.06 2 2 0 0 0 2.934 2.718l2-2a2 2 0 0 0 0-2.83.75.75 0 0 1 0-1.06Zm1.172-2.95a3.5 3.5 0 0 1 0 4.95.75.75 0 0 1-1.06-1.06 2 2 0 0 0-2.934-2.718l-2 2a2 2 0 0 0 0 2.83.75.75 0 0 1-1.06 1.06 3.5 3.5 0 0 1 0-4.95l2-2a3.5 3.5 0 0 1 4.95 0l.104.088Z" />
+                                </svg>
+                              </a>
+                            )}
+                            {todo.deadline && (() => {
+                              const dl = deadlineLabel(todo.deadline);
+                              return (
+                                <span
+                                  className={`text-(--text-xs) font-medium ${
+                                    dl.urgent
+                                      ? "text-danger"
+                                      : "text-ink-muted"
+                                  }`}
+                                >
+                                  {dl.text}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

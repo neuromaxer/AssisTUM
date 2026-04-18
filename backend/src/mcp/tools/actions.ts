@@ -280,6 +280,12 @@ export function registerActionTools(server: McpServer) {
       description: z.string().optional(),
       moodle_course_id: z.string().optional(),
       tum_course_id: z.string().optional(),
+      module_code: z.string().optional().describe("e.g. IN0018"),
+      sws: z.string().optional().describe("Semesterwochenstunden, e.g. 4"),
+      course_type: z.string().optional().describe("e.g. Vorlesung, Seminar, Übung"),
+      semester_name: z.string().optional().describe("e.g. Sommersemester 2026"),
+      department: z.string().optional(),
+      lecturers: z.string().optional().describe("Comma-separated lecturer names"),
       exam_date: z.string().optional().describe("ISO 8601 date"),
     },
     (args) => {
@@ -287,14 +293,20 @@ export function registerActionTools(server: McpServer) {
 
       const id = uuid();
       db.prepare(
-        `INSERT INTO courses (id, name, description, moodle_course_id, tum_course_id, exam_date, source)
-         VALUES (?, ?, ?, ?, ?, ?, 'agent')`
+        `INSERT INTO courses (id, name, description, moodle_course_id, tum_course_id, module_code, sws, course_type, semester_name, department, lecturers, exam_date, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'agent')`
       ).run(
         id,
         args.name,
         args.description ?? null,
         args.moodle_course_id ?? null,
         args.tum_course_id ?? null,
+        args.module_code ?? null,
+        args.sws ?? null,
+        args.course_type ?? null,
+        args.semester_name ?? null,
+        args.department ?? null,
+        args.lecturers ?? null,
         args.exam_date ?? null,
       );
 

@@ -9,16 +9,18 @@ function formatDate(dateStr: string): string {
 }
 
 function formatTime(dateStr: string): string {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr.replace(" ", "T"));
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: false });
 }
 
 export function CourseDetail({
   courseId,
   onBack,
+  onOpenTodo,
 }: {
   courseId: string;
   onBack: () => void;
+  onOpenTodo?: (id: string) => void;
 }) {
   const { data: course, isLoading } = useCourse(courseId);
   const { data: allEvents } = useEvents();
@@ -50,7 +52,7 @@ export function CourseDetail({
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-[560px] mx-auto py-8 px-4">
+      <div className="max-w-[680px] mx-auto py-8 px-4">
         {/* Back link */}
         <button
           onClick={onBack}
@@ -82,24 +84,16 @@ export function CourseDetail({
           </div>
         </div>
 
-        {/* Metadata card */}
-        <div className="bg-surface rounded-(--radius-lg) border border-border-subtle p-5 mb-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">Lecturers</div>
-              <div className="text-(--text-sm) font-medium text-ink">{course.lecturers || "\u2014"}</div>
-            </div>
-            <div>
-              <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">Department</div>
-              <div className="text-(--text-sm) font-medium text-ink">{course.department || "\u2014"}</div>
-            </div>
-            <div>
-              <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">SWS</div>
-              <div className="text-(--text-sm) font-medium text-ink">{course.sws || "\u2014"}</div>
-            </div>
-            <div>
-              <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">Source</div>
-              <div className="text-(--text-sm) font-medium text-ink flex items-center gap-1.5">
+        {/* Metadata card — only show fields that have values */}
+        {(() => {
+          const fields: { label: string; value: React.ReactNode }[] = [];
+          if (course.lecturers) fields.push({ label: "Lecturers", value: course.lecturers });
+          if (course.department) fields.push({ label: "Department", value: course.department });
+          if (course.sws) fields.push({ label: "SWS", value: course.sws });
+          fields.push({
+            label: "Source",
+            value: (
+              <span className="flex items-center gap-1.5">
                 {course.source === "tum_online" ? (
                   <>
                     <span className="w-[18px] h-[18px] rounded-full bg-accent inline-flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">T</span>
@@ -111,10 +105,22 @@ export function CourseDetail({
                     Agent
                   </>
                 ) : "Manual"}
+              </span>
+            ),
+          });
+          return (
+            <div className="bg-surface rounded-(--radius-lg) border border-border-subtle p-5 mb-4">
+              <div className="grid grid-cols-2 gap-4">
+                {fields.map((f) => (
+                  <div key={f.label}>
+                    <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">{f.label}</div>
+                    <div className="text-(--text-sm) font-medium text-ink">{f.value}</div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Upcoming events */}
         <div className="mb-4">
@@ -126,14 +132,14 @@ export function CourseDetail({
           ) : (
             <div className="bg-surface rounded-(--radius-lg) border border-border-subtle divide-y divide-border-subtle">
               {upcoming.map((e) => (
-                <div key={e.id} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className="text-(--text-xs) text-ink-muted w-20 flex-shrink-0">
-                    {formatDate(e.start)}
+                <div key={e.id} className="flex items-start gap-4 px-4 py-2.5">
+                  <div className="flex-shrink-0 w-24">
+                    <div className="text-(--text-xs) text-ink-muted">{formatDate(e.start)}</div>
+                    <div className="text-(--text-xs) text-accent font-medium whitespace-nowrap">
+                      {formatTime(e.start)}{" \u2013 "}{formatTime(e.end)}
+                    </div>
                   </div>
-                  <div className="text-(--text-xs) text-accent font-medium w-20 flex-shrink-0">
-                    {formatTime(e.start)}\u2013{formatTime(e.end)}
-                  </div>
-                  <div className="text-(--text-sm) text-ink truncate">{e.title}</div>
+                  <div className="text-(--text-sm) text-ink flex-1 min-w-0">{e.title}</div>
                 </div>
               ))}
             </div>
@@ -148,14 +154,14 @@ export function CourseDetail({
             </h2>
             <div className="bg-surface rounded-(--radius-lg) border border-border-subtle divide-y divide-border-subtle opacity-60">
               {past.slice(-5).map((e) => (
-                <div key={e.id} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className="text-(--text-xs) text-ink-muted w-20 flex-shrink-0">
-                    {formatDate(e.start)}
+                <div key={e.id} className="flex items-start gap-4 px-4 py-2.5">
+                  <div className="flex-shrink-0 w-24">
+                    <div className="text-(--text-xs) text-ink-muted">{formatDate(e.start)}</div>
+                    <div className="text-(--text-xs) text-ink-muted font-medium whitespace-nowrap">
+                      {formatTime(e.start)}{" \u2013 "}{formatTime(e.end)}
+                    </div>
                   </div>
-                  <div className="text-(--text-xs) text-ink-muted font-medium w-20 flex-shrink-0">
-                    {formatTime(e.start)}\u2013{formatTime(e.end)}
-                  </div>
-                  <div className="text-(--text-sm) text-ink-muted truncate">{e.title}</div>
+                  <div className="text-(--text-sm) text-ink-muted flex-1 min-w-0">{e.title}</div>
                 </div>
               ))}
             </div>
@@ -172,13 +178,17 @@ export function CourseDetail({
           ) : (
             <div className="bg-surface rounded-(--radius-lg) border border-border-subtle divide-y divide-border-subtle">
               {todos.map((t) => (
-                <div key={t.id} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className={`w-[10px] h-[10px] rounded-full flex-shrink-0 ${t.completed ? "bg-success" : "border-2 border-border"}`} />
-                  <div className={`text-(--text-sm) truncate flex-1 ${t.completed ? "text-ink-muted line-through" : "text-ink"}`}>
+                <div
+                  key={t.id}
+                  className="flex items-start gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface-hover transition-colors duration-100"
+                  onClick={() => onOpenTodo?.(t.id)}
+                >
+                  <div className={`w-[10px] h-[10px] rounded-full flex-shrink-0 mt-1 ${t.completed ? "bg-success" : "border-2 border-border"}`} />
+                  <div className={`text-(--text-sm) flex-1 min-w-0 ${t.completed ? "text-ink-muted line-through" : "text-ink"}`}>
                     {t.title}
                   </div>
                   {t.deadline && (
-                    <div className="text-(--text-xs) text-ink-muted flex-shrink-0">
+                    <div className="text-(--text-xs) text-ink-muted flex-shrink-0 whitespace-nowrap pt-0.5">
                       {formatDate(t.deadline)}
                     </div>
                   )}

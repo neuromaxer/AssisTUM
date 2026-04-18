@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventDropArg } from "@fullcalendar/core";
+import type { EventClickArg, EventDropArg, DateSelectArg } from "@fullcalendar/core";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import { useEvents, useUpdateEvent } from "../hooks/useEvents";
 import { useTodos } from "../hooks/useTodos";
@@ -227,33 +227,68 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
       });
     }
 
-    function handleDblClick(e: MouseEvent) {
-      const eventEl = (e.target as HTMLElement).closest(".fc-event");
-      if (!eventEl) return;
-      const titleEl = eventEl.querySelector(".fc-event-title, .fc-event-title-container, .fc-todo-title");
-      const titleText = titleEl?.textContent?.trim();
+    el.addEventListener("contextmenu", handleContextMenu);
+    return () => {
+      el.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, [events, todos, onOpenTodo, onOpenCourse]);
 
-      const matchedTodo = todos?.find((t) => t.title === titleText && !t.completed);
-      if (matchedTodo && onOpenTodo) {
-        e.preventDefault();
-        onOpenTodo(matchedTodo.id);
-        return;
-      }
+  function handleEventClick(info: EventClickArg) {
+    const ev = info.event;
+    if (ev.id === "__preview__") return;
 
-      const matchedEvent = events?.find((ev) => ev.title === titleText);
-      if (matchedEvent?.course_id && onOpenCourse) {
-        e.preventDefault();
-        onOpenCourse(matchedEvent.course_id);
+    if (ev.id.startsWith("todo-")) {
+      const todoId = ev.id.replace("todo-", "");
+      onOpenTodo?.(todoId);
+      return;
+    }
+
+    const courseId = ev.extendedProps.course_id;
+    if (courseId) {
+      onOpenCourse?.(courseId);
+    }
+  }
+
+  function handleSelect(info: DateSelectArg) {
+    const calEl = calendarRef.current;
+    if (!calEl) return;
+
+    const mouseEvent = info.jsEvent as MouseEvent | null;
+    const mouseX = mouseEvent?.clientX ?? window.innerWidth / 2;
+    const mouseY = mouseEvent?.clientY ?? 100;
+
+    const colBodies = calEl.querySelectorAll(".fc-timegrid-col");
+    let colRect: DOMRect | null = null;
+    for (const col of colBodies) {
+      const dateAttr = col.getAttribute("data-date");
+      if (dateAttr === info.startStr.split("T")[0]) {
+        colRect = (col as HTMLElement).getBoundingClientRect();
+        break;
       }
     }
 
-    el.addEventListener("contextmenu", handleContextMenu);
-    el.addEventListener("dblclick", handleDblClick);
-    return () => {
-      el.removeEventListener("contextmenu", handleContextMenu);
-      el.removeEventListener("dblclick", handleDblClick);
-    };
-  }, [events, todos, onOpenTodo, onOpenCourse]);
+    const popW = 300;
+    const popH = 400;
+    const gap = 8;
+    let x: number;
+    if (colRect) {
+      const spaceRight = window.innerWidth - colRect.right;
+      x = spaceRight >= popW + gap
+        ? colRect.right + gap
+        : colRect.left - popW - gap;
+      x = Math.max(8, x);
+    } else {
+      x = Math.min(mouseX + gap, window.innerWidth - popW - 8);
+    }
+    const y = Math.min(Math.max(mouseY - 40, 8), window.innerHeight - popH - 16);
+
+    setPopover({
+      x,
+      y,
+      start: info.startStr,
+      end: info.endStr,
+    });
+  }
 
   function handleEventDrop(info: EventDropArg) {
     if (info.event.id === "__preview__") return;
@@ -287,7 +322,10 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
         }}
         events={fcEvents}
         editable={true}
-        selectable={false}
+        selectable={true}
+        selectMirror={true}
+        eventClick={handleEventClick}
+        select={handleSelect}
         nowIndicator={true}
         allDaySlot={true}
         slotMinTime="00:00:00"
