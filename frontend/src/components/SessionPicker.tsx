@@ -14,6 +14,14 @@ interface SessionPickerProps {
   onDeleteSession?: (id: string) => Promise<void>;
 }
 
+function sessionLabel(session: Session | undefined, id: string | null): string {
+  if (!session && !id) return "No session";
+  if (!session) return id!.slice(0, 8);
+  if (session.title && session.title.length > 24) return session.title.slice(0, 24) + "...";
+  if (session.title) return session.title;
+  return session.id.slice(0, 8);
+}
+
 export function SessionPicker({
   activeSessionId,
   onSelectSession,
@@ -47,7 +55,7 @@ export function SessionPicker({
   }, [open]);
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
-  const label = activeSession?.title || (activeSessionId ? activeSessionId.slice(0, 8) + "..." : "No session");
+  const label = sessionLabel(activeSession, activeSessionId);
 
   const handleNew = async () => {
     setCreating(true);
@@ -68,34 +76,32 @@ export function SessionPicker({
   };
 
   return (
-    <div className="flex items-center justify-between px-(--spacing-panel) py-2 border-b border-border" ref={dropdownRef}>
-      <div className="flex items-center gap-2">
-        <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider font-mono">Session</span>
-        <button
-          className="text-(--text-xs) text-ink bg-surface-hover border border-border rounded-(--radius-md) px-2.5 py-1 cursor-pointer flex items-center gap-1 hover:bg-surface-active transition-colors"
-          onClick={() => setOpen(!open)}
-        >
-          {label}
-          <span className="text-[9px] text-ink-muted">{open ? "\u25BE" : "\u25B8"}</span>
-        </button>
-      </div>
+    <div className="flex items-center gap-1.5 px-(--spacing-panel) py-1.5 border-b border-border" ref={dropdownRef}>
       <button
-        className="text-(--text-xs) text-accent bg-transparent border border-accent/30 rounded-(--radius-md) px-2.5 py-1 cursor-pointer hover:bg-accent-subtle transition-colors"
+        className="flex-1 min-w-0 text-(--text-xs) text-ink-secondary bg-transparent border-none cursor-pointer flex items-center gap-1 truncate px-0 hover:text-ink transition-colors font-mono"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="truncate">{label}</span>
+        <span className="text-[8px] text-ink-muted shrink-0">{open ? "\u25BE" : "\u25B8"}</span>
+      </button>
+      <button
+        className="text-[10px] text-ink-muted bg-transparent border-none cursor-pointer hover:text-accent transition-colors shrink-0 px-0.5"
         onClick={handleNew}
         disabled={creating}
+        title="New session"
       >
-        {creating ? "..." : "+ New"}
+        {creating ? "..." : "+"}
       </button>
 
       {open && (
-        <div className="absolute top-full left-(--spacing-panel) right-(--spacing-panel) mt-1 bg-surface border border-border rounded-(--radius-md) shadow-sm z-10 max-h-[240px] overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-0.5 bg-surface border border-border rounded-(--radius-md) shadow-sm z-10 max-h-[240px] overflow-y-auto">
           {sessions.length === 0 ? (
-            <div className="px-3 py-3 text-(--text-xs) text-ink-muted font-mono">No sessions yet</div>
+            <div className="px-3 py-2.5 text-(--text-xs) text-ink-muted font-mono">No sessions yet</div>
           ) : (
             sessions.map((s) => (
               <button
                 key={s.id}
-                className={`flex items-center w-full px-3 py-2 text-left border-none cursor-pointer transition-colors ${
+                className={`flex items-center w-full px-3 py-1.5 text-left border-none cursor-pointer transition-colors ${
                   s.id === activeSessionId
                     ? "bg-accent-subtle border-l-2 border-l-accent"
                     : "bg-transparent hover:bg-surface-hover"
