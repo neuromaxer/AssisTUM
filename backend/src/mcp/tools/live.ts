@@ -186,10 +186,10 @@ export function registerLiveTools(server: McpServer) {
   );
 
   // =========================================================================
-  // memory_store
+  // cognee_memory_store
   // =========================================================================
   server.tool(
-    "memory_store",
+    "cognee_memory_store",
     "Store a fact in the student's long-term memory. Use this to remember user preferences, plans, struggles, and important conversation context across sessions.",
     {
       text: z.string().describe("The fact to remember, as a clear standalone statement"),
@@ -229,10 +229,10 @@ export function registerLiveTools(server: McpServer) {
   );
 
   // =========================================================================
-  // memory_recall
+  // cognee_memory_recall
   // =========================================================================
   server.tool(
-    "memory_recall",
+    "cognee_memory_recall",
     "Recall relevant facts from the student's long-term memory. Use this before making personalized recommendations, when the student references past conversations, or when planning.",
     {
       query: z.string().describe("Natural language query describing what to recall"),

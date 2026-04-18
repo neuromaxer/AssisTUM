@@ -479,9 +479,18 @@ export function registerFetchTools(server: McpServer) {
             }
             const html = await res.text();
             const $ = cheerio.load(html);
+            const links: { text: string; href: string }[] = [];
+            $("a[href]").each((_, el) => {
+              const href = $(el).attr("href");
+              const text = $(el).text().trim();
+              if (href && text && (href.includes("event") || href.includes("veranstaltung"))) {
+                const abs = href.startsWith("http") ? href : new URL(href, club.url).href;
+                links.push({ text: text.slice(0, 100), href: abs });
+              }
+            });
             $("head, script, style, nav, footer, header, noscript, svg, img").remove();
             const text = $("body").text().replace(/\s+/g, " ").trim();
-            return { club: club.name, url: club.url, text: text.slice(0, 6000) };
+            return { club: club.name, url: club.url, text: text.slice(0, 6000), event_links: links.slice(0, 20) };
           } catch (e: unknown) {
             return {
               club: club.name,
@@ -493,6 +502,28 @@ export function registerFetchTools(server: McpServer) {
       );
 
       return ok(results);
+    },
+  );
+
+  // =========================================================================
+  // web_fetch
+  // =========================================================================
+  server.tool(
+    "web_fetch",
+    "Fetch a web page and return its text content (HTML stripped). Use to visit individual event pages, club pages, etc.",
+    { url: z.string().describe("The URL to fetch") },
+    async ({ url }) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return err(`HTTP ${res.status} fetching ${url}`);
+        const html = await res.text();
+        const $ = cheerio.load(html);
+        $("head, script, style, nav, footer, header, noscript, svg, img").remove();
+        const text = $("body").text().replace(/\s+/g, " ").trim();
+        return ok({ url, text: text.slice(0, 8000) });
+      } catch (e: unknown) {
+        return err(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`);
+      }
     },
   );
 }

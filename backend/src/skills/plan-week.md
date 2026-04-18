@@ -15,7 +15,7 @@ CRITICAL: Use the Europe/Berlin timezone offset (+02:00 in summer, +01:00 in win
 ## Preferences
 
 - Home campus: assume the student commutes FROM central Munich.
-- Before Phase 5 (meals), call `memory_recall` with query "dietary preferences and food" and type "preference" to check for the student's current dietary preferences. Use whatever you find (e.g., vegetarian, vegan, allergies) when selecting meal options. If memory returns nothing, default to vegetarian.
+- Before Phase 5 (meals), call `cognee_memory_recall` with query "dietary preferences and food" and type "preference" to check for the student's current dietary preferences. Use whatever you find (e.g., vegetarian, vegan, allergies) when selecting meal options. If memory returns nothing, default to vegetarian.
 
 ## Phase 1: Lectures & Calendar
 
@@ -90,7 +90,7 @@ If email is unavailable, skip gracefully and continue.
 
 Tell the user: "Let me check what's for lunch this week..."
 
-1. Call `memory_recall` with query "dietary preferences and food" and type "preference" to retrieve the student's food preferences (e.g., vegetarian, vegan, allergies, favorite dishes). If no memories are found, default to vegetarian.
+1. Call `cognee_memory_recall` with query "dietary preferences and food" and type "preference" to retrieve the student's food preferences (e.g., vegetarian, vegan, allergies, favorite dishes). If no memories are found, default to vegetarian.
 
 Using the campus location map from Phase 1:
 
@@ -110,12 +110,13 @@ Using the campus location map from Phase 1:
 
 Tell the user: "Checking your student club events..."
 
-1. Call `club_events` to fetch from configured club URLs.
-2. For any events happening in the upcoming week:
+1. Call `club_events` to fetch from configured club URLs. The response includes `event_links` — a list of individual event page URLs found on each club's site.
+2. For each event link that looks relevant to the upcoming week, call `web_fetch` with the event's URL to get the actual event page. Extract the **exact date, time, and location** from the event page — do NOT guess times from the events list. Note: club websites often display "12:00 AM" when they mean noon (12:00 PM) — if an event shows 12:00 AM and that doesn't make sense for the event type, treat it as 12:00 PM.
+3. For each confirmed upcoming event:
    - Call `create_event` with type "club", color "#a855f7"
-   - In the description, ALWAYS include the event URL as a markdown link, e.g., "Hacking Legal 2026 — legal tech hackathon. [More info](https://www.tum-venture-labs.de/events/hacking-legal)"
-   - If the event came from a specific club page, include that club's URL as the link
-3. Report what was found: "Added N club events — let me know if you want to remove any."
+   - Use the exact time from the event page, not from the listing
+   - In the description, include the event URL as a markdown link, e.g., "Hacking Legal 2026 — legal tech hackathon. [More info](https://www.tum-venture-labs.de/events/hacking-legal)"
+4. Report what was found: "Added N club events — let me know if you want to remove any."
 
 If no clubs are configured, skip silently.
 

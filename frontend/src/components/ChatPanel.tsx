@@ -33,11 +33,14 @@ function renderPart(part: Part) {
   }
 }
 
-function getSkillName(parts: Part[]): string | null {
+function getSystemTag(parts: Part[]): { type: "skill"; name: string } | { type: "system"; label: string } | null {
   const firstText = parts.find((p) => p.type === "text") as TextPart | undefined;
   if (!firstText) return null;
-  const match = firstText.text.match(/^\[Skill:\s*([^\]]+)\]/);
-  return match ? match[1].trim() : null;
+  const skillMatch = firstText.text.match(/^\[Skill:\s*([^\]]+)\]/);
+  if (skillMatch) return { type: "skill", name: skillMatch[1].trim() };
+  const tagMatch = firstText.text.match(/^\[([^\]]+)\]/);
+  if (tagMatch) return { type: "system", label: tagMatch[1].trim() };
+  return null;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -231,8 +234,9 @@ export function ChatPanel() {
               <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider">You</span>
               {(() => {
                 const userParts = state.parts[turn.user.id] ?? [];
-                const skillName = getSkillName(userParts);
-                if (skillName) return <SkillBadge name={skillName} />;
+                const tag = getSystemTag(userParts);
+                if (tag?.type === "skill") return <SkillBadge name={tag.name} />;
+                if (tag?.type === "system") return null;
                 if (userParts.length > 0) return userParts.map(renderPart);
                 return <p className="text-ink-secondary text-(--text-sm) font-mono whitespace-pre-wrap">(prompt)</p>;
               })()}

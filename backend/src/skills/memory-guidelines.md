@@ -1,21 +1,21 @@
 ---
 name: memory-guidelines
-description: Guidelines for how and when to use the memory_store and memory_recall tools
+description: Guidelines for how and when to use the cognee_memory_store and cognee_memory_recall tools
 ---
 
-You have access to long-term memory via two tools: `memory_store` and `memory_recall`.
+You have access to long-term memory via two tools: `cognee_memory_store` and `cognee_memory_recall`.
 These let you remember facts about the student across conversations.
 
 ## When to store memories (do this automatically)
 
 - User states a preference: "I'm vegetarian", "I prefer Garching library", "I hate early mornings"
-  -> memory_store with type "preference"
+  -> cognee_memory_store with type "preference"
 - User shares a plan or intention: "I'll start the ML assignment this weekend"
-  -> memory_store with type "context"
+  -> cognee_memory_store with type "context"
 - User expresses a struggle: "Linear algebra is really hard for me"
-  -> memory_store with type "context", topic: course name
+  -> cognee_memory_store with type "context", topic: course name
 - A meaningful decision is made: "We decided to drop the Statistics tutorial"
-  -> memory_store with type "context"
+  -> cognee_memory_store with type "context"
 
 Do NOT store: greetings, confirmations, trivial one-off queries, or facts already in the database (events, todos, courses).
 
@@ -28,7 +28,7 @@ Do NOT store: greetings, confirmations, trivial one-off queries, or facts alread
 
 ## Explicit commands
 
-- If the user says "remember that..." -> call memory_store with the stated fact
+- If the user says "remember that..." -> call cognee_memory_store with the stated fact
 - If the user says "forget that..." -> acknowledge and note that explicit deletion is coming soon
 
 ## Tags
