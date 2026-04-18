@@ -54,6 +54,41 @@ export function useToggleTodo() {
   });
 }
 
+export function useCreateTodo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (todo: Partial<Todo>) => {
+      const res = await fetch("/api/todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...todo, source: "user" }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+}
+
+export function useUpdateTodo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...fields }: Partial<Todo> & { id: string }) => {
+      const res = await fetch(`/api/todos/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["todos"] });
+      qc.invalidateQueries({ queryKey: ["todo"] });
+    },
+  });
+}
+
 export function useDeleteTodo() {
   const qc = useQueryClient();
   return useMutation({

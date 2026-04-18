@@ -38,6 +38,17 @@ export function useCreateEvent() {
   });
 }
 
+export function useDeleteEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/events/${id}`, { method: "DELETE" });
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["events"] }),
+  });
+}
+
 export function useUpdateEvent() {
   const qc = useQueryClient();
   return useMutation({
