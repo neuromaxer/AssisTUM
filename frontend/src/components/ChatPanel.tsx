@@ -299,7 +299,7 @@ export function ChatPanel() {
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isRunning ? "Agent is working..." : "Ask AssisTUM... (/ for skills)"}
-            rows={1}
+            rows={2}
             disabled={sending}
             className="flex-1 bg-surface border border-border rounded-(--radius-md) pl-3 pr-11 py-2.5 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors resize-none max-h-[200px] overflow-y-auto"
           />

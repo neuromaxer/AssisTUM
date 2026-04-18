@@ -317,6 +317,7 @@ export function Calendar({ onOpenTodo, onOpenCourse, onOpenEvent, initialDate, o
         initialView="timeGridWeek"
         initialDate={initialDate ?? undefined}
         datesSet={(info) => onDateChange?.(info.start.toISOString())}
+        buttonText={{ today: "Today" }}
         headerToolbar={{
           left: "prev,next today",
           center: "title",

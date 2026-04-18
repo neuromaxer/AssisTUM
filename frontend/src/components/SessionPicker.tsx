@@ -76,7 +76,7 @@ export function SessionPicker({
   };
 
   return (
-    <div className="flex items-center gap-2 px-(--spacing-panel) py-1.5 border-b border-border" ref={dropdownRef}>
+    <div className="flex items-center gap-2 px-(--spacing-panel) py-3 border-b border-border" ref={dropdownRef}>
       <button
         className="flex-1 min-w-0 text-(--text-xs) text-ink bg-surface border border-border rounded-(--radius-sm) px-2 py-1 cursor-pointer flex items-center gap-1.5 hover:bg-surface-hover transition-colors font-mono truncate"
         onClick={() => setOpen(!open)}
@@ -85,7 +85,7 @@ export function SessionPicker({
         <span className="text-[8px] text-ink-muted shrink-0 ml-auto">{open ? "\u25BE" : "\u25B8"}</span>
       </button>
       <button
-        className="text-(--text-xs) text-accent bg-transparent border border-accent/30 rounded-(--radius-sm) px-1.5 py-0.5 cursor-pointer hover:bg-accent-subtle transition-colors shrink-0 leading-tight"
+        className="text-(--text-xs) text-white bg-accent hover:bg-accent-hover rounded-(--radius-md) px-2.5 py-1 cursor-pointer transition-colors shrink-0 font-medium"
         onClick={handleNew}
         disabled={creating}
         title="New session"

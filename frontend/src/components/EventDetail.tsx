@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useEvent, useDeleteEvent } from "../hooks/useEvents";
 import { useCourse } from "../hooks/useCourses";
+import { Markdown } from "./Markdown";
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   lecture: { bg: "bg-blue-500/10", text: "text-blue-600" },
@@ -143,7 +144,7 @@ export function EventDetail({
         {event.description && (
           <div className="bg-surface rounded-(--radius-lg) border border-border-subtle p-5 mb-6">
             <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-2">Description</div>
-            <p className="text-(--text-sm) text-ink-secondary leading-relaxed whitespace-pre-wrap">{event.description}</p>
+            <Markdown text={event.description} />
           </div>
         )}
 

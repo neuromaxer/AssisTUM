@@ -111,6 +111,8 @@ Tell the user: "Checking your student club events..."
 1. Call `club_events` to fetch from configured club URLs.
 2. For any events happening in the upcoming week:
    - Call `create_event` with type "club", color "#a855f7"
+   - In the description, ALWAYS include the event URL as a markdown link, e.g., "Hacking Legal 2026 — legal tech hackathon. [More info](https://www.tum-venture-labs.de/events/hacking-legal)"
+   - If the event came from a specific club page, include that club's URL as the link
 3. Report what was found: "Added N club events — let me know if you want to remove any."
 
 If no clubs are configured, skip silently.

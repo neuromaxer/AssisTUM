@@ -129,6 +129,26 @@ body {
   border-color: var(--color-accent) !important;
   color: #fff !important;
 }
+.fc .fc-button-active:hover {
+  background: var(--color-accent-hover) !important;
+  border-color: var(--color-accent-hover) !important;
+  color: #fff !important;
+}
+.fc .fc-today-button {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: #fff !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+}
+.fc .fc-today-button:hover {
+  background: var(--color-accent-hover) !important;
+  border-color: var(--color-accent-hover) !important;
+}
+.fc .fc-today-button:disabled {
+  opacity: 0.7 !important;
+  cursor: default !important;
+}
 .fc .fc-event {
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
