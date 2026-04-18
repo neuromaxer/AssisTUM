@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../db/client.js";
+import { moodleLogin } from "../moodle-session.js";
 
 export const authRouter = Router();
 
@@ -60,7 +61,7 @@ authRouter.post("/tum-online/confirm", async (_req, res) => {
   }
 });
 
-/* POST /moodle — exchange Moodle credentials for token */
+/* POST /moodle — authenticate via Shibboleth SAML and store Moodle session */
 authRouter.post("/moodle", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -68,25 +69,15 @@ authRouter.post("/moodle", async (req, res) => {
     return;
   }
   try {
-    const resp = await fetch("https://www.moodle.tum.de/login/token.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ username, password, service: "moodle_mobile_app" }),
-    });
-    const data = await resp.json() as { token?: string; error?: string };
-    if (data.error) {
-      res.status(401).json({ error: data.error });
-      return;
-    }
-    if (!data.token) {
-      res.status(500).json({ error: "No token in Moodle response" });
-      return;
-    }
-    saveSetting("moodle_token", data.token);
-    saveSetting("moodle_user", username);
+    const { session, sessKey, userId } = await moodleLogin(username, password);
+    saveSetting("moodle_session", session);
+    saveSetting("moodle_sesskey", sessKey);
+    saveSetting("moodle_userid", String(userId));
+    saveSetting("moodle_username", username);
+    saveSetting("moodle_password", password);
     res.json({ status: "connected" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(401).json({ error: err.message });
   }
 });
 
@@ -147,7 +138,7 @@ authRouter.get("/status", (_req, res) => {
   res.json({
     tum_online: has("tum_online_token"),
     tum_calendar: has("tum_ical_url"),
-    moodle: has("moodle_token"),
+    moodle: has("moodle_session"),
     email: has("tum_email_user") && has("tum_email_password"),
   });
 });

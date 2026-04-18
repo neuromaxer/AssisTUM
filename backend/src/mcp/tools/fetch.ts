@@ -4,6 +4,7 @@ import { getDb } from "../../db/client.js";
 import { parseStringPromise } from "xml2js";
 import ical from "node-ical";
 import { ImapFlow } from "imapflow";
+import { getMoodleSession, moodleAjax, moodleLogin } from "../../moodle-session.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,6 +24,39 @@ function getSetting(key: string): string | undefined {
     | { value: string }
     | undefined;
   return row?.value;
+}
+
+function saveSetting(key: string, value: string) {
+  const db = getDb();
+  db.prepare(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+  ).run(key, value);
+}
+
+async function ensureMoodleSession(): Promise<{ session: string; sessKey: string; userId: number }> {
+  const existing = getMoodleSession();
+  if (existing) {
+    console.log(`[moodle] Testing existing session...`);
+    const testRes = await fetch(`https://www.moodle.tum.de/my/`, {
+      headers: { Cookie: `MoodleSession=${existing.session}` },
+      redirect: "manual",
+    });
+    console.log(`[moodle] Session test: HTTP ${testRes.status}`);
+    if (testRes.status === 200) return existing;
+    console.log(`[moodle] Session expired, re-authenticating...`);
+  }
+  const username = getSetting("moodle_username");
+  const password = getSetting("moodle_password");
+  if (!username || !password) {
+    throw new Error("Missing setting: moodle credentials. Please configure Moodle in Settings.");
+  }
+  const fresh = await moodleLogin(username, password);
+  saveSetting("moodle_session", fresh.session);
+  saveSetting("moodle_sesskey", fresh.sessKey);
+  saveSetting("moodle_userid", String(fresh.userId));
+  console.log(`[moodle] Fresh session stored for userId=${fresh.userId}`);
+  return fresh;
 }
 
 function getWeekNumber(date: Date): number {
@@ -132,23 +166,13 @@ export function registerFetchTools(server: McpServer) {
     "Fetch the user's enrolled Moodle courses",
     {},
     async () => {
-      const token = getSetting("moodle_token");
-      if (!token) {
-        return err("Missing setting: moodle_token. Please configure it in Settings.");
-      }
-
       try {
-        const url =
-          `https://www.moodle.tum.de/webservice/rest/server.php` +
-          `?wstoken=${encodeURIComponent(token)}` +
-          `&wsfunction=core_enrol_get_users_courses` +
-          `&moodlewsrestformat=json` +
-          `&userid=0`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          return err(`Moodle returned HTTP ${res.status}`);
-        }
-        const data = await res.json();
+        const { session, sessKey } = await ensureMoodleSession();
+        const data = await moodleAjax(
+          session, sessKey,
+          "core_course_get_enrolled_courses_by_timeline_classification",
+          { classification: "all", limit: 0, offset: 0, sort: "fullname" },
+        );
         return ok(data);
       } catch (e: unknown) {
         return err(`Failed to fetch Moodle courses: ${e instanceof Error ? e.message : String(e)}`);
@@ -161,35 +185,16 @@ export function registerFetchTools(server: McpServer) {
   // =========================================================================
   server.tool(
     "moodle_assignments",
-    "Fetch Moodle assignments, optionally filtered by course IDs",
-    {
-      course_ids: z.array(z.number()).optional().describe("Array of Moodle course IDs to filter by"),
-    },
-    async (args) => {
-      const token = getSetting("moodle_token");
-      if (!token) {
-        return err("Missing setting: moodle_token. Please configure it in Settings.");
-      }
-
+    "Fetch Moodle assignments and deadlines",
+    {},
+    async () => {
       try {
-        let url =
-          `https://www.moodle.tum.de/webservice/rest/server.php` +
-          `?wstoken=${encodeURIComponent(token)}` +
-          `&wsfunction=mod_assign_get_assignments` +
-          `&moodlewsrestformat=json`;
-
-        if (args.course_ids && args.course_ids.length > 0) {
-          const courseParams = args.course_ids
-            .map((id, i) => `courseids[${i}]=${encodeURIComponent(id)}`)
-            .join("&");
-          url += `&${courseParams}`;
-        }
-
-        const res = await fetch(url);
-        if (!res.ok) {
-          return err(`Moodle returned HTTP ${res.status}`);
-        }
-        const data = await res.json();
+        const { session, sessKey } = await ensureMoodleSession();
+        const data = await moodleAjax(
+          session, sessKey,
+          "core_calendar_get_action_events_by_timesort",
+          { timesortfrom: Math.floor(Date.now() / 1000) - 86400, limitnum: 50 },
+        );
         return ok(data);
       } catch (e: unknown) {
         return err(`Failed to fetch Moodle assignments: ${e instanceof Error ? e.message : String(e)}`);
@@ -202,30 +207,41 @@ export function registerFetchTools(server: McpServer) {
   // =========================================================================
   server.tool(
     "moodle_course_content",
-    "Fetch the content/sections of a specific Moodle course",
+    "Fetch the content/sections of a specific Moodle course by scraping the course page",
     {
       course_id: z.number().describe("The Moodle course ID"),
     },
     async (args) => {
-      const token = getSetting("moodle_token");
-      if (!token) {
-        return err("Missing setting: moodle_token. Please configure it in Settings.");
-      }
-
       try {
-        const url =
-          `https://www.moodle.tum.de/webservice/rest/server.php` +
-          `?wstoken=${encodeURIComponent(token)}` +
-          `&wsfunction=core_course_get_contents` +
-          `&moodlewsrestformat=json` +
-          `&courseid=${encodeURIComponent(args.course_id)}`;
-
-        const res = await fetch(url);
-        if (!res.ok) {
-          return err(`Moodle returned HTTP ${res.status}`);
+        const { session } = await ensureMoodleSession();
+        const url = `https://www.moodle.tum.de/course/view.php?id=${args.course_id}`;
+        const res = await fetch(url, {
+          headers: { Cookie: `MoodleSession=${session}` },
+          redirect: "follow",
+        });
+        if (!res.ok) return err(`Moodle returned HTTP ${res.status}`);
+        const html = await res.text();
+        const sections: Array<{ name: string; activities: Array<{ name: string; type: string; url: string }> }> = [];
+        const sectionRe = /<li[^>]*id="section-(\d+)"[^>]*>([\s\S]*?)(?=<li[^>]*id="section-|<\/ul>\s*<\/div>\s*<\/div>)/gi;
+        let sm;
+        while ((sm = sectionRe.exec(html)) !== null) {
+          const sectionHtml = sm[2];
+          const nameMatch = sectionHtml.match(/aria-label="([^"]+)"/);
+          const activities: Array<{ name: string; type: string; url: string }> = [];
+          const actRe = /<a[^>]*href="(https:\/\/www\.moodle\.tum\.de\/mod\/([^/]+)\/view\.php\?id=\d+)"[^>]*>[\s\S]*?<span[^>]*class="instancename"[^>]*>([^<]+)/gi;
+          let am;
+          while ((am = actRe.exec(sectionHtml)) !== null) {
+            activities.push({ name: am[3].trim(), type: am[2], url: am[1] });
+          }
+          if (activities.length > 0 || nameMatch) {
+            sections.push({ name: nameMatch?.[1] ?? `Section ${sm[1]}`, activities });
+          }
         }
-        const data = await res.json();
-        return ok(data);
+        if (sections.length === 0) {
+          const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+          return ok({ title: titleMatch?.[1] ?? "Unknown", note: "Could not parse sections — page structure may differ", htmlSnippet: html.slice(0, 3000) });
+        }
+        return ok(sections);
       } catch (e: unknown) {
         return err(`Failed to fetch Moodle course content: ${e instanceof Error ? e.message : String(e)}`);
       }

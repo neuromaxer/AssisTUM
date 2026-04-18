@@ -206,7 +206,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
             <h3 className="text-(--text-sm) font-medium text-ink-secondary">Moodle</h3>
             <StatusBadge connected={!!status?.moodle} />
           </div>
-          <input className={inputClass} placeholder="TUM username" value={moodleUser} onChange={(e) => setMoodleUser(e.target.value)} />
+          <input className={inputClass} placeholder="TUM ID (e.g. ge12abc)" value={moodleUser} onChange={(e) => setMoodleUser(e.target.value)} />
           <input className={inputClass} placeholder="Password" type="password" value={moodlePass} onChange={(e) => setMoodlePass(e.target.value)} />
           <button className={buttonClass} disabled={moodleLoading || !moodleUser || !moodlePass} onClick={connectMoodle}>
             {moodleLoading ? "Connecting..." : "Connect"}
