@@ -30,7 +30,7 @@ export function useAgentStream() {
 
   useEffect(() => {
     sessionIdRef.current = sessionId;
-  });
+  }, [sessionId]);
 
   useEffect(() => {
     dispatch({ type: "__reset" });
