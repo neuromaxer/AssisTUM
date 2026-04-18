@@ -130,3 +130,57 @@ Downloaded PDFs from course pages, extracted text, summarized them, linked summa
 
 </div>
 </div>
+
+---
+
+# MCP-Powered Agent Architecture
+
+```mermaid {scale: 0.55}
+graph LR
+    U["User"] <--> FE["React Frontend<br/><small>Real-time SSE</small>"]
+    FE <--> BE["Express Backend"]
+    BE <--> AG["OpenCode Agent"]
+    BE <--> DB[("SQLite")]
+    AG <--> T1["TUM Online<br/><small>Token / XML</small>"]
+    AG <--> T2["Moodle<br/><small>SAML SSO</small>"]
+    AG <--> T3["Email<br/><small>IMAP / SMTP</small>"]
+    AG <--> T4["eat-api<br/><small>Public</small>"]
+    AG <--> T5["NavigaTUM<br/><small>Public</small>"]
+    AG <--> T6["MVV<br/><small>Public</small>"]
+    AG <--> T7["ASTA Rooms<br/><small>Public</small>"]
+    AG <--> T8["Web Scraper<br/><small>Cheerio</small>"]
+    style U fill:#3b82f6,stroke:#2563eb,color:#fff
+    style FE fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style BE fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style AG fill:#7c3aed,stroke:#6d28d9,color:#fff
+    style DB fill:#1e293b,stroke:#334155,color:#f1f5f9
+    style T1 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style T2 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style T3 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style T4 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style T5 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style T6 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style T7 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style T8 fill:#0f172a,stroke:#334155,color:#94a3b8
+```
+
+<div class="flex justify-center gap-8 mt-4">
+  <div class="text-center"><span class="text-3xl font-bold text-blue-400">15+</span><br/><span class="text-sm opacity-70">MCP Tools</span></div>
+  <div class="text-center"><span class="text-3xl font-bold text-blue-400">7</span><br/><span class="text-sm opacity-70">Agent Skills</span></div>
+  <div class="text-center"><span class="text-3xl font-bold text-blue-400">8</span><br/><span class="text-sm opacity-70">External Systems</span></div>
+</div>
+
+---
+
+# 8 University Systems. **Real APIs. Real Auth.**
+
+| System | Auth | Autonomous Actions |
+|--------|------|--------------------|
+| **Moodle** | SAML SSO | Fetches assignments, **downloads PDFs, extracts text, summarizes** |
+| **TUM Online** | Token | Pulls lectures, syncs courses, fetches grades |
+| **NavigaTUM** | Public | Resolves room codes → campus, **auto-generates commute blocks** |
+| **Email** | IMAP/SMTP | Reads inbox, **triages into actionable tasks with deadlines** |
+| **Mensa** | Public | Fetches menus, **picks closest canteen by schedule context** |
+| **MVV** | Public | Live departures, **calculates when to leave** |
+| **Clubs** | Web scrape | Extracts events from **arbitrary club websites** |
+| **Study Rooms** | ASTA API | **Real-time availability** across campuses |
