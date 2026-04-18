@@ -59,9 +59,11 @@ function SkillBadge({ name }: { name: string }) {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
   return (
-    <span className="inline-flex items-center gap-1 text-(--text-xs) font-mono text-accent bg-accent-subtle border border-accent/20 rounded-(--radius-sm) px-2 py-0.5">
-      /{name} <span className="text-ink-muted">{display}</span>
-    </span>
+    <div className="mt-1">
+      <span className="inline-flex items-center gap-1 text-(--text-xs) font-mono text-accent bg-accent-subtle border border-accent/20 rounded-(--radius-sm) px-2 py-0.5">
+        /{name} <span className="text-ink-muted">{display}</span>
+      </span>
+    </div>
   );
 }
 

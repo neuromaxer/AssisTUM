@@ -44,12 +44,16 @@ export function Layout({
   chat,
   statusBar,
   onSettingsClick,
+  showDashboard,
+  onToggleDashboard,
 }: {
   sidebar: ReactNode;
   main: ReactNode;
   chat: ReactNode;
   statusBar?: ReactNode;
   onSettingsClick?: () => void;
+  showDashboard?: boolean;
+  onToggleDashboard?: () => void;
 }) {
   const sidebarResize = useResizable(280, 200, 400, "right");
   const chatResize = useResizable(384, 280, 560, "left");
@@ -64,12 +68,22 @@ export function Layout({
             beta
           </span>
         </div>
-        <button
-          onClick={onSettingsClick}
-          className="text-(--text-sm) text-ink-muted hover:text-ink-secondary transition-colors duration-150"
-        >
-          Settings
-        </button>
+        <div className="flex items-center gap-4">
+          {onToggleDashboard && (
+            <button
+              onClick={onToggleDashboard}
+              className="text-(--text-sm) text-ink-muted hover:text-ink-secondary transition-colors duration-150"
+            >
+              {showDashboard ? "Calendar" : "Dashboard"}
+            </button>
+          )}
+          <button
+            onClick={onSettingsClick}
+            className="text-(--text-sm) text-ink-muted hover:text-ink-secondary transition-colors duration-150"
+          >
+            Settings
+          </button>
+        </div>
       </header>
       <div className="flex flex-1 overflow-hidden">
         <aside
