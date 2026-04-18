@@ -10,6 +10,7 @@ real-time and needs context for what's happening.
 
 Use the CURRENT DATE to determine the upcoming Monday–Sunday range.
 All events must use exact ISO 8601 datetimes within that range.
+CRITICAL: Use the Europe/Berlin timezone offset (+02:00 in summer, +01:00 in winter). NEVER use "Z" (UTC) — it causes events to appear 2 hours late on the calendar. Example: "2026-04-21T12:00:00+02:00" NOT "2026-04-21T12:00:00.000Z".
 
 ## Preferences
 
