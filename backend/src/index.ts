@@ -10,6 +10,7 @@ import { clubsRouter } from "./api/clubs.js";
 import { sseHandler } from "./api/sse.js";
 import { agentRouter } from "./api/agent.js";
 import { authRouter } from "./api/auth.js";
+import { resetRouter } from "./api/reset.js";
 
 const app = express();
 app.use(cors());
@@ -27,6 +28,7 @@ app.use("/api/settings", settingsRouter);
 app.use("/api/clubs", clubsRouter);
 app.use("/api/agent", agentRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/reset", resetRouter);
 
 getDb();
 console.log("Database initialized");
