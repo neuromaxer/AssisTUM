@@ -83,4 +83,22 @@ export function runMigrations(db: Database.Database) {
       value TEXT NOT NULL
     );
   `);
+
+  // Add new course metadata columns (idempotent)
+  const newCols = [
+    { table: "courses", col: "module_code", type: "TEXT" },
+    { table: "courses", col: "sws", type: "TEXT" },
+    { table: "courses", col: "course_type", type: "TEXT" },
+    { table: "courses", col: "semester_id", type: "TEXT" },
+    { table: "courses", col: "semester_name", type: "TEXT" },
+    { table: "courses", col: "department", type: "TEXT" },
+    { table: "courses", col: "lecturers", type: "TEXT" },
+  ];
+  for (const { table, col, type } of newCols) {
+    try {
+      db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+    } catch {
+      // Column already exists
+    }
+  }
 }

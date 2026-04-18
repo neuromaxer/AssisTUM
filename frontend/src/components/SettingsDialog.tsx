@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuthStatus } from "../hooks/useSettings";
+import { useSyncCourses } from "../hooks/useCourses";
 
 const inputClass =
   "w-full bg-surface border border-border rounded-(--radius-md) px-3 py-2 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors";
@@ -42,6 +43,9 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const [emailPass, setEmailPass] = useState("");
   const [emailMsg, setEmailMsg] = useState<{ text: string; error: boolean } | null>(null);
   const [emailLoading, setEmailLoading] = useState(false);
+
+  const syncCourses = useSyncCourses();
+  const [syncMsg, setSyncMsg] = useState<{ text: string; error: boolean } | null>(null);
 
   if (!open) return null;
 
@@ -185,6 +189,26 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
             )}
           </div>
           <Feedback message={tumMsg?.text ?? null} isError={tumMsg?.error} />
+          {status?.tum_online && (
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                className={buttonClass}
+                disabled={syncCourses.isPending}
+                onClick={async () => {
+                  setSyncMsg(null);
+                  try {
+                    const result = await syncCourses.mutateAsync();
+                    setSyncMsg({ text: `Synced ${result.synced} courses`, error: false });
+                  } catch (err: any) {
+                    setSyncMsg({ text: err.message, error: true });
+                  }
+                }}
+              >
+                {syncCourses.isPending ? "Syncing..." : "Sync Courses"}
+              </button>
+              <Feedback message={syncMsg?.text ?? null} isError={syncMsg?.error} />
+            </div>
+          )}
         </div>
 
         <div className="space-y-(--spacing-element)">
