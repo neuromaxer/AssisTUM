@@ -12,7 +12,7 @@ export function ToolCallCard({ part }: ToolCallCardProps) {
   const isError = status === "error";
   const isCompleted = status === "completed";
 
-  const [open, setOpen] = useState(isRunning || isError);
+  const [open, setOpen] = useState(isError);
 
   const title =
     (isCompleted || isRunning) && state.title ? state.title : tool;
