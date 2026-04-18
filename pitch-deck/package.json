@@ -1,0 +1,13 @@
+{
+  "name": "assistum-pitch-deck",
+  "private": true,
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build",
+    "export": "slidev export --dark --output assistum-pitch-deck"
+  },
+  "dependencies": {
+    "@slidev/cli": "^51.0.0",
+    "@slidev/theme-seriph": "latest"
+  }
+}
