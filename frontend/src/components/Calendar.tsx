@@ -18,7 +18,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 
-export function Calendar({ onOpenTodo }: { onOpenTodo?: (id: string) => void }) {
+export function Calendar({ onOpenTodo, onOpenCourse }: { onOpenTodo?: (id: string) => void; onOpenCourse?: (id: string) => void }) {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
   const updateEvent = useUpdateEvent();
@@ -233,10 +233,18 @@ export function Calendar({ onOpenTodo }: { onOpenTodo?: (id: string) => void }) 
       if (!eventEl) return;
       const titleEl = eventEl.querySelector(".fc-event-title, .fc-event-title-container, .fc-todo-title");
       const titleText = titleEl?.textContent?.trim();
+
       const matchedTodo = todos?.find((t) => t.title === titleText && !t.completed);
       if (matchedTodo && onOpenTodo) {
         e.preventDefault();
         onOpenTodo(matchedTodo.id);
+        return;
+      }
+
+      const matchedEvent = events?.find((ev) => ev.title === titleText);
+      if (matchedEvent?.course_id && onOpenCourse) {
+        e.preventDefault();
+        onOpenCourse(matchedEvent.course_id);
       }
     }
 
@@ -246,7 +254,7 @@ export function Calendar({ onOpenTodo }: { onOpenTodo?: (id: string) => void }) 
       el.removeEventListener("contextmenu", handleContextMenu);
       el.removeEventListener("dblclick", handleDblClick);
     };
-  }, [events, todos, onOpenTodo]);
+  }, [events, todos, onOpenTodo, onOpenCourse]);
 
   function handleEventDrop(info: EventDropArg) {
     if (info.event.id === "__preview__") return;
