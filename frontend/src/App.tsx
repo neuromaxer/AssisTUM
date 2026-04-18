@@ -2,6 +2,7 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "./components/Layout";
 import { Calendar } from "./components/Calendar";
+import { TodoPanel } from "./components/TodoPanel";
 
 const queryClient = new QueryClient();
 
@@ -9,12 +10,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Layout
-        sidebar={
-          <div className="text-zinc-500 text-sm">
-            <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Todos</h2>
-            <p className="text-zinc-600">No todos yet</p>
-          </div>
-        }
+        sidebar={<TodoPanel />}
         main={<Calendar />}
         chat={
           <div className="p-4 text-zinc-500 text-sm font-mono">
