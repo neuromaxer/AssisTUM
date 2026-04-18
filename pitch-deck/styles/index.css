@@ -43,6 +43,23 @@ table td {
   gap: 1.5rem;
 }
 
+/* Four-column layout */
+.four-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.four-cols .col h4 {
+  color: #3070b3;
+  margin-bottom: 0.5rem;
+}
+
+.four-cols .col p {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
 .three-cols .col h4 {
   color: #3070b3;
   margin-bottom: 0.5rem;

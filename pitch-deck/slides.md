@@ -56,22 +56,20 @@ graph LR
 Systems don't talk to each other. Students are the glue.
 
 ---
-layout: image
-image: /images/1_empty_screen.png
-backgroundSize: contain
----
 
 # What if it took **one message**?
 
----
-layout: center
+<img src="/images/1_empty_screen.png" class="mx-auto mt-4 rounded-lg shadow-lg" style="max-height: 75%; object-fit: contain;" />
+
 ---
 
 # **30 seconds later**
 
-<div class="text-center mt-8 p-8 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
+<div class="text-center mt-4 p-6 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
 
-[SCREENSHOT NEEDED: After running "Let's plan my next week", capture the fully populated state -- calendar filled with color-coded events (blue lectures, gray commute, orange lunch, purple clubs), todos panel with deadline badges, and the agent's summary visible in the chat panel.]
+SCREENSHOT NEEDED: Run `/plan-week`, wait for cascade to finish. Capture the fully populated state — calendar with color-coded events, todos with deadline badges, agent summary in chat.
+
+Save as `pitch-deck/images/3_populated_screen.png`
 
 </div>
 
@@ -105,12 +103,12 @@ Each phase hits a **real external system**. No mocks. No pre-seeded data.
 
 # It doesn't just fetch data — it **makes decisions**
 
-<div class="three-cols">
+<div class="four-cols">
 <div class="col">
 
 #### Commute
 
-Looked up every room in NavigaTUM, determined which campus each lecture is on, added travel time.
+Looked up every room in NavigaTUM, determined campus, added travel time.
 
 **No one told it to.**
 
@@ -119,7 +117,7 @@ Looked up every room in NavigaTUM, determined which campus each lecture is on, a
 
 #### Mensa
 
-Picked the closest canteen to your actual location that day. Chose a meal based on your preferences.
+Picked the closest canteen to your location that day. Chose a meal.
 
 **Context-aware scheduling.**
 
@@ -128,9 +126,18 @@ Picked the closest canteen to your actual location that day. Chose a meal based 
 
 #### Moodle
 
-Downloaded PDFs from course pages, extracted text, summarized them, linked summaries in your tasks.
+Downloaded PDFs, extracted text, summarized them, linked in your tasks.
 
 **Reads and understands content.**
+
+</div>
+<div class="col">
+
+#### Memory (Cognee)
+
+Remembers your preferences, past choices, and context across sessions.
+
+**Learns and adapts over time.**
 
 </div>
 </div>
@@ -190,18 +197,19 @@ graph LR
 | **Study Rooms** | ASTA API | **Real-time availability** across campuses |
 
 ---
-layout: center
----
 
 # One interface. **Zero learning curve.**
 
-No forms. No dropdowns. Just conversation.
-
-<div class="text-center mt-8 p-8 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
-
-[SCREENSHOT NEEDED: Take the populated UI screenshot and annotate it with callout arrows pointing to: Left panel -- "Tasks with deadlines, priorities, and linked Moodle resources"; Center panel -- "Real-time calendar with color-coded event types"; Right panel -- "Natural language chat with slash commands". Use Figma, Preview, or any image editor.]
-
+<div class="relative mt-2">
+  <img src="/images/2_populated_ui.png" class="mx-auto rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
+  <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-size: 0.8rem;">
+    <div style="text-align: center; flex: 1; color: #3070b3; font-weight: 600;">Tasks with deadlines & Moodle resources</div>
+    <div style="text-align: center; flex: 2; color: #3070b3; font-weight: 600;">Real-time calendar with color-coded events</div>
+    <div style="text-align: center; flex: 1; color: #3070b3; font-weight: 600;">Natural language chat & slash commands</div>
+  </div>
 </div>
+
+No forms. No dropdowns. Just conversation.
 
 ---
 layout: center
