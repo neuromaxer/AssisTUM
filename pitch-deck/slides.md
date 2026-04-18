@@ -59,13 +59,13 @@ Systems don't talk to each other. Students are the glue.
 
 # What if it took **one message**?
 
-<img src="/images/1_empty_screen.png" class="mx-auto mt-4 rounded-lg shadow-lg" style="max-height: 75%; object-fit: contain;" />
+<img src="/images/1_empty_screen.png" class="mx-auto mt-2 rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
 
 ---
 
 # **30 seconds later**
 
-<img src="/images/2_populated_calendar.png" class="mx-auto mt-4 rounded-lg shadow-lg" style="max-height: 75%; object-fit: contain;" />
+<img src="/images/2_populated_calendar.png" class="mx-auto mt-2 rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
 
 ---
 
