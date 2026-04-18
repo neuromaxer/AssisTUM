@@ -16,3 +16,42 @@
 .animate-fade-in-up {
   animation: fade-in-up 0.3s ease-out forwards;
 }
+
+/* FullCalendar dark theme overrides */
+.fc {
+  --fc-border-color: rgb(39 39 42 / 0.8);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgb(24 24 27);
+  --fc-today-bg-color: rgb(39 39 42 / 0.3);
+  --fc-now-indicator-color: #3070b3;
+  --fc-event-border-color: transparent;
+  --fc-small-font-size: 0.75rem;
+}
+.fc .fc-col-header-cell-cushion,
+.fc .fc-timegrid-slot-label-cushion {
+  color: rgb(161 161 170);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+.fc .fc-toolbar-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.fc .fc-button {
+  background: rgb(39 39 42);
+  border-color: rgb(63 63 70);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+.fc .fc-button:hover {
+  background: rgb(63 63 70);
+}
+.fc .fc-button-active {
+  background: #3070b3 !important;
+  border-color: #3070b3 !important;
+}
+.fc .fc-event {
+  border-radius: 4px;
+  font-size: 0.7rem;
+  padding: 2px 4px;
+}

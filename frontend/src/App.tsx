@@ -1,6 +1,7 @@
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "./components/Layout";
+import { Calendar } from "./components/Calendar";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +15,7 @@ export function App() {
             <p className="text-zinc-600">No todos yet</p>
           </div>
         }
-        main={
-          <div className="h-full flex items-center justify-center text-zinc-600 text-sm">
-            Calendar will appear here
-          </div>
-        }
+        main={<Calendar />}
         chat={
           <div className="p-4 text-zinc-500 text-sm font-mono">
             <p className="text-zinc-600">Type a message to start planning...</p>
