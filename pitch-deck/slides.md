@@ -70,3 +70,63 @@ backgroundSize: contain
 ---
 
 # **30 seconds later**
+
+---
+
+# One message. **Seven autonomous phases.**
+
+```mermaid {scale: 0.55}
+graph TD
+    Q["'Let's plan my next week'"] --> P1
+    P1["1. Fetch lectures<br/><small>TUM Online + iCal</small>"] --> P2
+    P2["2. Resolve rooms & add commute<br/><small>NavigaTUM</small>"] --> P3
+    P3["3. Scan Moodle — fetch PDFs, summarize<br/><small>Moodle SAML</small>"] --> P4
+    P4["4. Triage email into tasks<br/><small>IMAP</small>"] --> P5
+    P5["5. Schedule meals by campus<br/><small>eat-api</small>"] --> P6
+    P6["6. Scrape club events<br/><small>Web Scraper</small>"] --> P7
+    P7["7. Summary + tomorrow's briefing"]
+    style Q fill:#3b82f6,stroke:#2563eb,color:#fff
+    style P1 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style P2 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style P3 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style P4 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style P5 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style P6 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style P7 fill:#22c55e,stroke:#16a34a,color:#fff
+```
+
+Each phase hits a **real external system**. No mocks. No pre-seeded data.
+
+---
+
+# It doesn't just fetch data — it **makes decisions**
+
+<div class="three-cols">
+<div class="col">
+
+#### Commute
+
+Looked up every room in NavigaTUM, determined which campus each lecture is on, added travel time.
+
+**No one told it to.**
+
+</div>
+<div class="col">
+
+#### Mensa
+
+Picked the closest canteen to your actual location that day. Chose a meal based on your preferences.
+
+**Context-aware scheduling.**
+
+</div>
+<div class="col">
+
+#### Moodle
+
+Downloaded PDFs from course pages, extracted text, summarized them, linked summaries in your tasks.
+
+**Reads and understands content.**
+
+</div>
+</div>
