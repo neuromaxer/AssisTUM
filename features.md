@@ -76,3 +76,17 @@
 - **Completion tracking** — toggle todos as done
 - **Course-linked tasks** — todos tied to specific courses
 - **Assignment import** — Moodle assignments become todos automatically
+
+## Deployment to Appx
+
+AssisTUM can run as a managed project inside [Appx](https://github.com/neuromaxer/appx) — a self-hostable platform for hosting agentic applications. Appx handles TLS, authentication, subdomain routing, and egress control, so you get `assistum.<your-domain>` with zero infra work.
+
+### Setup
+
+1. Create project "assistum" in the Appx dashboard — note the assigned port (e.g., 10000)
+2. Copy the assistum codebase into the Appx project directory (`<ProjectRoot>/assistum/`)
+3. Build: `npm install && npm run build -w frontend && npm run build -w backend`
+4. Start: `task start:appx APPX_PORT=<assigned_port>`
+5. Access at `assistum.<baseDomain>`
+
+The `start:appx` task launches Express (serving both API and frontend) on the assigned port and a dedicated OpenCode instance on port 4097. Appx proxies all subdomain traffic to Express. Local dev (`task dev`) is unaffected — it uses separate ports and the default `.env`.
