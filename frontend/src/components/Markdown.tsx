@@ -97,8 +97,9 @@ if (typeof document !== "undefined" && !document.getElementById(styleId)) {
       padding: 1px 5px;
       font-size: var(--text-xs);
     }
-    .assistum-markdown ul, .assistum-markdown ol { margin: 4px 0; padding-left: 20px; }
-    .assistum-markdown li { margin: 2px 0; }
+    .assistum-markdown ul { margin: 4px 0; padding-left: 20px; list-style: disc; }
+    .assistum-markdown ol { margin: 4px 0; padding-left: 20px; list-style: decimal; }
+    .assistum-markdown li { margin: 2px 0; display: list-item; }
     .assistum-markdown a { color: var(--color-accent); text-decoration: none; }
     .assistum-markdown a:hover { text-decoration: underline; }
     .assistum-markdown h1, .assistum-markdown h2, .assistum-markdown h3 {

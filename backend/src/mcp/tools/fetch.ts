@@ -5,6 +5,7 @@ import { parseStringPromise } from "xml2js";
 import ical from "node-ical";
 import { ImapFlow } from "imapflow";
 import { getMoodleSession, moodleAjax, moodleLogin, decodeHtmlEntities } from "../../moodle-session.js";
+import * as cheerio from "cheerio";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -477,7 +478,10 @@ export function registerFetchTools(server: McpServer) {
               return { club: club.name, url: club.url, error: `HTTP ${res.status}` };
             }
             const html = await res.text();
-            return { club: club.name, url: club.url, html_snippet: html.slice(0, 3000) };
+            const $ = cheerio.load(html);
+            $("head, script, style, nav, footer, header, noscript, svg, img").remove();
+            const text = $("body").text().replace(/\s+/g, " ").trim();
+            return { club: club.name, url: club.url, text: text.slice(0, 6000) };
           } catch (e: unknown) {
             return {
               club: club.name,

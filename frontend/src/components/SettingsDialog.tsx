@@ -9,12 +9,11 @@ const inputClass =
 const buttonClass =
   "bg-surface-hover hover:bg-surface-active disabled:opacity-40 text-(--text-sm) px-3 py-2 rounded-(--radius-md) font-medium transition-colors";
 
-function StatusBadge({ connected, label }: { connected: boolean; label?: string }) {
-  return (
-    <span className={`text-(--text-xs) ${connected ? "text-success" : "text-ink-faint"}`}>
-      {label ?? (connected ? "Connected" : "Not connected")}
-    </span>
-  );
+type ServiceResult = { ok: boolean; message: string };
+
+function Dot({ color }: { color: "green" | "red" | "yellow" }) {
+  const bg = color === "green" ? "bg-emerald-400" : color === "yellow" ? "bg-amber-400" : "bg-red-400";
+  return <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${bg}`} />;
 }
 
 function Feedback({ message, isError }: { message: string | null; isError?: boolean }) {
@@ -24,26 +23,44 @@ function Feedback({ message, isError }: { message: string | null; isError?: bool
   );
 }
 
+function ServiceRow({ label, connected, pending, result, action, statusNode }: {
+  label: string;
+  connected: boolean;
+  pending?: boolean;
+  result?: ServiceResult;
+  action?: React.ReactNode;
+  statusNode?: React.ReactNode;
+}) {
+  const isPendingResult = result && pending;
+  const dotColor = result
+    ? (isPendingResult ? "yellow" : result.ok ? "green" : "red")
+    : pending ? "yellow" : connected ? "green" : "red";
+  const statusText = result
+    ? result.message
+    : pending ? "Pending confirmation" : connected ? "Connected" : "Not connected";
+  const textColor = result
+    ? (isPendingResult ? "text-amber-500" : result.ok ? "text-success" : "text-error")
+    : pending ? "text-amber-500" : connected ? "text-success" : "text-ink-faint";
+
+  return (
+    <div className="flex items-center gap-2.5 py-1">
+      <Dot color={dotColor} />
+      <span className="text-(--text-sm) text-ink w-24 shrink-0">{label}</span>
+      <span className={`text-(--text-xs) ${textColor} flex-1`}>{statusNode ?? statusText}</span>
+      {action}
+    </div>
+  );
+}
+
 export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: status, refetch } = useAuthStatus();
 
   const [tumId, setTumId] = useState("");
-  const [tumMsg, setTumMsg] = useState<{ text: string; error: boolean } | null>(null);
-  const [tumLoading, setTumLoading] = useState(false);
-
+  const [password, setPassword] = useState("");
   const [icalUrl, setIcalUrl] = useState("");
-  const [icalMsg, setIcalMsg] = useState<{ text: string; error: boolean } | null>(null);
-  const [icalLoading, setIcalLoading] = useState(false);
-
-  const [moodleUser, setMoodleUser] = useState("");
-  const [moodlePass, setMoodlePass] = useState("");
-  const [moodleMsg, setMoodleMsg] = useState<{ text: string; error: boolean } | null>(null);
-  const [moodleLoading, setMoodleLoading] = useState(false);
-
-  const [emailUser, setEmailUser] = useState("");
-  const [emailPass, setEmailPass] = useState("");
-  const [emailMsg, setEmailMsg] = useState<{ text: string; error: boolean } | null>(null);
-  const [emailLoading, setEmailLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<Record<string, ServiceResult> | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const syncCourses = useSyncCourses();
   const [syncMsg, setSyncMsg] = useState<{ text: string; error: boolean } | null>(null);
@@ -57,117 +74,56 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
 
   if (!open) return null;
 
-  const connectTumOnline = async () => {
-    setTumLoading(true);
-    setTumMsg(null);
+  const tumPending = status?.tum_online === "pending";
+  const tumConnected = status?.tum_online === "connected";
+
+  const connectAll = async () => {
+    setLoading(true);
+    setResults(null);
     try {
-      const res = await fetch("/api/auth/tum-online", {
+      const res = await fetch("/api/auth/connect-all", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tum_id: tumId }),
+        body: JSON.stringify({ tum_id: tumId, password, ical_url: icalUrl || undefined }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setTumMsg({ text: data.error, error: true });
-      } else {
-        setTumMsg({ text: data.message, error: false });
-        refetch();
-      }
+      setResults(data.results);
+      setPassword("");
+      refetch();
     } catch (err: any) {
-      setTumMsg({ text: err.message, error: true });
+      setResults({ general: { ok: false, message: err.message } });
     } finally {
-      setTumLoading(false);
+      setLoading(false);
     }
   };
 
   const confirmTumToken = async () => {
-    setTumLoading(true);
+    setConfirmLoading(true);
     try {
       const res = await fetch("/api/auth/tum-online/confirm", { method: "POST" });
       const data = await res.json();
       if (data.confirmed) {
-        setTumMsg({ text: "Token confirmed!", error: false });
+        setResults((prev) => ({ ...prev, tum_online: { ok: true, message: "Confirmed!" } }));
         refetch();
+        setSyncMsg(null);
+        try {
+          const result = await syncCourses.mutateAsync();
+          setSyncMsg({ text: `Synced ${result.synced} courses`, error: false });
+        } catch (err: any) {
+          setSyncMsg({ text: err.message, error: true });
+        }
       } else {
-        setTumMsg({ text: "Not confirmed yet — check your email", error: true });
+        setResults((prev) => ({ ...prev, tum_online: { ok: false, message: "Not confirmed yet — check your TUM email" } }));
       }
     } catch (err: any) {
-      setTumMsg({ text: err.message, error: true });
+      setResults((prev) => ({ ...prev, tum_online: { ok: false, message: err.message } }));
     } finally {
-      setTumLoading(false);
+      setConfirmLoading(false);
     }
   };
 
-  const connectIcal = async () => {
-    setIcalLoading(true);
-    setIcalMsg(null);
-    try {
-      const res = await fetch("/api/auth/ical", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: icalUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setIcalMsg({ text: data.error, error: true });
-      } else {
-        setIcalMsg({ text: "Calendar connected!", error: false });
-        refetch();
-      }
-    } catch (err: any) {
-      setIcalMsg({ text: err.message, error: true });
-    } finally {
-      setIcalLoading(false);
-    }
-  };
-
-  const connectMoodle = async () => {
-    setMoodleLoading(true);
-    setMoodleMsg(null);
-    try {
-      const res = await fetch("/api/auth/moodle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: moodleUser, password: moodlePass }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setMoodleMsg({ text: data.error, error: true });
-      } else {
-        setMoodleMsg({ text: "Moodle connected!", error: false });
-        setMoodlePass("");
-        refetch();
-      }
-    } catch (err: any) {
-      setMoodleMsg({ text: err.message, error: true });
-    } finally {
-      setMoodleLoading(false);
-    }
-  };
-
-  const connectEmail = async () => {
-    setEmailLoading(true);
-    setEmailMsg(null);
-    try {
-      const res = await fetch("/api/auth/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: emailUser, password: emailPass }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setEmailMsg({ text: data.error, error: true });
-      } else {
-        setEmailMsg({ text: "Email connected!", error: false });
-        setEmailPass("");
-        refetch();
-      }
-    } catch (err: any) {
-      setEmailMsg({ text: err.message, error: true });
-    } finally {
-      setEmailLoading(false);
-    }
-  };
+  const tumConfirmed = tumConnected || (results?.tum_online?.ok && results.tum_online.message === "Confirmed!");
+  const showConfirmButton = !tumConfirmed && (tumPending || results?.tum_online != null);
 
   return (
     <div
@@ -175,89 +131,59 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
       onClick={onClose}
     >
       <div
-        className="bg-surface border border-border rounded-(--radius-lg) p-(--spacing-panel) w-[520px] max-h-[80vh] overflow-y-auto space-y-(--spacing-section) shadow-lg"
+        className="bg-surface border border-border rounded-(--radius-lg) p-(--spacing-panel) w-[520px] max-h-[90vh] overflow-y-auto space-y-(--spacing-section) shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-(--text-lg) font-semibold text-ink">Settings</h2>
 
         <div className="space-y-(--spacing-element)">
-          <div className="flex items-center gap-2">
-            <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Online API</h3>
-            <StatusBadge connected={!!status?.tum_online} />
-          </div>
-          <div className="flex gap-2">
-            <input className={inputClass} placeholder="TUM ID (e.g. ge12abc)" value={tumId} onChange={(e) => setTumId(e.target.value)} />
-            <button className={buttonClass} disabled={tumLoading || !tumId} onClick={connectTumOnline}>
-              {tumLoading ? "..." : "Request Token"}
-            </button>
-            {status?.tum_online === false && (
-              <button className={buttonClass} disabled={tumLoading} onClick={confirmTumToken}>
-                Confirm
-              </button>
-            )}
-          </div>
-          <Feedback message={tumMsg?.text ?? null} isError={tumMsg?.error} />
-          {status?.tum_online && (
-            <div className="flex items-center gap-2 mt-1">
+          <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Credentials</h3>
+          <input className={inputClass} placeholder="TUM ID (e.g. ge12abc)" value={tumId} onChange={(e) => setTumId(e.target.value)} />
+          <input className={inputClass} placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input className={inputClass} placeholder="iCal subscription URL (optional)" value={icalUrl} onChange={(e) => setIcalUrl(e.target.value)} />
+          <button
+            className={`${buttonClass} w-full`}
+            disabled={loading || !tumId || !password}
+            onClick={connectAll}
+          >
+            {loading ? "Connecting..." : "Connect All Services"}
+          </button>
+        </div>
+
+        <div className="space-y-0.5">
+          <h3 className="text-(--text-xs) font-medium text-ink-faint uppercase tracking-wide mb-1">Services</h3>
+          <ServiceRow
+            label="TUM Online"
+            connected={tumConnected}
+            pending={tumPending || (results?.tum_online?.ok === true && !tumConfirmed)}
+            result={results?.tum_online}
+            statusNode={showConfirmButton ? (
+              <>Check your TUM email or <a href="https://campus.tum.de/tumonline/wbservicesadmin.userTokenManagement" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-600">confirm here</a></>
+            ) : undefined}
+            action={showConfirmButton ? (
               <button
-                className={buttonClass}
-                disabled={syncCourses.isPending}
-                onClick={async () => {
-                  setSyncMsg(null);
-                  try {
-                    const result = await syncCourses.mutateAsync();
-                    setSyncMsg({ text: `Synced ${result.synced} courses`, error: false });
-                  } catch (err: any) {
-                    setSyncMsg({ text: err.message, error: true });
-                  }
-                }}
+                className={`${buttonClass} text-(--text-xs) py-1 px-2 shrink-0`}
+                disabled={confirmLoading}
+                onClick={confirmTumToken}
               >
-                {syncCourses.isPending ? "Syncing..." : "Sync Courses"}
+                {confirmLoading ? "..." : "Confirm"}
               </button>
-              <Feedback message={syncMsg?.text ?? null} isError={syncMsg?.error} />
-            </div>
+            ) : undefined}
+          />
+          <ServiceRow label="Moodle" connected={!!status?.moodle} result={results?.moodle} />
+          <ServiceRow label="Email" connected={!!status?.email} result={results?.email} />
+          <ServiceRow label="Calendar" connected={!!status?.tum_calendar} result={results?.calendar} />
+          {results?.general && (
+            <Feedback message={results.general.message} isError={!results.general.ok} />
           )}
         </div>
 
-        <div className="space-y-(--spacing-element)">
+        {(syncCourses.isPending || syncMsg) && (
           <div className="flex items-center gap-2">
-            <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Calendar (iCal)</h3>
-            <StatusBadge connected={!!status?.tum_calendar} />
+            {syncCourses.isPending && <span className="text-(--text-xs) text-ink-faint">Syncing courses...</span>}
+            <Feedback message={syncMsg?.text ?? null} isError={syncMsg?.error} />
           </div>
-          <div className="flex gap-2">
-            <input className={inputClass} placeholder="Paste iCal subscription URL" value={icalUrl} onChange={(e) => setIcalUrl(e.target.value)} />
-            <button className={buttonClass} disabled={icalLoading || !icalUrl} onClick={connectIcal}>
-              {icalLoading ? "..." : "Save"}
-            </button>
-          </div>
-          <Feedback message={icalMsg?.text ?? null} isError={icalMsg?.error} />
-        </div>
-
-        <div className="space-y-(--spacing-element)">
-          <div className="flex items-center gap-2">
-            <h3 className="text-(--text-sm) font-medium text-ink-secondary">Moodle</h3>
-            <StatusBadge connected={!!status?.moodle} />
-          </div>
-          <input className={inputClass} placeholder="TUM ID (e.g. ge12abc)" value={moodleUser} onChange={(e) => setMoodleUser(e.target.value)} />
-          <input className={inputClass} placeholder="Password" type="password" value={moodlePass} onChange={(e) => setMoodlePass(e.target.value)} />
-          <button className={buttonClass} disabled={moodleLoading || !moodleUser || !moodlePass} onClick={connectMoodle}>
-            {moodleLoading ? "Connecting..." : "Connect"}
-          </button>
-          <Feedback message={moodleMsg?.text ?? null} isError={moodleMsg?.error} />
-        </div>
-
-        <div className="space-y-(--spacing-element)">
-          <div className="flex items-center gap-2">
-            <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Email</h3>
-            <StatusBadge connected={!!status?.email} />
-          </div>
-          <input className={inputClass} placeholder="TUM ID (e.g. ge12abc)" value={emailUser} onChange={(e) => setEmailUser(e.target.value)} />
-          <input className={inputClass} placeholder="Password" type="password" value={emailPass} onChange={(e) => setEmailPass(e.target.value)} />
-          <button className={buttonClass} disabled={emailLoading || !emailUser || !emailPass} onClick={connectEmail}>
-            {emailLoading ? "Verifying..." : "Connect"}
-          </button>
-          <Feedback message={emailMsg?.text ?? null} isError={emailMsg?.error} />
-        </div>
+        )}
 
         <div className="space-y-(--spacing-element)">
           <div className="flex items-center gap-2">

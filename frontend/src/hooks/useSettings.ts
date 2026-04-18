@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export type AuthStatus = {
-  tum_online: boolean;
+  tum_online: "connected" | "pending" | "disconnected";
   tum_calendar: boolean;
   moodle: boolean;
   email: boolean;

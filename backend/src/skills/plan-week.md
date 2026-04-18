@@ -49,8 +49,8 @@ Report: "Added travel time for N Garching trips this week."
 Tell the user: "Now checking Moodle for assignments and course materials..."
 
 1. Call `moodle_courses` to get enrolled Moodle courses.
-2. Call `moodle_assignments` for upcoming deadlines.
-3. For each course that has assignments due in the next 14 days:
+2. Call `moodle_assignments` for ALL courses (no date filter — fetch everything).
+3. For each assignment that has a deadline in the future (not yet past):
    - Call `moodle_course_content` with the course's Moodle ID to find exercise sheets, lecture slides, and resources related to the assignment.
    - For important resources (PDFs, exercise sheets), call `moodle_fetch` on their URLs to extract a brief text summary (first 200 characters is fine).
    - Call `create_todo` with:
@@ -62,7 +62,7 @@ Tell the user: "Now checking Moodle for assignments and course materials..."
      - course_id: linked to the course
      - source_link: the Moodle assignment URL (e.g., "https://www.moodle.tum.de/mod/assign/view.php?id=XXXXX")
      - resources: JSON string array of related files, e.g., `[{"title": "Exercise Sheet 3", "url": "https://www.moodle.tum.de/mod/resource/view.php?id=123", "summary": "Covers topics: ..."}]`
-4. Report: "You have N assignments coming up. I've linked the relevant course materials."
+4. Report: "You have N assignments total (N due this week, N later). I've added them all."
 
 If Moodle is unavailable, say "Couldn't reach Moodle right now — I'll skip that" and continue.
 
@@ -122,11 +122,16 @@ Tell the user: "Almost done — let me check for conflicts and summarize your we
 1. Call `query_events` for the full Monday-Sunday range.
 2. Call `query_todos` to get all pending todos.
 3. Check for overlapping events (where one event's start < another's end and vice versa).
-4. Deliver the summary using the EXACT format below. Use bullet points, not paragraphs. Group by section with bold headings. Omit a section if it has no items.
+4. Deliver the summary using the EXACT format below.
 
 ### Summary format
 
-CRITICAL: Follow this format EXACTLY. Use the precise heading syntax, priority tags, and bullet structure shown. Do NOT write paragraphs — every item is a bullet. Do NOT merge observations into run-on sentences — one bullet per observation.
+CRITICAL FORMAT RULES — violating these makes the output unreadable:
+- Every single item MUST be a markdown bullet (`- `). NO exceptions.
+- Conflicts: one bullet per conflict. NEVER write a conflict as a paragraph.
+- Observations: one bullet per observation. NEVER chain multiple observations in one bullet.
+- If a section has no items, omit it entirely.
+- Do NOT use numbered lists. Only use `- ` bullets.
 
 ---
 
@@ -203,25 +208,30 @@ CRITICAL: Follow this format EXACTLY. Use the precise heading syntax, priority t
 
 Tell the user with a bold heading:
 
-**Tomorrow's Briefing ([Day name, Month DD])**
+**🌅 Tomorrow's Briefing ([Day name, Month DD])**
 
-Then deliver a SHORT paragraph (3-5 sentences max) covering:
+Then deliver as bullet points (one per item, each can be 1-2 sentences):
 
-1. Whether there are lectures tomorrow, and if so when/where the first one is.
-2. If Garching: "Leave by HH:MM" with departure time.
-3. Any high-priority todos due tomorrow or the day after — name them specifically.
-4. One actionable tip: what to prep tonight, what to bring, or what to read.
+- Whether there are lectures tomorrow, and if so when/where the first one is.
+- If Garching: "Leave by HH:MM" with departure time.
+- Any high-priority todos due tomorrow or the day after — name them specifically.
+- One actionable tip: what to prep tonight, what to bring, or what to read.
+
+Do NOT write a paragraph. Use `- ` bullets.
 
 ### Example output:
 
-**Tomorrow's Briefing (Sunday Apr 19)**
+**🌅 Tomorrow's Briefing (Sunday Apr 19)**
 
-Tomorrow is a free day with no lectures — use it well. Your three high-priority email todos are all due **Monday evening** at the latest. Check the Durt room change email first thing to confirm Tuesday's venue — if the room changed from N3815, you need to know before you set off. Start working through Exercise Sheet 0 (6 probability problems) so it's fresh before Wednesday's 10:00 exercise session.
+- Tomorrow is a free day with no lectures — use it to clear your inbox.
+- Your three high-priority email todos are all due **Monday evening**. Check the Durt room change email first to confirm Tuesday's venue.
+- Start Exercise Sheet 0 (6 probability problems) so it's fresh before Wednesday's 10:00 exercise session.
+- If the room changed from N3815, you need to know before Tuesday — verify tonight.
 
 ## Phase 9: Ad-Hoc Events
 
 End with:
 
-"That's your week planned! Do you have any personal events, hobbies, or time you'd like to block off? For example: gym sessions, study groups, social plans, or just downtime."
+"❓ That's your week planned! Do you have any personal events, hobbies, or time you'd like to block off? For example: gym sessions, study groups, social plans, or just downtime."
 
 Wait for the user to respond. If they mention events, create them with appropriate types and colors. If they say they're good, wrap up.
