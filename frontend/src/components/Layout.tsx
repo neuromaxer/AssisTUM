@@ -81,7 +81,7 @@ export function Layout({
           className="w-1 cursor-col-resize hover:bg-accent/20 active:bg-accent/30 transition-colors shrink-0"
           onMouseDown={sidebarResize.onMouseDown}
         />
-        <main className="flex-1 overflow-hidden p-(--spacing-panel)">{main}</main>
+        <main className="flex-1 min-w-0 overflow-hidden p-(--spacing-panel)">{main}</main>
         <div
           className="w-1 cursor-col-resize hover:bg-accent/20 active:bg-accent/30 transition-colors shrink-0"
           onMouseDown={chatResize.onMouseDown}
