@@ -413,3 +413,121 @@ graph LR
 - Live occupancy head count
 
 **Agent behavior:** Cross-references calendar → determines campus → picks closest canteen → schedules lunch → selects meal
+
+---
+
+# <span class="appendix-badge">A5</span> NavigaTUM & Commute
+
+```mermaid {scale: 0.6}
+graph LR
+    ROOM["Room Code<br/><small>e.g. 5602.EG.001</small>"] --> NAV["NavigaTUM API"]
+    NAV --> CAMPUS["Campus: Garching"]
+    CAMPUS --> CHECK{"Campus switch?"}
+    CHECK -->|Yes| COMMUTE["Insert 1h commute block"]
+    CHECK -->|No| SKIP["No action needed"]
+    subgraph Live Route Planning
+        MVV["MVV EFA API"] --> DEPS["Real-time departures"]
+        DEPS --> ROUTE["Which U-Bahn, when to leave"]
+    end
+    style ROOM fill:#1e293b,stroke:#64748b,color:#f1f5f9
+    style NAV fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style CAMPUS fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style CHECK fill:#1e293b,stroke:#eab308,color:#f1f5f9
+    style COMMUTE fill:#64748b,stroke:#475569,color:#fff
+    style SKIP fill:#1e293b,stroke:#334155,color:#94a3b8
+    style MVV fill:#1e293b,stroke:#22c55e,color:#f1f5f9
+    style DEPS fill:#1e293b,stroke:#22c55e,color:#f1f5f9
+    style ROUTE fill:#22c55e,stroke:#16a34a,color:#fff
+```
+
+**APIs:** NavigaTUM (room/building search) + MVV EFA (real-time departures)
+
+**Commute logic:** For each lecture → resolve room code → determine campus → if campus switch, insert 1h commute block
+
+**Route planning:** NavigaTUM room lookup + MVV live departures → tells student which U-Bahn to take and when to leave
+
+---
+
+# <span class="appendix-badge">A6</span> Student Clubs
+
+```mermaid {scale: 0.6}
+graph LR
+    URLS["Configured Club URLs"] --> FETCH["Fetch HTML"]
+    FETCH --> PARSE["Cheerio: Strip HTML"]
+    PARSE --> EXTRACT["Extract Event Text"]
+    EXTRACT --> CREATE["Create Calendar Events"]
+    style URLS fill:#1e293b,stroke:#a855f7,color:#f1f5f9
+    style FETCH fill:#1e293b,stroke:#a855f7,color:#f1f5f9
+    style PARSE fill:#1e293b,stroke:#a855f7,color:#f1f5f9
+    style EXTRACT fill:#1e293b,stroke:#a855f7,color:#f1f5f9
+    style CREATE fill:#a855f7,stroke:#9333ea,color:#fff
+```
+
+**Method:** Configurable club URLs + Cheerio HTML scraping
+
+**Capabilities:** Scrapes arbitrary club websites, strips HTML, extracts event text
+
+**Resilience:** Handles errors gracefully — skips clubs that fail, continues with rest
+
+Works with **any** student club website — no special API needed
+
+---
+
+# <span class="appendix-badge">A7</span> Study Rooms
+
+**API:** ASTA study room API (public)
+
+**Capabilities:**
+- Real-time room availability across TUM campuses
+- Filters by proximity to student's current/upcoming location
+- Reports available rooms with building details
+
+```mermaid {scale: 0.6}
+graph LR
+    LOC["Student Location"] --> ASTA["ASTA API"]
+    ASTA --> FILTER["Filter by Proximity"]
+    FILTER --> ROOMS["Available Rooms + Details"]
+    style LOC fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style ASTA fill:#1e293b,stroke:#22c55e,color:#f1f5f9
+    style FILTER fill:#1e293b,stroke:#22c55e,color:#f1f5f9
+    style ROOMS fill:#22c55e,stroke:#16a34a,color:#fff
+```
+
+Accessed via `/find-study-room` slash command or natural language request
+
+---
+
+# <span class="appendix-badge">A8</span> The Agent Engine
+
+```mermaid {scale: 0.5}
+sequenceDiagram
+    participant User
+    participant Frontend as React Frontend
+    participant Backend as Express Backend
+    participant Agent as OpenCode Agent
+    participant MCP as MCP Tools (15+)
+    participant API as External APIs
+    participant DB as SQLite
+
+    User->>Frontend: /plan-week
+    Frontend->>Backend: POST /api/skills/plan-week/invoke
+    Backend->>Agent: Load skill markdown as system prompt
+    loop For each phase
+        Agent->>MCP: Call tool (e.g. tum_lectures)
+        MCP->>API: Real API request
+        API-->>MCP: Response
+        MCP->>DB: Write events/todos
+        MCP-->>Agent: Tool result
+        Agent-->>Frontend: SSE stream update
+        Frontend->>Frontend: UI updates in real-time
+    end
+    Agent-->>Frontend: Final summary
+```
+
+**Engine:** OpenCode SDK — agent spawned as local server
+
+**Protocol:** Model Context Protocol (MCP) — 15+ tools exposed to agent
+
+**Skills:** 7 markdown-defined workflows, loaded dynamically
+
+**Error handling:** Per-tool graceful degradation — if one integration fails, agent skips and continues
