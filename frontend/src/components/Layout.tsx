@@ -18,6 +18,7 @@ function useResizable(initialWidth: number, min: number, max: number, side: "lef
         ? ev.clientX - startX.current
         : startX.current - ev.clientX;
       setWidth(Math.min(max, Math.max(min, startW.current + delta)));
+      window.dispatchEvent(new Event("resize"));
     };
 
     const onMouseUp = () => {
