@@ -5,6 +5,12 @@ interface ToolCallCardProps {
   part: ToolPart;
 }
 
+function formatToolName(raw: string): string {
+  let name = raw.replace(/^assistum-tools_/, "");
+  name = name.replace(/_/g, " ");
+  return name;
+}
+
 export function ToolCallCard({ part }: ToolCallCardProps) {
   const { tool, state } = part;
   const status = state.status;
@@ -15,7 +21,7 @@ export function ToolCallCard({ part }: ToolCallCardProps) {
   const [open, setOpen] = useState(isError);
 
   const title =
-    (isCompleted || isRunning) && state.title ? state.title : tool;
+    (isCompleted || isRunning) && state.title ? state.title : formatToolName(tool);
 
   return (
     <div className="border border-border rounded-(--radius-md) overflow-hidden my-1">
@@ -26,6 +32,7 @@ export function ToolCallCard({ part }: ToolCallCardProps) {
         <span className="flex-1 font-mono text-(--text-xs) text-ink truncate">
           {title}
         </span>
+        <span className="text-[9px] text-ink-faint uppercase tracking-wider shrink-0">tool</span>
         <span className={`font-mono text-[10px] tracking-wider flex items-center gap-1 ${
           isError ? "text-danger" : isRunning ? "text-warning" : isCompleted ? "text-success" : "text-ink-muted"
         }`}>

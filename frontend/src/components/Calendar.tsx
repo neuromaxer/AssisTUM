@@ -19,7 +19,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 
-export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }: { onOpenTodo?: (id: string) => void; onOpenCourse?: (id: string) => void; initialDate?: string | null; onDateChange?: (date: string) => void }) {
+export function Calendar({ onOpenTodo, onOpenCourse, onOpenEvent, initialDate, onDateChange }: { onOpenTodo?: (id: string) => void; onOpenCourse?: (id: string) => void; onOpenEvent?: (id: string) => void; initialDate?: string | null; onDateChange?: (date: string) => void }) {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
   const updateEvent = useUpdateEvent();
@@ -246,6 +246,8 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
     const courseId = ev.extendedProps.course_id;
     if (courseId) {
       onOpenCourse?.(courseId);
+    } else {
+      onOpenEvent?.(ev.id);
     }
   }
 

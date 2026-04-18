@@ -7,6 +7,7 @@ import { Dashboard } from "./components/Dashboard";
 import { TodoPanel } from "./components/TodoPanel";
 import { TodoDetail } from "./components/TodoDetail";
 import { CourseDetail } from "./components/CourseDetail";
+import { EventDetail } from "./components/EventDetail";
 import { ChatPanel } from "./components/ChatPanel";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { StatusBar } from "./components/StatusBar";
@@ -17,6 +18,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [calendarDate, setCalendarDate] = useState<string | null>(null);
   const [showDashboard, setShowDashboard] = useState(false);
 
@@ -26,6 +28,7 @@ export function App() {
         <Calendar
           onOpenTodo={setSelectedTodoId}
           onOpenCourse={setSelectedCourseId}
+          onOpenEvent={setSelectedEventId}
           initialDate={calendarDate}
           onDateChange={setCalendarDate}
         />
@@ -45,6 +48,8 @@ export function App() {
             <TodoDetail todoId={selectedTodoId} onBack={() => setSelectedTodoId(null)} onOpenCourse={(id) => { setSelectedTodoId(null); setSelectedCourseId(id); }} />
           ) : selectedCourseId ? (
             <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} onOpenTodo={(id) => { setSelectedCourseId(null); setSelectedTodoId(id); }} />
+          ) : selectedEventId ? (
+            <EventDetail eventId={selectedEventId} onBack={() => setSelectedEventId(null)} onOpenCourse={(id) => { setSelectedEventId(null); setSelectedCourseId(id); }} />
           ) : (
             calendarView
           )

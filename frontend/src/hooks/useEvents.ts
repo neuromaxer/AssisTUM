@@ -12,6 +12,17 @@ export type Event = {
   source: string;
 };
 
+export function useEvent(id: string | null) {
+  return useQuery<Event>({
+    queryKey: ["event", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/events/${id}`);
+      return res.json();
+    },
+    enabled: !!id,
+  });
+}
+
 export function useEvents() {
   return useQuery<Event[]>({
     queryKey: ["events"],
