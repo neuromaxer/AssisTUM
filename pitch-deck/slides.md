@@ -56,16 +56,12 @@ graph LR
 Systems don't talk to each other. Students are the glue.
 
 ---
-layout: center
+layout: image
+image: /images/1_empty_screen.png
+backgroundSize: contain
 ---
 
 # What if it took **one message**?
-
-<div class="text-center mt-8 p-8 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
-
-[SCREENSHOT NEEDED: Open AssisTUM at localhost:5173. Calendar should show current week, empty. Todos panel empty. Type "Let's plan my next week" in the chat input but DO NOT send. Capture the full browser window.]
-
-</div>
 
 ---
 layout: center
@@ -339,7 +335,7 @@ Built in 48 hours. Ready to deploy.
 </div>
 
 <div class="mt-4 text-sm opacity-50">
-Team AssisTUM — REPLY Makeathon 2026
+Team Pui — REPLY Makeathon 2026
 </div>
 
 ---
@@ -354,7 +350,7 @@ Deep-dive into each integration
 
 # <span class="appendix-badge">A1</span> TUM Online Integration
 
-```mermaid {scale: 0.6}
+```mermaid {scale: 0.45}
 sequenceDiagram
     participant Agent
     participant Backend
@@ -364,53 +360,43 @@ sequenceDiagram
     TUM-->>Backend: XML response
     Backend->>Backend: Parse XML (xml2js)
     Backend-->>Agent: Structured lecture data
-    Agent->>Agent: Create calendar events
 ```
 
-**Auth:** Token-based (email confirmation flow from TUM Online)
+**Auth:** Token-based (email confirmation flow) | **Data:** XML → xml2js → JSON → calendar events
 
-**Capabilities:**
-- Fetch full lecture schedule (XML parsed)
-- Sync courses to local database
-- Fetch grades
-
-**Data flow:** Token → XML API → xml2js parser → structured JSON → calendar events
+**Capabilities:** Fetch lecture schedule, sync courses to local DB, fetch grades
 
 ---
 
 # <span class="appendix-badge">A2</span> Moodle Integration
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.4}
 sequenceDiagram
     participant Agent
     participant Backend
     participant Shib as Shibboleth IdP
     participant Moodle
     Agent->>Backend: moodle_assignments()
-    Backend->>Moodle: GET /login
-    Moodle-->>Backend: Redirect to Shibboleth
-    Backend->>Shib: POST credentials
-    Shib-->>Backend: SAML assertion
-    Backend->>Moodle: POST SAML response
-    Moodle-->>Backend: Session cookie
-    Backend->>Moodle: AJAX: core_enrol_get_users_courses
-    Moodle-->>Backend: Course list + assignments
-    Backend->>Moodle: Fetch resource pages
-    Backend->>Backend: Detect PDFs → download → extract text (unpdf)
+    Backend->>Shib: SAML login (auto-redirect)
+    Shib-->>Backend: SAML assertion + session
+    Backend->>Moodle: Fetch courses & assignments
+    Moodle-->>Backend: Course list + deadlines
+    Backend->>Moodle: Fetch resource pages + PDFs
+    Backend->>Backend: Extract text (unpdf) + summarize
     Backend-->>Agent: Assignments + summarized resources
 ```
 
 **Auth:** SAML Shibboleth SSO — auto-redirect chain, session caching, auto-refresh on expiry
 
-**PDF Pipeline:** Moodle page → detect PDF → download → unpdf text extraction → summarize → store as task resource
+**PDF Pipeline:** Moodle page → detect PDF → download → extract text → summarize → link in task
 
-The most technically complex integration. SAML auth alone is non-trivial.
+Most technically complex integration. SAML auth alone is non-trivial.
 
 ---
 
 # <span class="appendix-badge">A3</span> Email Integration
 
-```mermaid {scale: 0.6}
+```mermaid {scale: 0.45}
 sequenceDiagram
     participant Agent
     participant Backend
@@ -418,26 +404,20 @@ sequenceDiagram
     Agent->>Backend: tum_email_read()
     Backend->>IMAP: Connect (credentials)
     IMAP-->>Backend: Last 7 days of messages
-    Backend->>Backend: Parse sender, subject, date, body (500 chars)
-    Backend-->>Agent: Email list
+    Backend-->>Agent: Parsed email list
     Agent->>Agent: Identify actionable items
     Agent->>Backend: create_todo(type: email_action)
 ```
 
-**Auth:** IMAP credentials (TUM email server) + SMTP for sending
+**Auth:** IMAP credentials + SMTP for sending | **Read:** Last N days, extract sender/subject/date/body
 
-**Capabilities:**
-- Read inbox (configurable: last N days, message limit)
-- Extract sender, subject, date, body snippet
-- Send emails with reply tracking via SMTP
-
-**Agent behavior:** Scans for actionable items, creates `email_action` todos with 48h default deadline unless email specifies one
+**Agent behavior:** Scans for actionable items, creates todos with 48h default deadline unless email specifies one
 
 ---
 
 # <span class="appendix-badge">A4</span> Mensa & Canteen
 
-```mermaid {scale: 0.6}
+```mermaid {scale: 0.5}
 graph LR
     CAL["Today's Calendar"] --> CAMPUS["Determine Campus"]
     CAMPUS --> SEL["Select Closest Mensa"]
@@ -464,17 +444,15 @@ graph LR
 
 # <span class="appendix-badge">A5</span> NavigaTUM & Commute
 
-```mermaid {scale: 0.6}
+```mermaid {scale: 0.45}
 graph LR
-    ROOM["Room Code<br/><small>e.g. 5602.EG.001</small>"] --> NAV["NavigaTUM API"]
+    ROOM["Room Code"] --> NAV["NavigaTUM API"]
     NAV --> CAMPUS["Campus: Garching"]
     CAMPUS --> CHECK{"Campus switch?"}
-    CHECK -->|Yes| COMMUTE["Insert 1h commute block"]
-    CHECK -->|No| SKIP["No action needed"]
-    subgraph Live Route Planning
-        MVV["MVV EFA API"] --> DEPS["Real-time departures"]
-        DEPS --> ROUTE["Which U-Bahn, when to leave"]
-    end
+    CHECK -->|Yes| COMMUTE["Insert 1h commute"]
+    CHECK -->|No| SKIP["No action"]
+    MVV["MVV EFA API"] --> DEPS["Live departures"]
+    DEPS --> ROUTE["Route + timing"]
     style ROOM fill:#f0efec,stroke:#9c9c9c,color:#1c1c1c
     style NAV fill:#f0efec,stroke:#3070b3,color:#1c1c1c
     style CAMPUS fill:#f0efec,stroke:#3070b3,color:#1c1c1c
@@ -496,7 +474,7 @@ graph LR
 
 # <span class="appendix-badge">A6</span> Student Clubs
 
-```mermaid {scale: 0.6}
+```mermaid {scale: 0.5}
 graph LR
     URLS["Configured Club URLs"] --> FETCH["Fetch HTML"]
     FETCH --> PARSE["Cheerio: Strip HTML"]
@@ -528,7 +506,7 @@ Works with **any** student club website — no special API needed
 - Filters by proximity to student's current/upcoming location
 - Reports available rooms with building details
 
-```mermaid {scale: 0.6}
+```mermaid {scale: 0.5}
 graph LR
     LOC["Student Location"] --> ASTA["ASTA API"]
     ASTA --> FILTER["Filter by Proximity"]
@@ -545,7 +523,7 @@ Accessed via `/find-study-room` slash command or natural language request
 
 # <span class="appendix-badge">A8</span> The Agent Engine
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.38}
 sequenceDiagram
     participant User
     participant Frontend as React Frontend
@@ -553,7 +531,6 @@ sequenceDiagram
     participant Agent as OpenCode Agent
     participant MCP as MCP Tools (15+)
     participant API as External APIs
-    participant DB as SQLite
 
     User->>Frontend: /plan-week
     Frontend->>Backend: POST /api/skills/plan-week/invoke
@@ -562,18 +539,12 @@ sequenceDiagram
         Agent->>MCP: Call tool (e.g. tum_lectures)
         MCP->>API: Real API request
         API-->>MCP: Response
-        MCP->>DB: Write events/todos
-        MCP-->>Agent: Tool result
+        MCP-->>Agent: Tool result + DB write
         Agent-->>Frontend: SSE stream update
-        Frontend->>Frontend: UI updates in real-time
     end
     Agent-->>Frontend: Final summary
 ```
 
-**Engine:** OpenCode SDK — agent spawned as local server
-
-**Protocol:** Model Context Protocol (MCP) — 15+ tools exposed to agent
-
-**Skills:** 7 markdown-defined workflows, loaded dynamically
+**Engine:** OpenCode SDK | **Protocol:** MCP — 15+ tools | **Skills:** 7 markdown workflows, loaded dynamically
 
 **Error handling:** Per-tool graceful degradation — if one integration fails, agent skips and continues
