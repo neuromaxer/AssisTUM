@@ -81,7 +81,8 @@ todosRouter.patch("/:id", (req, res) => {
   for (const field of allowedFields) {
     if (req.body[field] !== undefined) {
       updates.push(`${field} = ?`);
-      params.push(req.body[field]);
+      const val = req.body[field];
+      params.push(typeof val === "boolean" ? (val ? 1 : 0) : val);
     }
   }
 

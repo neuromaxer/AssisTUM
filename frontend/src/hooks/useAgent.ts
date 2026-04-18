@@ -19,8 +19,10 @@ export function useAgent() {
       let sid = sessionId;
       if (!sid) {
         const createRes = await fetch("/api/agent/session", { method: "POST" });
+        if (!createRes.ok) throw new Error("Failed to create agent session — is OpenCode running?");
         const session = await createRes.json();
         sid = session.id;
+        if (!sid) throw new Error("Agent session created but no ID returned");
         setSessionId(sid);
       }
 
