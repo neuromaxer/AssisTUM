@@ -292,6 +292,40 @@ Works with **any TUM student's real credentials**, today. Not a prototype — a 
 </div>
 
 ---
+
+# Limitations & Honest Tradeoffs
+
+<div class="three-cols">
+<div class="col">
+
+#### LLM Hallucinations
+
+The agent can misinterpret data or generate incorrect summaries. Every action it takes — events, todos, meal picks — should be **reviewed by the student**, not blindly trusted.
+
+</div>
+<div class="col">
+
+#### Omissions
+
+The agent may miss an assignment, skip a club event, or overlook a deadline. It's a **co-pilot, not autopilot** — it reduces work, but doesn't replace human judgment.
+
+</div>
+<div class="col">
+
+#### API Fragility
+
+University systems change without notice. SAML sessions expire, Moodle restructures pages, club websites update layouts. The agent handles failures gracefully, but **no integration is guaranteed forever**.
+
+</div>
+</div>
+
+<div class="text-center mt-8 text-lg">
+
+We built AssisTUM to **assist**, not to replace. The student always has the final say.
+
+</div>
+
+---
 layout: center
 class: text-center
 ---
