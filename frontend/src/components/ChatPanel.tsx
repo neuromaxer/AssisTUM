@@ -1,14 +1,22 @@
-import { useRef, useEffect, useState, FormEvent } from "react";
+import { useRef, useEffect, useState, FormEvent, KeyboardEvent } from "react";
 import { useAgent } from "../hooks/useAgent";
 
 export function ChatPanel() {
   const { messages, sendMessage, loading } = useAgent();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 200) + "px";
+  }, [input]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -16,6 +24,13 @@ export function ChatPanel() {
     if (!text || loading) return;
     setInput("");
     sendMessage(text);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   };
 
   return (
@@ -64,17 +79,19 @@ export function ChatPanel() {
       </div>
 
       <form onSubmit={handleSubmit} className="p-3 border-t border-border flex gap-(--spacing-element)">
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Ask AssisTUM..."
-          className="flex-1 bg-surface border border-border rounded-(--radius-md) px-3 py-2.5 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors"
+          rows={1}
+          className="flex-1 bg-surface border border-border rounded-(--radius-md) px-3 py-2.5 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors resize-none max-h-[200px] overflow-y-auto"
         />
         <button
           type="submit"
           disabled={!input.trim() || loading}
-          className="bg-accent hover:bg-accent-hover disabled:opacity-40 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors"
+          className="bg-accent hover:bg-accent-hover disabled:opacity-40 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors self-end"
         >
           Send
         </button>
