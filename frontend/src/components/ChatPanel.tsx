@@ -292,7 +292,7 @@ export function ChatPanel() {
             onClose={() => setSlashOpen(false)}
           />
         )}
-        <form onSubmit={handleSubmit} className="flex gap-(--spacing-element)">
+        <form onSubmit={handleSubmit} className="relative flex items-end">
           <textarea
             ref={textareaRef}
             value={input}
@@ -301,23 +301,29 @@ export function ChatPanel() {
             placeholder={isRunning ? "Agent is working..." : "Ask AssisTUM... (/ for skills)"}
             rows={1}
             disabled={sending}
-            className="flex-1 bg-surface border border-border rounded-(--radius-md) px-3 py-2.5 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors resize-none max-h-[200px] overflow-y-auto"
+            className="flex-1 bg-surface border border-border rounded-(--radius-md) pl-3 pr-11 py-2.5 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors resize-none max-h-[200px] overflow-y-auto"
           />
           {isRunning ? (
             <button
               type="button"
               onClick={abortSession}
-              className="bg-danger hover:bg-danger/80 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors self-end"
+              className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center rounded-full bg-danger hover:bg-danger/80 transition-colors cursor-pointer"
+              title="Stop"
             >
-              Stop
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="white" className="w-3 h-3">
+                <rect x="3" y="3" width="10" height="10" rx="1" />
+              </svg>
             </button>
           ) : (
             <button
               type="submit"
               disabled={!input.trim() || sending}
-              className="bg-accent hover:bg-accent-hover disabled:opacity-40 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors self-end"
+              className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center rounded-full bg-accent hover:bg-accent-hover disabled:opacity-40 transition-colors cursor-pointer"
+              title="Send"
             >
-              {sending ? "..." : "Send"}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="white" className="w-3.5 h-3.5">
+                <path d="M2.87 2.298a.75.75 0 0 0-.812 1.021L3.39 6.624a1 1 0 0 0 .928.626H8.25a.75.75 0 0 1 0 1.5H4.318a1 1 0 0 0-.927.626l-1.333 3.305a.75.75 0 0 0 .812 1.021l11.07-3.548a.75.75 0 0 0 0-1.408L2.87 2.298Z" />
+              </svg>
             </button>
           )}
         </form>
