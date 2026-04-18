@@ -2,11 +2,10 @@ import { useState } from "react";
 import { useSkills } from "../hooks/useSkills";
 
 interface SkillBarProps {
-  sessionId: string | null;
   ensureSession: () => Promise<string>;
 }
 
-export function SkillBar({ sessionId, ensureSession }: SkillBarProps) {
+export function SkillBar({ ensureSession }: SkillBarProps) {
   const { data: skills = [] } = useSkills();
   const [invoking, setInvoking] = useState<string | null>(null);
 
