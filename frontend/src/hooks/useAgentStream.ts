@@ -21,6 +21,7 @@ export function useAgentStream() {
 
   const setSessionId = useCallback((id: string | null) => {
     setSessionIdRaw(id);
+    sessionIdRef.current = id;
     if (id) {
       localStorage.setItem(STORAGE_KEY, id);
     } else {
