@@ -184,3 +184,114 @@ graph LR
 | **MVV** | Public | Live departures, **calculates when to leave** |
 | **Clubs** | Web scrape | Extracts events from **arbitrary club websites** |
 | **Study Rooms** | ASTA API | **Real-time availability** across campuses |
+
+---
+layout: image
+image: /screenshot-ui-annotated.png
+backgroundSize: contain
+---
+
+# One interface. **Zero learning curve.**
+
+No forms. No dropdowns. Just conversation.
+
+---
+layout: center
+---
+
+# 30 minutes → **30 seconds**
+
+<div class="before-after mt-8">
+<div class="before">
+
+#### Before
+
+- 6 browser tabs open
+- Manual copy-paste between systems
+- Missed deadlines
+- Forgotten lunches
+- No travel time planning
+
+</div>
+<div class="after">
+
+#### After
+
+- One conversation
+- Full week planned
+- Every deadline tracked
+- Campus-aware meals
+- Commute blocks included
+
+</div>
+</div>
+
+<div class="text-center mt-8 text-lg">
+
+Works with **any TUM student's real credentials**, today. Not a prototype — a **working product**.
+
+</div>
+
+---
+
+# Not a chatbot. A **campus operating system.**
+
+<div class="capability-grid">
+<div class="capability-group">
+
+#### Data Intelligence
+
+- Fetches and reads PDFs, exercise sheets, and lecture slides from Moodle
+- Extracts text from PDFs, summarizes content, links in tasks
+- Scrapes any student club website for events
+- Reads and triages university email
+
+</div>
+<div class="capability-group">
+
+#### Autonomous Actions
+
+- Resolves lecture rooms → determines campus → adds commute time
+- Picks closest mensa by your schedule, selects meals
+- Schedules study sessions around your deadlines
+- Detects and resolves calendar conflicts
+
+</div>
+<div class="capability-group">
+
+#### Real-Time Information
+
+- Live MVV departures — when to leave and which train
+- Study room availability across campuses
+- Mensa occupancy — how crowded right now?
+- Canteen menus for the full week
+
+</div>
+<div class="capability-group">
+
+#### Agent Skills
+
+- `/plan-week` — Build full week from 5+ systems
+- `/review-lectures` — Review sessions with Moodle materials
+- `/schedule-study-sessions` — Auto-schedule before deadlines
+- `/commute-helper` `/find-study-room` `/conflict-resolver` `/course-brainstorm`
+
+</div>
+</div>
+
+---
+layout: center
+class: text-center
+---
+
+# AssisTUM
+
+**Being a student should be about learning — not logistics.**
+
+<div class="mt-12 text-sm opacity-50">
+Built in 48 hours. Ready to deploy.
+</div>
+
+<div class="mt-4 text-sm opacity-50">
+Team AssisTUM — REPLY Makeathon 2026
+</div>
