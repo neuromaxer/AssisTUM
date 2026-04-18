@@ -9,7 +9,15 @@ tasks:
   dev:
     desc: Start OpenCode + backend + frontend dev servers
     cmds:
-      - npx concurrently -n oc,be,fe -c blue,green,yellow "opencode serve --port 4096" "npm run dev -w backend" "npm run dev -w frontend"
+      - npx concurrently --kill-others -n oc,be,fe -c blue,green,yellow "opencode serve --port 4096" "npm run dev -w backend" "npm run dev -w frontend"
+
+  kill:
+    desc: Kill stale dev processes on ports 3001, 4096, 5173
+    cmds:
+      - lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+      - lsof -ti:4096 | xargs kill -9 2>/dev/null || true
+      - lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+      - echo "Killed stale processes"
 
   dev:backend:
     desc: Start backend dev server only
