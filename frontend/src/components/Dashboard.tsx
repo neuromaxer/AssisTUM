@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEvents } from "../hooks/useEvents";
-import { useTodos } from "../hooks/useTodos";
+import { useTodos, useToggleTodo } from "../hooks/useTodos";
 
 function getISOWeek(date: Date): number {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -57,6 +57,7 @@ export function Dashboard() {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
   const { data: menu } = useTodayMenu();
+  const toggleTodo = useToggleTodo();
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -165,8 +166,16 @@ export function Dashboard() {
             </h3>
             <div className="space-y-2">
               {urgentTodos.map((t) => (
-                <div key={t.id} className="flex items-center justify-between gap-2">
-                  <p className="text-(--text-sm) text-ink">{t.title}</p>
+                <div key={t.id} className="flex items-center justify-between gap-2 group">
+                  <button
+                    onClick={() => toggleTodo.mutate({ id: t.id, completed: true })}
+                    className="flex items-center gap-2 text-left min-w-0"
+                  >
+                    <span className="w-4 h-4 rounded-full border border-border group-hover:border-accent flex-shrink-0 transition-colors duration-150" />
+                    <p className="text-(--text-sm) text-ink group-hover:text-ink-secondary transition-colors duration-150 truncate">
+                      {t.title}
+                    </p>
+                  </button>
                   {t.deadline && (
                     <span className="text-(--text-xs) font-mono text-warning whitespace-nowrap">
                       due {formatDate(t.deadline)}
