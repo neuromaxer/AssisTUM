@@ -295,3 +295,121 @@ Built in 48 hours. Ready to deploy.
 <div class="mt-4 text-sm opacity-50">
 Team AssisTUM — REPLY Makeathon 2026
 </div>
+
+---
+layout: section
+---
+
+# Appendix
+
+Deep-dive into each integration
+
+---
+
+# <span class="appendix-badge">A1</span> TUM Online Integration
+
+```mermaid {scale: 0.6}
+sequenceDiagram
+    participant Agent
+    participant Backend
+    participant TUM as TUM Online API
+    Agent->>Backend: tum_lectures()
+    Backend->>TUM: GET /cdm (token auth)
+    TUM-->>Backend: XML response
+    Backend->>Backend: Parse XML (xml2js)
+    Backend-->>Agent: Structured lecture data
+    Agent->>Agent: Create calendar events
+```
+
+**Auth:** Token-based (email confirmation flow from TUM Online)
+
+**Capabilities:**
+- Fetch full lecture schedule (XML parsed)
+- Sync courses to local database
+- Fetch grades
+
+**Data flow:** Token → XML API → xml2js parser → structured JSON → calendar events
+
+---
+
+# <span class="appendix-badge">A2</span> Moodle Integration
+
+```mermaid {scale: 0.55}
+sequenceDiagram
+    participant Agent
+    participant Backend
+    participant Shib as Shibboleth IdP
+    participant Moodle
+    Agent->>Backend: moodle_assignments()
+    Backend->>Moodle: GET /login
+    Moodle-->>Backend: Redirect to Shibboleth
+    Backend->>Shib: POST credentials
+    Shib-->>Backend: SAML assertion
+    Backend->>Moodle: POST SAML response
+    Moodle-->>Backend: Session cookie
+    Backend->>Moodle: AJAX: core_enrol_get_users_courses
+    Moodle-->>Backend: Course list + assignments
+    Backend->>Moodle: Fetch resource pages
+    Backend->>Backend: Detect PDFs → download → extract text (unpdf)
+    Backend-->>Agent: Assignments + summarized resources
+```
+
+**Auth:** SAML Shibboleth SSO — auto-redirect chain, session caching, auto-refresh on expiry
+
+**PDF Pipeline:** Moodle page → detect PDF → download → unpdf text extraction → summarize → store as task resource
+
+The most technically complex integration. SAML auth alone is non-trivial.
+
+---
+
+# <span class="appendix-badge">A3</span> Email Integration
+
+```mermaid {scale: 0.6}
+sequenceDiagram
+    participant Agent
+    participant Backend
+    participant IMAP as TUM IMAP Server
+    Agent->>Backend: tum_email_read()
+    Backend->>IMAP: Connect (credentials)
+    IMAP-->>Backend: Last 7 days of messages
+    Backend->>Backend: Parse sender, subject, date, body (500 chars)
+    Backend-->>Agent: Email list
+    Agent->>Agent: Identify actionable items
+    Agent->>Backend: create_todo(type: email_action)
+```
+
+**Auth:** IMAP credentials (TUM email server) + SMTP for sending
+
+**Capabilities:**
+- Read inbox (configurable: last N days, message limit)
+- Extract sender, subject, date, body snippet
+- Send emails with reply tracking via SMTP
+
+**Agent behavior:** Scans for actionable items, creates `email_action` todos with 48h default deadline unless email specifies one
+
+---
+
+# <span class="appendix-badge">A4</span> Mensa & Canteen
+
+```mermaid {scale: 0.6}
+graph LR
+    CAL["Today's Calendar"] --> CAMPUS["Determine Campus"]
+    CAMPUS --> SEL["Select Closest Mensa"]
+    SEL --> API["eat-api: Fetch Menu"]
+    API --> MEAL["Pick Meal"]
+    MEAL --> EVENT["Create Lunch Event"]
+    style CAL fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style CAMPUS fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style SEL fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style API fill:#1e293b,stroke:#f97316,color:#f1f5f9
+    style MEAL fill:#1e293b,stroke:#f97316,color:#f1f5f9
+    style EVENT fill:#f97316,stroke:#ea580c,color:#fff
+```
+
+**API:** TUM eat-api (public, no auth)
+
+**Capabilities:**
+- Weekly menus by location (mensa-garching, mensa-arcisstr, etc.)
+- Live occupancy head count
+
+**Agent behavior:** Cross-references calendar → determines campus → picks closest canteen → schedules lunch → selects meal
