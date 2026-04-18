@@ -173,6 +173,22 @@ export function TodoPanel({
                           {todo.title}
                         </span>
 
+                        {/* Source link */}
+                        {todo.source_link && (
+                          <a
+                            href={todo.source_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-shrink-0 text-ink-muted hover:text-accent transition-colors duration-100"
+                            title="Open source"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                              <path d="M8.914 6.025a.75.75 0 0 1 1.06 0 3.5 3.5 0 0 1 0 4.95l-2 2a3.5 3.5 0 0 1-5.054-4.838.75.75 0 0 1 1.06 1.06 2 2 0 0 0 2.934 2.718l2-2a2 2 0 0 0 0-2.83.75.75 0 0 1 0-1.06Zm1.172-2.95a3.5 3.5 0 0 1 0 4.95.75.75 0 0 1-1.06-1.06 2 2 0 0 0-2.934-2.718l-2 2a2 2 0 0 0 0 2.83.75.75 0 0 1-1.06 1.06 3.5 3.5 0 0 1 0-4.95l2-2a3.5 3.5 0 0 1 4.95 0l.104.088Z" />
+                            </svg>
+                          </a>
+                        )}
+
                         {/* Deadline badge */}
                         {todo.deadline && (() => {
                           const dl = deadlineLabel(todo.deadline);

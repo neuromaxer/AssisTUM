@@ -3,6 +3,7 @@ import {
   useTodo,
   useToggleTodo,
   useDeleteTodo,
+  type TodoResource,
 } from "../hooks/useTodos";
 
 const priorityColors: Record<string, { bg: string; text: string }> = {
@@ -198,6 +199,25 @@ export function TodoDetail({
                 {formatDate(todo.created_at)}
               </div>
             </div>
+
+            {todo.source_link && (
+              <div>
+                <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-1">
+                  Source
+                </div>
+                <a
+                  href={todo.source_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-(--text-sm) font-medium text-accent hover:underline flex items-center gap-1"
+                >
+                  Open source
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                    <path d="M8.914 6.025a.75.75 0 0 1 1.06 0 3.5 3.5 0 0 1 0 4.95l-2 2a3.5 3.5 0 0 1-5.054-4.838.75.75 0 0 1 1.06 1.06 2 2 0 0 0 2.934 2.718l2-2a2 2 0 0 0 0-2.83.75.75 0 0 1 0-1.06Zm1.172-2.95a3.5 3.5 0 0 1 0 4.95.75.75 0 0 1-1.06-1.06 2 2 0 0 0-2.934-2.718l-2 2a2 2 0 0 0 0 2.83.75.75 0 0 1-1.06 1.06 3.5 3.5 0 0 1 0-4.95l2-2a3.5 3.5 0 0 1 4.95 0l.104.088Z" />
+                  </svg>
+                </a>
+              </div>
+            )}
           </div>
         </div>
 
@@ -212,6 +232,44 @@ export function TodoDetail({
             </p>
           </div>
         )}
+
+        {/* Resources */}
+        {todo.resources && (() => {
+          let parsed: TodoResource[] = [];
+          try { parsed = JSON.parse(todo.resources); } catch { /* ignore */ }
+          if (parsed.length === 0) return null;
+          return (
+            <div className="bg-surface rounded-(--radius-lg) border border-border-subtle p-5 mb-6">
+              <div className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-wider mb-3">
+                Resources ({parsed.length})
+              </div>
+              <div className="space-y-3">
+                {parsed.map((r, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 text-ink-muted mt-0.5 flex-shrink-0">
+                      <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 12.5 5H7.621a1.5 1.5 0 0 1-1.06-.44L5.439 3.44A1.5 1.5 0 0 0 4.378 3H3.5Z" />
+                    </svg>
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-(--text-sm) font-medium text-accent hover:underline"
+                      >
+                        {r.title}
+                      </a>
+                      {r.summary && (
+                        <p className="text-(--text-xs) text-ink-muted mt-0.5 leading-relaxed">
+                          {r.summary}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Actions */}
         <div className="flex items-center gap-3">

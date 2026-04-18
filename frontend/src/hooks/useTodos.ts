@@ -12,6 +12,14 @@ export type Todo = {
   source: string;
   session_id: string | null;
   created_at: string;
+  source_link: string | null;
+  resources: string | null;
+};
+
+export type TodoResource = {
+  title: string;
+  url: string;
+  summary?: string;
 };
 
 export function useTodos() {
