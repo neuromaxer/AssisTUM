@@ -230,7 +230,8 @@ assistum/
 │   │   ├── sync/
 │   │   │   ├── pipeline.ts       # Orchestrates full sync: fetch → detect → agent pass
 │   │   │   ├── fetchers/
-│   │   │   │   ├── tum-online.ts # Fetch lectures, calendar, grades
+│   │   │   │   ├── tum-online.ts # Fetch lectures, grades via API
+│   │   │   │   ├── tum-ical.ts   # Fetch + parse iCal calendar feed
 │   │   │   │   ├── tum-email.ts  # Fetch emails via IMAP
 │   │   │   │   ├── moodle.ts     # Fetch courses, assignments, content
 │   │   │   │   ├── eat-api.ts    # Fetch canteen menus
@@ -372,14 +373,74 @@ sync_log (
 
 ## Credentials & Settings UI
 
-**Settings page (gear icon in top bar):**
+**Settings page (gear icon in top bar).** Each service has its own auth method and a green/red connection indicator.
 
-- **TUM Online:** TUM ID input → "Connect" → backend calls `requestToken` → "Check your email" → polls `isTokenConfirmed` → stores token in `settings` table
-- **Moodle:** Username + password → "Connect" → backend calls `login/token.php` → stores Moodle token in `settings` table
-- **TUM Email:** TUM ID + password → "Connect" → backend verifies IMAP login to `mail.tum.de:993` → stores credentials in `settings` table
-- Status indicators: green/red dot per connected service
+### TUM Online API (lectures, grades, person search)
 
-MCP tools read credentials from the `settings` table at call time. The agent never sees raw tokens.
+**Auth method:** Token request flow
+
+1. User enters TUM ID (format: `ab12xyz`)
+2. Backend calls `wbservicesbasic.requestToken?pUsername=...&pTokenName=AssisTUM`
+3. TUM Online sends confirmation email to user
+4. Frontend polls `wbservicesbasic.isTokenConfirmed?pToken=...` until confirmed
+5. Store `pToken` in `settings` table as `tum_online_token`
+6. Verify by calling `wbservicesbasic.id?pToken=...`
+
+Used by: `tum_lectures`, `tum_grades`, and any other `wbservicesbasic.*` endpoints.
+
+### TUM Calendar (lecture times, exam dates)
+
+**Auth method:** Paste iCal subscription URL
+
+1. User pastes their TUM calendar URL (found in TUM Online → Calendar → Export)
+   Format: `https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=...&pToken=...`
+2. Backend extracts and stores `pStud` and the iCal `pToken` (note: this is a different token from the API `pToken` above)
+3. Backend verifies by fetching the URL and checking for valid `.ics` data
+4. Store full URL in `settings` table as `tum_ical_url`
+
+Used by: `tum_calendar` syncer — fetches and parses `.ics` into events.
+
+**Important:** The iCal token is NOT the same as the TUM Online API token. They are separate auth mechanisms on separate URL paths (`/tumonlinej/ws/` vs `/tumonline/wbservicesbasic.*`).
+
+### Moodle (courses, assignments, content)
+
+**Auth method:** Username + password → token exchange
+
+1. User enters TUM username + password
+2. Backend calls `POST https://www.moodle.tum.de/login/token.php` with `username`, `password`, `service=moodle_mobile_app`
+3. Returns `{ "token": "..." }` on success
+4. Store Moodle token in `settings` table as `moodle_token`
+5. All subsequent Moodle calls use: `https://www.moodle.tum.de/webservice/rest/server.php?wstoken=...&wsfunction=...&moodlewsrestformat=json`
+
+Available functions via `moodle_mobile_app` service:
+- `core_enrol_get_users_courses` — enrolled courses
+- `mod_assign_get_assignments` — assignment deadlines
+- `core_course_get_contents` — course materials/slides
+- `core_calendar_get_calendar_events` — Moodle calendar
+
+Used by: `moodle_courses`, `moodle_assignments`, `moodle_course_content` syncers.
+
+### TUM Email (inbox, sending)
+
+**Auth method:** TUM ID + TUM password → IMAP/SMTP login
+
+1. User enters TUM ID + TUM password
+2. Backend verifies by attempting IMAP login to `mail.tum.de:993` (TLS)
+3. Store credentials in `settings` table as `tum_email_user` + `tum_email_password`
+4. SMTP sending uses `mail.tum.de:587` (STARTTLS) with same credentials
+
+Used by: `tum_email_read` syncer, `tum_email_send` live tool.
+
+### Settings summary
+
+| Service | Auth input | Stored in `settings` | Verification |
+|---|---|---|---|
+| TUM Online API | TUM ID | `tum_online_token` | `wbservicesbasic.id` call |
+| TUM Calendar | Paste iCal URL | `tum_ical_url` | Fetch URL, check valid `.ics` |
+| Moodle | Username + password | `moodle_token` | Token returned from `login/token.php` |
+| TUM Email | TUM ID + password | `tum_email_user`, `tum_email_password` | IMAP login to `mail.tum.de:993` |
+
+MCP tools read credentials from the `settings` table at call time. The agent never sees raw tokens or passwords.
 
 For the demo: pre-populate settings DB so the flow starts immediately. Settings page exists as proof of real integration.
 
@@ -396,6 +457,7 @@ For the demo: pre-populate settings DB so the flow starts immediately. Settings 
 | `tsx` | TypeScript execution |
 | `dotenv` | Env vars fallback |
 | `xml2js` | Parse TUM Online XML responses |
+| `node-ical` | Parse TUM iCal calendar feed |
 | `imapflow` | IMAP client for TUM email reading |
 | `nodemailer` | SMTP client for sending TUM email |
 | `@grpc/grpc-js` + `@grpc/proto-loader` | Campus Backend gRPC (clubs, occupancy) |
