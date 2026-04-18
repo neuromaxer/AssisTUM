@@ -100,12 +100,16 @@ table td {
 .decision-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 1rem;
+  column-gap: 1.5rem;
+  row-gap: 2rem;
+  justify-items: center;
+  text-align: center;
 }
 
 .decision-grid .capability-group {
   font-size: 0.82rem;
   line-height: 1.5;
+  max-width: 280px;
 }
 
 /* Center mermaid diagrams */

@@ -26,6 +26,14 @@ AssisTUM connects to all TUM systems through a single interface with an AI agent
 
 See [features.md](features.md) for detailed feature descriptions.
 
+## Pitch Deck
+
+The slide deck is built with [Slidev](https://sli.dev) and lives in [`pitch-deck/`](pitch-deck/). To preview:
+
+```bash
+cd pitch-deck && npx slidev --port 3030
+```
+
 ## Agent Skills
 
 Slash commands that trigger multi-step agent workflows:
@@ -125,6 +133,8 @@ Environment variables (`.env`):
 | `PORT` | `3001` | Express server port |
 | `OPENCODE_URL` | `http://127.0.0.1:4096` | OpenCode agent engine URL |
 | `DB_PATH` | `./assistum.db` | SQLite database path |
+| `COGNEE_URL` | — | Cognee Cloud tenant URL for agent memory |
+| `COGNEE_API_KEY` | — | Cognee Cloud API key |
 
 TUM service credentials are configured via the Settings dialog in the UI.
 

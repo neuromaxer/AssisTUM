@@ -16,27 +16,25 @@ layout: center
 class: text-center
 ---
 
-# AssisTUM
+<div class="text-7xl font-bold" style="color: #3070b3;">AssisTUM</div>
 
-Your Autonomous Campus Co-Pilot
+<div class="text-2xl mt-4" style="color: #5c5c5c;">Your Autonomous Campus Co-Pilot</div>
 
-<div class="pt-8">
-  <span class="text-sm" style="color: #5c5c5c;">REPLY Makeathon 2026 — Team Pui</span>
+<div class="pt-10">
+  <span class="text-lg" style="color: #5c5c5c;">REPLY Makeathon 2026 — Team Pui</span>
 </div>
 
 <div class="mt-2">
-  <span class="text-xs" style="color: #9c9c9c;">Max Solovyev, Nicolas Mallinckrodt, Kho Yin Xun</span>
+  <span class="text-base" style="color: #9c9c9c;">Max Solovyev, Nicolas Mallinckrodt, Kho Yin Xun</span>
 </div>
 
----
-layout: center
 ---
 
 # Students are **human APIs**
 
-<div class="text-center mt-8">
+<div class="text-center mt-2">
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.45}
 graph LR
     S((Student)) --- T[TUM Online]
     S --- M[Moodle]
@@ -59,7 +57,7 @@ graph LR
 
 <div class="stat">30+ minutes every week</div>
 
-Systems don't talk to each other. Students are the glue.
+<div class="text-center">Systems don't talk to each other. Students are the glue.</div>
 
 ---
 
@@ -69,7 +67,7 @@ Systems don't talk to each other. Students are the glue.
 
 ---
 
-# **30 seconds later**
+# **3 minutes later**
 
 <img src="/images/2_populated_calendar.png" class="mx-auto mt-2 rounded-lg shadow-lg" style="max-height: 90%; object-fit: contain;" />
 
@@ -77,7 +75,7 @@ Systems don't talk to each other. Students are the glue.
 
 # One message. **Seven autonomous phases.**
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.6}
 graph TD
     Q["'Let's plan my next week'"] --> P1
     Q --> P2
@@ -112,24 +110,17 @@ Each phase hits a **real external system**. No mocks. No pre-seeded data.
 
 # It doesn't just fetch data — it **makes decisions**
 
-<div class="decision-grid">
+<div class="decision-grid mt-16">
 <div class="capability-group">
 
-#### Commute
+#### Lectures (Calendar)
 
-Looked up every room in NavigaTUM, determined campus, added travel time. **No one told it to.**
+Imported real schedule from TUM Online + iCal, placed every course on the calendar. **Automatic weekly setup.**
 
 </div>
 <div class="capability-group">
 
-#### Mensa
-
-Picked the closest canteen to your location that day. Chose a meal. **Context-aware scheduling.**
-
-</div>
-<div class="capability-group">
-
-#### Moodle
+#### Course Materials (Moodle)
 
 Fetched materials, assignments, and PDFs — extracted text, summarized, linked in tasks. **Reads and understands content.**
 
@@ -146,6 +137,20 @@ Read university inbox, identified actionable items, created tasks with deadlines
 #### Memory (Cognee)
 
 Remembers preferences, past choices, and context across sessions. **Learns and adapts over time.**
+
+</div>
+<div class="capability-group">
+
+#### Commute
+
+Looked up every room in NavigaTUM, determined campus, added travel time. **No one told it to.**
+
+</div>
+<div class="capability-group">
+
+#### Mensa
+
+Picked the closest canteen to your location that day. Chose a meal. **Context-aware scheduling.**
 
 </div>
 </div>
@@ -208,7 +213,7 @@ graph LR
 layout: center
 ---
 
-# 30 minutes → **30 seconds**
+# 30 minutes → **3 minutes**
 
 <div class="before-after mt-8">
 <div class="before">
@@ -245,7 +250,7 @@ Works with **any TUM student's real credentials**, today. Not a prototype — a 
 
 # Not a chatbot. A **campus operating system.**
 
-<div class="capability-grid">
+<div class="capability-grid mt-16">
 <div class="capability-group">
 
 #### Data Intelligence
@@ -292,7 +297,7 @@ Works with **any TUM student's real credentials**, today. Not a prototype — a 
 
 # Limitations & Honest Tradeoffs
 
-<div class="three-cols">
+<div class="three-cols mt-16">
 <div class="col">
 
 #### LLM Hallucinations
@@ -331,11 +336,11 @@ class: text-center
 
 **Being a student should be about learning — not logistics.**
 
-<div class="mt-12 text-sm opacity-50">
-Built in 48 hours. Ready to deploy.
+<div class="mt-4 text-sm opacity-50">
+Built in &lt;40 hours. Ready to deploy.
 </div>
 
-<div class="mt-4 text-sm opacity-50">
+<div class="mt-2 text-sm opacity-50">
 Team Pui — REPLY Makeathon 2026
 </div>
 
@@ -351,7 +356,7 @@ Deep-dive into each integration
 
 # <span class="appendix-badge">A1</span> Memory — Cognee Integration
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.6}
 graph LR
     CONV["User conversations<br/><small>Preferences, corrections, choices</small>"] --> COGNEE["Cognee Engine"]
     HIST["Past schedules<br/><small>What worked, what didn't</small>"] --> COGNEE
@@ -376,7 +381,7 @@ graph LR
 
 # <span class="appendix-badge">A2</span> TUM Online Integration
 
-```mermaid {scale: 0.45}
+```mermaid {scale: 0.55}
 sequenceDiagram
     participant Agent
     participant Backend
@@ -396,7 +401,7 @@ sequenceDiagram
 
 # <span class="appendix-badge">A3</span> Moodle Integration
 
-```mermaid {scale: 0.4}
+```mermaid {scale: 0.5}
 sequenceDiagram
     participant Agent
     participant Backend
@@ -422,7 +427,7 @@ Most technically complex integration. SAML auth alone is non-trivial.
 
 # <span class="appendix-badge">A4</span> Email Integration
 
-```mermaid {scale: 0.45}
+```mermaid {scale: 0.55}
 sequenceDiagram
     participant Agent
     participant Backend
@@ -443,7 +448,7 @@ sequenceDiagram
 
 # <span class="appendix-badge">A5</span> Mensa & Canteen
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.6}
 graph LR
     CAL["Today's Calendar"] --> CAMPUS["Determine Campus"]
     CAMPUS --> SEL["Select Closest Mensa"]
@@ -470,7 +475,7 @@ graph LR
 
 # <span class="appendix-badge">A6</span> NavigaTUM & Commute
 
-```mermaid {scale: 0.45}
+```mermaid {scale: 0.55}
 graph LR
     ROOM["Room Code"] --> NAV["NavigaTUM API"]
     NAV --> CAMPUS["Campus: Garching"]
@@ -500,7 +505,7 @@ graph LR
 
 # <span class="appendix-badge">A7</span> Student Clubs
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.6}
 graph LR
     URLS["Configured Club URLs"] --> FETCH["Fetch HTML"]
     FETCH --> PARSE["Cheerio: Strip HTML"]
@@ -525,6 +530,7 @@ Works with **any** student club website — no special API needed
 
 # <span class="appendix-badge">A8</span> Study Rooms
 
+
 **API:** ASTA study room API (public)
 
 **Capabilities:**
@@ -532,7 +538,7 @@ Works with **any** student club website — no special API needed
 - Filters by proximity to student's current/upcoming location
 - Reports available rooms with building details
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.6}
 graph LR
     LOC["Student Location"] --> ASTA["ASTA API"]
     ASTA --> FILTER["Filter by Proximity"]
@@ -549,7 +555,7 @@ Accessed via `/find-study-room` slash command or natural language request
 
 # <span class="appendix-badge">A9</span> The Agent Engine
 
-```mermaid {scale: 0.38}
+```mermaid {scale: 0.48}
 sequenceDiagram
     participant User
     participant Frontend as React Frontend
@@ -574,3 +580,33 @@ sequenceDiagram
 **Engine:** OpenCode SDK | **Protocol:** MCP — 15+ tools | **Skills:** 7 markdown workflows, loaded dynamically
 
 **Error handling:** Per-tool graceful degradation — if one integration fails, agent skips and continues
+
+---
+
+# <span class="appendix-badge">A10</span> Hosting on Appx
+
+```mermaid {scale: 0.55}
+graph LR
+    U["User"] --> APPX["Appx Platform<br/><small>TLS, auth, egress control</small>"]
+    APPX --> |"assistum.domain"| FE["Express<br/><small>API + React SPA</small>"]
+    FE --> OC["OpenCode<br/><small>Agent engine</small>"]
+    OC --> TOOLS["15+ MCP Tools"]
+    TOOLS --> APIS["TUM Systems"]
+    style U fill:#3070b3,stroke:#25609e,color:#ffffff
+    style APPX fill:#6b21a8,stroke:#581c87,color:#ffffff
+    style FE fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style OC fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style TOOLS fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style APIS fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+```
+
+**[Appx](https://github.com/neuromaxer/appx)** is a self-hostable platform for building, sharing, and running agentic applications.
+
+AssisTUM deploys to Appx as a managed project — zero infra work:
+
+- **TLS + Auth** — Appx handles HTTPS and platform login
+- **Subdomain routing** — `assistum.<your-domain>` out of the box
+- **Egress control** — monitors and restricts agent outbound traffic
+- **One command** — `task start:appx` launches everything
+
+AssisTUM is the first agentic app running on Appx — proving that complex, multi-system agents can be packaged and shared as easily as traditional web apps.
