@@ -18,7 +18,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 
-export function Calendar({ onOpenTodo, onOpenCourse }: { onOpenTodo?: (id: string) => void; onOpenCourse?: (id: string) => void }) {
+export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }: { onOpenTodo?: (id: string) => void; onOpenCourse?: (id: string) => void; initialDate?: string | null; onDateChange?: (date: string) => void }) {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
   const updateEvent = useUpdateEvent();
@@ -279,6 +279,8 @@ export function Calendar({ onOpenTodo, onOpenCourse }: { onOpenTodo?: (id: strin
       <FullCalendar
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
+        initialDate={initialDate ?? undefined}
+        datesSet={(info) => onDateChange?.(info.start.toISOString())}
         headerToolbar={{
           left: "prev,next today",
           center: "title",

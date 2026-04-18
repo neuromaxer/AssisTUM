@@ -16,6 +16,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [calendarDate, setCalendarDate] = useState<string | null>(null);
   return (
     <QueryClientProvider client={queryClient}>
       <Layout
@@ -35,6 +36,8 @@ export function App() {
             <Calendar
               onOpenTodo={setSelectedTodoId}
               onOpenCourse={setSelectedCourseId}
+              initialDate={calendarDate}
+              onDateChange={setCalendarDate}
             />
           )
         }
