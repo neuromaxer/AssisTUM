@@ -8,6 +8,7 @@ import { coursesRouter } from "./api/courses.js";
 import { settingsRouter } from "./api/settings.js";
 import { clubsRouter } from "./api/clubs.js";
 import { sseHandler } from "./api/sse.js";
+import { agentRouter } from "./api/agent.js";
 
 const app = express();
 app.use(cors());
@@ -23,6 +24,7 @@ app.use("/api/todos", todosRouter);
 app.use("/api/courses", coursesRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/clubs", clubsRouter);
+app.use("/api/agent", agentRouter);
 
 getDb();
 console.log("Database initialized");
