@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, FormEvent, KeyboardEvent, useMemo } from "react";
+import { useRef, useEffect, useState, type KeyboardEvent, useMemo } from "react";
 import { useAgentStream } from "../hooks/useAgentStream";
 import { Markdown } from "./Markdown";
 import { ToolCallCard } from "./ToolCallCard";
@@ -65,7 +65,7 @@ export function ChatPanel() {
     el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }, [input]);
 
-  const handleSubmit = async (e: FormEvent | KeyboardEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || sending || isRunning) return;
