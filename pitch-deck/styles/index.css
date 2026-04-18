@@ -6,7 +6,7 @@
 }
 
 .capability-group h4 {
-  color: #60a5fa;
+  color: #3070b3;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
   text-transform: uppercase;
@@ -25,14 +25,14 @@ table {
 }
 
 table th {
-  color: #60a5fa;
-  border-bottom: 2px solid #3b82f6;
+  color: #3070b3;
+  border-bottom: 2px solid #3070b3;
   text-align: left;
   padding: 0.4rem 0.6rem;
 }
 
 table td {
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid #e0ddd7;
   padding: 0.4rem 0.6rem;
 }
 
@@ -44,7 +44,7 @@ table td {
 }
 
 .three-cols .col h4 {
-  color: #60a5fa;
+  color: #3070b3;
   margin-bottom: 0.5rem;
 }
 
@@ -57,7 +57,7 @@ table td {
 .stat {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #60a5fa;
+  color: #3070b3;
   text-align: center;
   margin: 1rem 0;
 }
@@ -82,8 +82,8 @@ table td {
 /* Appendix header badge */
 .appendix-badge {
   display: inline-block;
-  background: #1e293b;
-  color: #94a3b8;
+  background: #e8e6e1;
+  color: #5c5c5c;
   padding: 0.2rem 0.6rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;

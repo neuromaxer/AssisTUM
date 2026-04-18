@@ -2,15 +2,15 @@
 theme: seriph
 title: AssisTUM — Your Autonomous Campus Co-Pilot
 author: Team AssisTUM
-colorSchema: dark
+colorSchema: light
 aspectRatio: 16/9
 canvasWidth: 980
 exportFilename: assistum-pitch-deck
 fonts:
-  sans: Inter
+  sans: DM Sans
   mono: Fira Code
 themeConfig:
-  primary: '#60a5fa'
+  primary: '#3070b3'
 transition: slide-left
 ---
 
@@ -30,7 +30,7 @@ layout: center
 
 <div class="text-center mt-8">
 
-```mermaid {scale: 0.7}
+```mermaid {scale: 0.5}
 graph LR
     S((Student)) --- T[TUM Online]
     S --- M[Moodle]
@@ -39,14 +39,14 @@ graph LR
     S --- N[NavigaTUM]
     S --- C[Club Sites]
     S --- Z[ZHS]
-    style S fill:#ef4444,stroke:#dc2626,color:#fff
-    style T fill:#1e293b,stroke:#334155,color:#f1f5f9
-    style M fill:#1e293b,stroke:#334155,color:#f1f5f9
-    style E fill:#1e293b,stroke:#334155,color:#f1f5f9
-    style Me fill:#1e293b,stroke:#334155,color:#f1f5f9
-    style N fill:#1e293b,stroke:#334155,color:#f1f5f9
-    style C fill:#1e293b,stroke:#334155,color:#f1f5f9
-    style Z fill:#1e293b,stroke:#334155,color:#f1f5f9
+    style S fill:#dc2626,stroke:#b91c1c,color:#ffffff
+    style T fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
+    style M fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
+    style E fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
+    style Me fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
+    style N fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
+    style C fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
+    style Z fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
 ```
 
 </div>
@@ -56,43 +56,51 @@ graph LR
 Systems don't talk to each other. Students are the glue.
 
 ---
-layout: image
-image: /screenshot-empty.png
-backgroundSize: contain
+layout: center
 ---
 
 # What if it took **one message**?
 
+<div class="text-center mt-8 p-8 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
+
+[SCREENSHOT NEEDED: Open AssisTUM at localhost:5173. Calendar should show current week, empty. Todos panel empty. Type "Let's plan my next week" in the chat input but DO NOT send. Capture the full browser window.]
+
+</div>
+
 ---
-layout: image
-image: /screenshot-populated.png
-backgroundSize: contain
+layout: center
 ---
 
 # **30 seconds later**
+
+<div class="text-center mt-8 p-8 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
+
+[SCREENSHOT NEEDED: After running "Let's plan my next week", capture the fully populated state -- calendar filled with color-coded events (blue lectures, gray commute, orange lunch, purple clubs), todos panel with deadline badges, and the agent's summary visible in the chat panel.]
+
+</div>
 
 ---
 
 # One message. **Seven autonomous phases.**
 
-```mermaid {scale: 0.55}
-graph TD
+```mermaid {scale: 0.45}
+graph LR
     Q["'Let's plan my next week'"] --> P1
     P1["1. Fetch lectures<br/><small>TUM Online + iCal</small>"] --> P2
-    P2["2. Resolve rooms & add commute<br/><small>NavigaTUM</small>"] --> P3
-    P3["3. Scan Moodle — fetch PDFs, summarize<br/><small>Moodle SAML</small>"] --> P4
-    P4["4. Triage email into tasks<br/><small>IMAP</small>"] --> P5
-    P5["5. Schedule meals by campus<br/><small>eat-api</small>"] --> P6
-    P6["6. Scrape club events<br/><small>Web Scraper</small>"] --> P7
-    P7["7. Summary + tomorrow's briefing"]
-    style Q fill:#3b82f6,stroke:#2563eb,color:#fff
-    style P1 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style P2 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style P3 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style P4 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style P5 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style P6 fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style P7 fill:#22c55e,stroke:#16a34a,color:#fff
+    P2["2. Resolve rooms & commute<br/><small>NavigaTUM</small>"] --> P3
+    P3["3. Scan Moodle & PDFs<br/><small>Moodle SAML</small>"] --> P4
+    P4["4. Triage email<br/><small>IMAP</small>"] --> P5
+    P5["5. Schedule meals<br/><small>eat-api</small>"] --> P6
+    P6["6. Scrape clubs<br/><small>Web Scraper</small>"] --> P7
+    P7["7. Summary + briefing"]
+    style Q fill:#3070b3,stroke:#25609e,color:#ffffff
+    style P1 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style P2 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style P3 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style P4 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style P5 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style P6 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style P7 fill:#16a34a,stroke:#15803d,color:#ffffff
 ```
 
 Each phase hits a **real external system**. No mocks. No pre-seeded data.
@@ -135,7 +143,7 @@ Downloaded PDFs from course pages, extracted text, summarized them, linked summa
 
 # MCP-Powered Agent Architecture
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.45}
 graph LR
     U["User"] <--> FE["React Frontend<br/><small>Real-time SSE</small>"]
     FE <--> BE["Express Backend"]
@@ -149,25 +157,25 @@ graph LR
     AG <--> T6["MVV<br/><small>Public</small>"]
     AG <--> T7["ASTA Rooms<br/><small>Public</small>"]
     AG <--> T8["Web Scraper<br/><small>Cheerio</small>"]
-    style U fill:#3b82f6,stroke:#2563eb,color:#fff
-    style FE fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style BE fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style AG fill:#7c3aed,stroke:#6d28d9,color:#fff
-    style DB fill:#1e293b,stroke:#334155,color:#f1f5f9
-    style T1 fill:#0f172a,stroke:#334155,color:#94a3b8
-    style T2 fill:#0f172a,stroke:#334155,color:#94a3b8
-    style T3 fill:#0f172a,stroke:#334155,color:#94a3b8
-    style T4 fill:#0f172a,stroke:#334155,color:#94a3b8
-    style T5 fill:#0f172a,stroke:#334155,color:#94a3b8
-    style T6 fill:#0f172a,stroke:#334155,color:#94a3b8
-    style T7 fill:#0f172a,stroke:#334155,color:#94a3b8
-    style T8 fill:#0f172a,stroke:#334155,color:#94a3b8
+    style U fill:#3070b3,stroke:#25609e,color:#ffffff
+    style FE fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style BE fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style AG fill:#6b21a8,stroke:#581c87,color:#ffffff
+    style DB fill:#f0efec,stroke:#e0ddd7,color:#1c1c1c
+    style T1 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+    style T2 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+    style T3 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+    style T4 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+    style T5 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+    style T6 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+    style T7 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
+    style T8 fill:#e8e6e1,stroke:#e0ddd7,color:#5c5c5c
 ```
 
 <div class="flex justify-center gap-8 mt-4">
-  <div class="text-center"><span class="text-3xl font-bold text-blue-400">15+</span><br/><span class="text-sm opacity-70">MCP Tools</span></div>
-  <div class="text-center"><span class="text-3xl font-bold text-blue-400">7</span><br/><span class="text-sm opacity-70">Agent Skills</span></div>
-  <div class="text-center"><span class="text-3xl font-bold text-blue-400">8</span><br/><span class="text-sm opacity-70">External Systems</span></div>
+  <div class="text-center"><span class="text-3xl font-bold text-[#3070b3]">15+</span><br/><span class="text-sm opacity-60">MCP Tools</span></div>
+  <div class="text-center"><span class="text-3xl font-bold text-[#3070b3]">7</span><br/><span class="text-sm opacity-60">Agent Skills</span></div>
+  <div class="text-center"><span class="text-3xl font-bold text-[#3070b3]">8</span><br/><span class="text-sm opacity-60">External Systems</span></div>
 </div>
 
 ---
@@ -186,14 +194,18 @@ graph LR
 | **Study Rooms** | ASTA API | **Real-time availability** across campuses |
 
 ---
-layout: image
-image: /screenshot-ui-annotated.png
-backgroundSize: contain
+layout: center
 ---
 
 # One interface. **Zero learning curve.**
 
 No forms. No dropdowns. Just conversation.
+
+<div class="text-center mt-8 p-8 border-2 border-dashed border-[#e0ddd7] rounded-lg bg-[#f0efec]">
+
+[SCREENSHOT NEEDED: Take the populated UI screenshot and annotate it with callout arrows pointing to: Left panel -- "Tasks with deadlines, priorities, and linked Moodle resources"; Center panel -- "Real-time calendar with color-coded event types"; Right panel -- "Natural language chat with slash commands". Use Figma, Preview, or any image editor.]
+
+</div>
 
 ---
 layout: center
@@ -398,12 +410,12 @@ graph LR
     SEL --> API["eat-api: Fetch Menu"]
     API --> MEAL["Pick Meal"]
     MEAL --> EVENT["Create Lunch Event"]
-    style CAL fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style CAMPUS fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style SEL fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style API fill:#1e293b,stroke:#f97316,color:#f1f5f9
-    style MEAL fill:#1e293b,stroke:#f97316,color:#f1f5f9
-    style EVENT fill:#f97316,stroke:#ea580c,color:#fff
+    style CAL fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style CAMPUS fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style SEL fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style API fill:#f0efec,stroke:#d97706,color:#1c1c1c
+    style MEAL fill:#f0efec,stroke:#d97706,color:#1c1c1c
+    style EVENT fill:#d97706,stroke:#b45309,color:#ffffff
 ```
 
 **API:** TUM eat-api (public, no auth)
@@ -429,15 +441,15 @@ graph LR
         MVV["MVV EFA API"] --> DEPS["Real-time departures"]
         DEPS --> ROUTE["Which U-Bahn, when to leave"]
     end
-    style ROOM fill:#1e293b,stroke:#64748b,color:#f1f5f9
-    style NAV fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style CAMPUS fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style CHECK fill:#1e293b,stroke:#eab308,color:#f1f5f9
-    style COMMUTE fill:#64748b,stroke:#475569,color:#fff
-    style SKIP fill:#1e293b,stroke:#334155,color:#94a3b8
-    style MVV fill:#1e293b,stroke:#22c55e,color:#f1f5f9
-    style DEPS fill:#1e293b,stroke:#22c55e,color:#f1f5f9
-    style ROUTE fill:#22c55e,stroke:#16a34a,color:#fff
+    style ROOM fill:#f0efec,stroke:#9c9c9c,color:#1c1c1c
+    style NAV fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style CAMPUS fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style CHECK fill:#f0efec,stroke:#ca8a04,color:#1c1c1c
+    style COMMUTE fill:#9c9c9c,stroke:#7c7c7c,color:#ffffff
+    style SKIP fill:#f0efec,stroke:#e0ddd7,color:#5c5c5c
+    style MVV fill:#f0efec,stroke:#16a34a,color:#1c1c1c
+    style DEPS fill:#f0efec,stroke:#16a34a,color:#1c1c1c
+    style ROUTE fill:#16a34a,stroke:#15803d,color:#ffffff
 ```
 
 **APIs:** NavigaTUM (room/building search) + MVV EFA (real-time departures)
@@ -456,11 +468,11 @@ graph LR
     FETCH --> PARSE["Cheerio: Strip HTML"]
     PARSE --> EXTRACT["Extract Event Text"]
     EXTRACT --> CREATE["Create Calendar Events"]
-    style URLS fill:#1e293b,stroke:#a855f7,color:#f1f5f9
-    style FETCH fill:#1e293b,stroke:#a855f7,color:#f1f5f9
-    style PARSE fill:#1e293b,stroke:#a855f7,color:#f1f5f9
-    style EXTRACT fill:#1e293b,stroke:#a855f7,color:#f1f5f9
-    style CREATE fill:#a855f7,stroke:#9333ea,color:#fff
+    style URLS fill:#f0efec,stroke:#9333ea,color:#1c1c1c
+    style FETCH fill:#f0efec,stroke:#9333ea,color:#1c1c1c
+    style PARSE fill:#f0efec,stroke:#9333ea,color:#1c1c1c
+    style EXTRACT fill:#f0efec,stroke:#9333ea,color:#1c1c1c
+    style CREATE fill:#9333ea,stroke:#7e22ce,color:#ffffff
 ```
 
 **Method:** Configurable club URLs + Cheerio HTML scraping
@@ -487,10 +499,10 @@ graph LR
     LOC["Student Location"] --> ASTA["ASTA API"]
     ASTA --> FILTER["Filter by Proximity"]
     FILTER --> ROOMS["Available Rooms + Details"]
-    style LOC fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
-    style ASTA fill:#1e293b,stroke:#22c55e,color:#f1f5f9
-    style FILTER fill:#1e293b,stroke:#22c55e,color:#f1f5f9
-    style ROOMS fill:#22c55e,stroke:#16a34a,color:#fff
+    style LOC fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style ASTA fill:#f0efec,stroke:#16a34a,color:#1c1c1c
+    style FILTER fill:#f0efec,stroke:#16a34a,color:#1c1c1c
+    style ROOMS fill:#16a34a,stroke:#15803d,color:#ffffff
 ```
 
 Accessed via `/find-study-room` slash command or natural language request
