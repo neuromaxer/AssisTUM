@@ -2,10 +2,12 @@ import dotenv from "dotenv";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
-dotenv.config({ path: "../.env" });
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const defaultDbPath = resolve(__dirname, "../../assistum.db");
+const projectRoot = resolve(__dirname, "../..");
+
+dotenv.config({ path: resolve(projectRoot, ".env") });
+
+const defaultDbPath = resolve(projectRoot, "assistum.db");
 
 export const config = {
   port: parseInt(process.env.PORT || "3001"),
