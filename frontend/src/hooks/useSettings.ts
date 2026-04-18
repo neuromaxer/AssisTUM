@@ -1,11 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+export type AuthStatus = {
+  tum_online: boolean;
+  tum_calendar: boolean;
+  moodle: boolean;
+  email: boolean;
+};
+
+export function useAuthStatus() {
+  return useQuery<AuthStatus>({
+    queryKey: ["authStatus"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/status");
+      return res.json();
+    },
+    refetchInterval: 5000,
+  });
+}
+
 export function useSettings() {
   return useQuery<Record<string, string>>({
     queryKey: ["settings"],
     queryFn: async () => {
       const res = await fetch("/api/settings");
-      return res.json();
+      const rows = await res.json();
+      const map: Record<string, string> = {};
+      for (const r of rows) map[r.key] = r.value;
+      return map;
     },
   });
 }

@@ -1,0 +1,153 @@
+import { Router } from "express";
+import { getDb } from "../db/client.js";
+
+export const authRouter = Router();
+
+function saveSetting(key: string, value: string) {
+  const db = getDb();
+  db.prepare(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`
+  ).run(key, value);
+}
+
+/* POST /tum-online — request a TUM Online API token */
+authRouter.post("/tum-online", async (req, res) => {
+  const { tum_id } = req.body;
+  if (!tum_id) {
+    res.status(400).json({ error: "Missing tum_id" });
+    return;
+  }
+  try {
+    const url = `https://campus.tum.de/tumonline/wbservicesbasic.requestToken?pUsername=${encodeURIComponent(tum_id)}&pTokenName=AssisTUM`;
+    const resp = await fetch(url);
+    const text = await resp.text();
+    if (text.includes("<error>")) {
+      const match = text.match(/<message>(.*?)<\/message>/);
+      res.status(400).json({ error: match?.[1] || "TUM Online error", raw: text });
+      return;
+    }
+    const tokenMatch = text.match(/<token>(.*?)<\/token>/);
+    if (!tokenMatch) {
+      res.status(500).json({ error: "Could not parse token from response", raw: text });
+      return;
+    }
+    const token = tokenMatch[1];
+    saveSetting("tum_online_token", token);
+    saveSetting("tum_id", tum_id);
+    res.json({ status: "token_requested", message: "Check your TUM email to confirm the token" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* POST /tum-online/confirm — poll token confirmation */
+authRouter.post("/tum-online/confirm", async (_req, res) => {
+  const db = getDb();
+  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get("tum_online_token") as { value: string } | undefined;
+  if (!row) {
+    res.status(400).json({ error: "No token to confirm. Request one first." });
+    return;
+  }
+  try {
+    const url = `https://campus.tum.de/tumonline/wbservicesbasic.isTokenConfirmed?pToken=${encodeURIComponent(row.value)}`;
+    const resp = await fetch(url);
+    const text = await resp.text();
+    const confirmed = text.toLowerCase().includes("true");
+    res.json({ confirmed });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* POST /moodle — exchange Moodle credentials for token */
+authRouter.post("/moodle", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    res.status(400).json({ error: "Missing username or password" });
+    return;
+  }
+  try {
+    const resp = await fetch("https://www.moodle.tum.de/login/token.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ username, password, service: "moodle_mobile_app" }),
+    });
+    const data = await resp.json() as { token?: string; error?: string };
+    if (data.error) {
+      res.status(401).json({ error: data.error });
+      return;
+    }
+    if (!data.token) {
+      res.status(500).json({ error: "No token in Moodle response" });
+      return;
+    }
+    saveSetting("moodle_token", data.token);
+    saveSetting("moodle_user", username);
+    res.json({ status: "connected" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* POST /email — verify TUM email IMAP credentials */
+authRouter.post("/email", async (req, res) => {
+  const { user, password } = req.body;
+  if (!user || !password) {
+    res.status(400).json({ error: "Missing user or password" });
+    return;
+  }
+  try {
+    const { ImapFlow } = await import("imapflow");
+    const client = new ImapFlow({
+      host: "mail.tum.de",
+      port: 993,
+      secure: true,
+      auth: { user, pass: password },
+      logger: false,
+    });
+    await client.connect();
+    await client.logout();
+    saveSetting("tum_email_user", user);
+    saveSetting("tum_email_password", password);
+    res.json({ status: "connected" });
+  } catch (err: any) {
+    res.status(401).json({ error: `IMAP login failed: ${err.message}` });
+  }
+});
+
+/* POST /ical — verify and save iCal URL */
+authRouter.post("/ical", async (req, res) => {
+  const { url } = req.body;
+  if (!url) {
+    res.status(400).json({ error: "Missing url" });
+    return;
+  }
+  try {
+    const resp = await fetch(url);
+    const text = await resp.text();
+    if (!text.includes("BEGIN:VCALENDAR")) {
+      res.status(400).json({ error: "URL does not return valid iCal data" });
+      return;
+    }
+    saveSetting("tum_ical_url", url);
+    res.json({ status: "connected" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* GET /status — connection status for all services */
+authRouter.get("/status", (_req, res) => {
+  const db = getDb();
+  function has(key: string): boolean {
+    const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as { value: string } | undefined;
+    return !!row?.value;
+  }
+  res.json({
+    tum_online: has("tum_online_token"),
+    tum_calendar: has("tum_ical_url"),
+    moodle: has("moodle_token"),
+    email: has("tum_email_user") && has("tum_email_password"),
+  });
+});
