@@ -127,10 +127,12 @@ export function CalendarPopover({
       });
     } else if (mode === "reminder" && !isEditingTodo) {
       if (hasDate) {
+        const useTime = hasTime && reminderTime;
         onPreviewChange({
           title: reminderTitle || "Reminder",
-          start: reminderDate,
-          allDay: true,
+          start: useTime ? `${reminderDate}T${reminderTime}:00` : reminderDate,
+          end: useTime ? `${reminderDate}T${String(Number(reminderTime.split(":")[0]) + 1).padStart(2, "0")}:${reminderTime.split(":")[1]}:00` : undefined,
+          allDay: !useTime,
           color: "transparent",
           isTodo: true,
         });

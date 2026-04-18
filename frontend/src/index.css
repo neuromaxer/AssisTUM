@@ -79,6 +79,32 @@ body {
   animation: fade-in-up 0.25s ease-out forwards;
 }
 
+/* Wheel transition */
+.wheel-container {
+  perspective: 1100px;
+}
+.wheel-panel {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.wheel-panel-visible {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+.wheel-panel-exit {
+  transform: rotateX(-88deg);
+  opacity: 0;
+  pointer-events: none;
+}
+.wheel-panel-enter {
+  transform: rotateX(88deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* FullCalendar — paper theme */
 .fc {
   --fc-border-color: var(--color-border-subtle);
@@ -88,6 +114,9 @@ body {
   --fc-now-indicator-color: var(--color-accent);
   --fc-event-border-color: transparent;
   --fc-small-font-size: var(--text-xs);
+}
+.fc .fc-timegrid-axis-cushion {
+  display: none;
 }
 .fc .fc-col-header-cell-cushion,
 .fc .fc-timegrid-slot-label-cushion {
@@ -171,11 +200,7 @@ body {
   flex-shrink: 0;
 }
 .fc-todo-dot::after {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-accent);
+  content: none;
 }
 .fc-todo-title {
   font-size: var(--text-xs);
