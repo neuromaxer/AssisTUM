@@ -1,7 +1,7 @@
 ---
 theme: seriph
 title: AssisTUM — Your Autonomous Campus Co-Pilot
-author: Team AssisTUM
+author: Team Pui
 colorSchema: light
 aspectRatio: 16/9
 canvasWidth: 980
@@ -12,14 +12,20 @@ fonts:
 themeConfig:
   primary: '#3070b3'
 transition: slide-left
+layout: center
+class: text-center
 ---
 
 # AssisTUM
 
 Your Autonomous Campus Co-Pilot
 
-<div class="pt-12">
-  <span class="text-sm opacity-50">REPLY Makeathon 2026 — Team AssisTUM</span>
+<div class="pt-8">
+  <span class="text-sm" style="color: #5c5c5c;">REPLY Makeathon 2026 — Team Pui</span>
+</div>
+
+<div class="mt-2">
+  <span class="text-xs" style="color: #9c9c9c;">Max Solovyev, Nicolas Mallinckrodt, Kho Yin Xun</span>
 </div>
 
 ---
@@ -59,28 +65,35 @@ Systems don't talk to each other. Students are the glue.
 
 # What if it took **one message**?
 
-<img src="/images/1_empty_screen.png" class="mx-auto mt-2 rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
+<img src="/images/1_empty_screen.png" class="mx-auto mt-2 rounded-lg shadow-lg" style="max-height: 90%; object-fit: contain;" />
 
 ---
 
 # **30 seconds later**
 
-<img src="/images/2_populated_calendar.png" class="mx-auto mt-2 rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
+<img src="/images/2_populated_calendar.png" class="mx-auto mt-2 rounded-lg shadow-lg" style="max-height: 90%; object-fit: contain;" />
 
 ---
 
 # One message. **Seven autonomous phases.**
 
-```mermaid {scale: 0.45}
-graph LR
+```mermaid {scale: 0.5}
+graph TD
     Q["'Let's plan my next week'"] --> P1
-    P1["1. Fetch lectures<br/><small>TUM Online + iCal</small>"] --> P2
-    P2["2. Resolve rooms & commute<br/><small>NavigaTUM</small>"] --> P3
-    P3["3. Scan Moodle & PDFs<br/><small>Moodle SAML</small>"] --> P4
-    P4["4. Triage email<br/><small>IMAP</small>"] --> P5
-    P5["5. Schedule meals<br/><small>eat-api</small>"] --> P6
-    P6["6. Scrape clubs<br/><small>Web Scraper</small>"] --> P7
-    P7["7. Summary + briefing"]
+    Q --> P2
+    Q --> P3
+    Q --> P4
+    Q --> P5
+    Q --> P6
+    P1["Fetch lectures<br/><small>TUM Online + iCal</small>"] --> PLAN
+    P2["Resolve rooms<br/><small>NavigaTUM</small>"] --> PLAN
+    P3["Scan Moodle<br/><small>Materials, assignments, PDFs</small>"] --> PLAN
+    P4["Triage email<br/><small>IMAP</small>"] --> PLAN
+    P5["Fetch menus<br/><small>eat-api</small>"] --> PLAN
+    P6["Scrape clubs<br/><small>Web Scraper</small>"] --> PLAN
+    PLAN["Plan & schedule<br/><small>Resolve conflicts, assign time slots</small>"] --> LOG
+    LOG["Build calendar<br/><small>Commute, meals, study blocks</small>"] --> SUM
+    SUM["Summary + briefing"]
     style Q fill:#3070b3,stroke:#25609e,color:#ffffff
     style P1 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
     style P2 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
@@ -88,7 +101,9 @@ graph LR
     style P4 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
     style P5 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
     style P6 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
-    style P7 fill:#16a34a,stroke:#15803d,color:#ffffff
+    style PLAN fill:#3070b3,stroke:#25609e,color:#ffffff
+    style LOG fill:#3070b3,stroke:#25609e,color:#ffffff
+    style SUM fill:#16a34a,stroke:#15803d,color:#ffffff
 ```
 
 Each phase hits a **real external system**. No mocks. No pre-seeded data.
@@ -97,41 +112,40 @@ Each phase hits a **real external system**. No mocks. No pre-seeded data.
 
 # It doesn't just fetch data — it **makes decisions**
 
-<div class="four-cols">
-<div class="col">
+<div class="decision-grid">
+<div class="capability-group">
 
 #### Commute
 
-Looked up every room in NavigaTUM, determined campus, added travel time.
-
-**No one told it to.**
+Looked up every room in NavigaTUM, determined campus, added travel time. **No one told it to.**
 
 </div>
-<div class="col">
+<div class="capability-group">
 
 #### Mensa
 
-Picked the closest canteen to your location that day. Chose a meal.
-
-**Context-aware scheduling.**
+Picked the closest canteen to your location that day. Chose a meal. **Context-aware scheduling.**
 
 </div>
-<div class="col">
+<div class="capability-group">
 
 #### Moodle
 
-Downloaded PDFs, extracted text, summarized them, linked in your tasks.
-
-**Reads and understands content.**
+Fetched materials, assignments, and PDFs — extracted text, summarized, linked in tasks. **Reads and understands content.**
 
 </div>
-<div class="col">
+<div class="capability-group">
+
+#### Email
+
+Read university inbox, identified actionable items, created tasks with deadlines. **Autonomous triage.**
+
+</div>
+<div class="capability-group">
 
 #### Memory (Cognee)
 
-Remembers your preferences, past choices, and context across sessions.
-
-**Learns and adapts over time.**
+Remembers preferences, past choices, and context across sessions. **Learns and adapts over time.**
 
 </div>
 </div>
@@ -189,21 +203,6 @@ graph LR
 | **MVV** | Public | Live departures, **calculates when to leave** |
 | **Clubs** | Web scrape | Extracts events from **arbitrary club websites** |
 | **Study Rooms** | ASTA API | **Real-time availability** across campuses |
-
----
-
-# One interface. **Zero learning curve.**
-
-<div class="relative mt-2">
-  <img src="/images/2_populated_calendar.png" class="mx-auto rounded-lg shadow-lg" style="max-height: 68%; object-fit: contain;" />
-  <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-size: 0.8rem;">
-    <div style="text-align: center; flex: 1; color: #3070b3; font-weight: 600;">Tasks with deadlines & Moodle resources</div>
-    <div style="text-align: center; flex: 2; color: #3070b3; font-weight: 600;">Real-time calendar with color-coded events</div>
-    <div style="text-align: center; flex: 1; color: #3070b3; font-weight: 600;">Natural language chat & slash commands</div>
-  </div>
-</div>
-
-No forms. No dropdowns. Just conversation.
 
 ---
 layout: center
@@ -350,7 +349,32 @@ Deep-dive into each integration
 
 ---
 
-# <span class="appendix-badge">A1</span> TUM Online Integration
+# <span class="appendix-badge">A1</span> Memory — Cognee Integration
+
+```mermaid {scale: 0.5}
+graph LR
+    CONV["User conversations<br/><small>Preferences, corrections, choices</small>"] --> COGNEE["Cognee Engine"]
+    HIST["Past schedules<br/><small>What worked, what didn't</small>"] --> COGNEE
+    COGNEE --> KG["Knowledge Graph"]
+    KG --> RECALL["Agent recalls<br/><small>preferences at decision time</small>"]
+    RECALL --> BETTER["Better decisions<br/><small>Vegetarian? Morning person? Garching regular?</small>"]
+    style CONV fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style HIST fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style COGNEE fill:#3070b3,stroke:#25609e,color:#ffffff
+    style KG fill:#3070b3,stroke:#25609e,color:#ffffff
+    style RECALL fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style BETTER fill:#16a34a,stroke:#15803d,color:#ffffff
+```
+
+**How it works:** As the student interacts with AssisTUM, Cognee extracts preferences and patterns from conversations and stores them in a knowledge graph. The agent queries this graph at decision time.
+
+**Examples:** "Prefers vegetarian meals" · "Usually studies in the morning" · "Takes U6 not U3" · "Skips Mensa on Fridays"
+
+**Result:** The agent gets smarter over time — no explicit settings, just natural conversation.
+
+---
+
+# <span class="appendix-badge">A2</span> TUM Online Integration
 
 ```mermaid {scale: 0.45}
 sequenceDiagram
@@ -370,7 +394,7 @@ sequenceDiagram
 
 ---
 
-# <span class="appendix-badge">A2</span> Moodle Integration
+# <span class="appendix-badge">A3</span> Moodle Integration
 
 ```mermaid {scale: 0.4}
 sequenceDiagram
@@ -396,7 +420,7 @@ Most technically complex integration. SAML auth alone is non-trivial.
 
 ---
 
-# <span class="appendix-badge">A3</span> Email Integration
+# <span class="appendix-badge">A4</span> Email Integration
 
 ```mermaid {scale: 0.45}
 sequenceDiagram
@@ -417,7 +441,7 @@ sequenceDiagram
 
 ---
 
-# <span class="appendix-badge">A4</span> Mensa & Canteen
+# <span class="appendix-badge">A5</span> Mensa & Canteen
 
 ```mermaid {scale: 0.5}
 graph LR
@@ -444,7 +468,7 @@ graph LR
 
 ---
 
-# <span class="appendix-badge">A5</span> NavigaTUM & Commute
+# <span class="appendix-badge">A6</span> NavigaTUM & Commute
 
 ```mermaid {scale: 0.45}
 graph LR
@@ -474,7 +498,7 @@ graph LR
 
 ---
 
-# <span class="appendix-badge">A6</span> Student Clubs
+# <span class="appendix-badge">A7</span> Student Clubs
 
 ```mermaid {scale: 0.5}
 graph LR
@@ -499,7 +523,7 @@ Works with **any** student club website — no special API needed
 
 ---
 
-# <span class="appendix-badge">A7</span> Study Rooms
+# <span class="appendix-badge">A8</span> Study Rooms
 
 **API:** ASTA study room API (public)
 
@@ -523,7 +547,7 @@ Accessed via `/find-study-room` slash command or natural language request
 
 ---
 
-# <span class="appendix-badge">A8</span> The Agent Engine
+# <span class="appendix-badge">A9</span> The Agent Engine
 
 ```mermaid {scale: 0.38}
 sequenceDiagram

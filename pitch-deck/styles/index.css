@@ -96,6 +96,24 @@ table td {
   padding-left: 1rem;
 }
 
+/* Decision grid (3-col, wraps) */
+.decision-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.decision-grid .capability-group {
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* Center mermaid diagrams */
+.mermaid {
+  display: flex;
+  justify-content: center;
+}
+
 /* Appendix header badge */
 .appendix-badge {
   display: inline-block;
