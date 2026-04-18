@@ -7,9 +7,9 @@ tasks:
       - npm install
 
   dev:
-    desc: Start backend + frontend dev servers with hot reload
+    desc: Start OpenCode + backend + frontend dev servers
     cmds:
-      - npx concurrently "npm run dev -w backend" "npm run dev -w frontend"
+      - npx concurrently -n oc,be,fe -c blue,green,yellow "opencode serve --port 4096" "npm run dev -w backend" "npm run dev -w frontend"
 
   dev:backend:
     desc: Start backend dev server only
