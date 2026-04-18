@@ -11,12 +11,12 @@ export function StatusBar() {
   const { data: status } = useAuthStatus();
 
   return (
-    <div className="flex items-center gap-4 text-[11px] text-zinc-500">
+    <div className="flex items-center gap-4 text-(--text-xs) text-ink-muted">
       {services.map((svc) => (
         <span key={svc.key} className="flex items-center gap-1.5">
           <span
             className={`w-1.5 h-1.5 rounded-full ${
-              status?.[svc.key] ? "bg-green-400" : "bg-zinc-700"
+              status?.[svc.key] ? "bg-success" : "bg-ink-faint"
             }`}
           />
           {svc.label}

@@ -20,10 +20,9 @@ export function ChatPanel() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Message list */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-(--spacing-panel) space-y-(--spacing-section)">
         {messages.length === 0 && !loading && (
-          <p className="text-zinc-600 font-mono text-sm">
+          <p className="text-ink-muted font-mono text-(--text-sm)">
             Type a message to start planning your week...
           </p>
         )}
@@ -32,18 +31,18 @@ export function ChatPanel() {
           <div key={i} className="space-y-1">
             {msg.role === "user" ? (
               <>
-                <span className="text-[10px] text-zinc-500 uppercase tracking-wider">You</span>
-                <p className="text-zinc-300 text-sm font-mono whitespace-pre-wrap">
+                <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider">You</span>
+                <p className="text-ink-secondary text-(--text-sm) font-mono whitespace-pre-wrap">
                   {msg.content}
                 </p>
               </>
             ) : (
               <>
-                <span className="text-[10px] text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-tum-blue" />
+                <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   AssisTUM
                 </span>
-                <p className="text-zinc-100 text-sm font-mono whitespace-pre-wrap">
+                <p className="text-ink text-(--text-sm) font-mono whitespace-pre-wrap">
                   {msg.content}
                 </p>
               </>
@@ -53,30 +52,29 @@ export function ChatPanel() {
 
         {loading && (
           <div className="space-y-1">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-tum-blue" />
+            <span className="text-(--text-xs) text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
               AssisTUM
             </span>
-            <p className="text-zinc-400 text-sm font-mono animate-pulse">Agent is working...</p>
+            <p className="text-ink-muted text-(--text-sm) font-mono animate-pulse">Agent is working...</p>
           </div>
         )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Input form */}
-      <form onSubmit={handleSubmit} className="p-3 border-t border-zinc-800/80 flex gap-2">
+      <form onSubmit={handleSubmit} className="p-3 border-t border-border flex gap-(--spacing-element)">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask AssisTUM..."
-          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-tum-blue/50 transition-colors"
+          className="flex-1 bg-surface border border-border rounded-(--radius-md) px-3 py-2.5 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors"
         />
         <button
           type="submit"
           disabled={!input.trim() || loading}
-          className="bg-tum-blue hover:bg-tum-blue-light disabled:opacity-40 text-sm px-4 py-2.5 rounded-lg font-medium transition-colors"
+          className="bg-accent hover:bg-accent-hover disabled:opacity-40 text-white text-(--text-sm) px-4 py-2.5 rounded-(--radius-md) font-medium transition-colors"
         >
           Send
         </button>

@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useAuthStatus } from "../hooks/useSettings";
 
 const inputClass =
-  "w-full bg-zinc-800/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-tum-blue/50";
+  "w-full bg-surface border border-border rounded-(--radius-md) px-3 py-2 text-(--text-sm) font-mono text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50 transition-colors";
 
-const btnClass =
-  "bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-sm px-3 py-2 rounded-lg transition-colors";
+const buttonClass =
+  "bg-surface-hover hover:bg-surface-active disabled:opacity-40 text-(--text-sm) px-3 py-2 rounded-(--radius-md) font-medium transition-colors";
 
 function StatusBadge({ connected, label }: { connected: boolean; label?: string }) {
   return (
-    <span className={`text-xs ${connected ? "text-green-400" : "text-zinc-600"}`}>
+    <span className={`text-(--text-xs) ${connected ? "text-success" : "text-ink-faint"}`}>
       {label ?? (connected ? "Connected" : "Not connected")}
     </span>
   );
@@ -18,7 +18,7 @@ function StatusBadge({ connected, label }: { connected: boolean; label?: string 
 function Feedback({ message, isError }: { message: string | null; isError?: boolean }) {
   if (!message) return null;
   return (
-    <p className={`text-xs mt-1 ${isError ? "text-red-400" : "text-green-400"}`}>{message}</p>
+    <p className={`text-(--text-xs) mt-1 ${isError ? "text-error" : "text-success"}`}>{message}</p>
   );
 }
 
@@ -158,26 +158,28 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center"
+      onClick={onClose}
+    >
       <div
-        className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-[520px] max-h-[80vh] overflow-y-auto space-y-5"
+        className="bg-surface border border-border rounded-(--radius-lg) p-(--spacing-panel) w-[520px] max-h-[80vh] overflow-y-auto space-y-(--spacing-section) shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold">Settings</h2>
+        <h2 className="text-(--text-lg) font-semibold text-ink">Settings</h2>
 
-        {/* TUM Online API */}
-        <div className="space-y-2">
+        <div className="space-y-(--spacing-element)">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-zinc-400">TUM Online API</h3>
+            <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Online API</h3>
             <StatusBadge connected={!!status?.tum_online} />
           </div>
           <div className="flex gap-2">
             <input className={inputClass} placeholder="TUM ID (e.g. ge12abc)" value={tumId} onChange={(e) => setTumId(e.target.value)} />
-            <button className={btnClass} disabled={tumLoading || !tumId} onClick={connectTumOnline}>
+            <button className={buttonClass} disabled={tumLoading || !tumId} onClick={connectTumOnline}>
               {tumLoading ? "..." : "Request Token"}
             </button>
             {status?.tum_online === false && (
-              <button className={btnClass} disabled={tumLoading} onClick={confirmTumToken}>
+              <button className={buttonClass} disabled={tumLoading} onClick={confirmTumToken}>
                 Confirm
               </button>
             )}
@@ -185,50 +187,50 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           <Feedback message={tumMsg?.text ?? null} isError={tumMsg?.error} />
         </div>
 
-        {/* TUM Calendar */}
-        <div className="space-y-2">
+        <div className="space-y-(--spacing-element)">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-zinc-400">TUM Calendar (iCal)</h3>
+            <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Calendar (iCal)</h3>
             <StatusBadge connected={!!status?.tum_calendar} />
           </div>
           <div className="flex gap-2">
             <input className={inputClass} placeholder="Paste iCal subscription URL" value={icalUrl} onChange={(e) => setIcalUrl(e.target.value)} />
-            <button className={btnClass} disabled={icalLoading || !icalUrl} onClick={connectIcal}>
+            <button className={buttonClass} disabled={icalLoading || !icalUrl} onClick={connectIcal}>
               {icalLoading ? "..." : "Save"}
             </button>
           </div>
           <Feedback message={icalMsg?.text ?? null} isError={icalMsg?.error} />
         </div>
 
-        {/* Moodle */}
-        <div className="space-y-2">
+        <div className="space-y-(--spacing-element)">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-zinc-400">Moodle</h3>
+            <h3 className="text-(--text-sm) font-medium text-ink-secondary">Moodle</h3>
             <StatusBadge connected={!!status?.moodle} />
           </div>
           <input className={inputClass} placeholder="TUM username" value={moodleUser} onChange={(e) => setMoodleUser(e.target.value)} />
           <input className={inputClass} placeholder="Password" type="password" value={moodlePass} onChange={(e) => setMoodlePass(e.target.value)} />
-          <button className={btnClass} disabled={moodleLoading || !moodleUser || !moodlePass} onClick={connectMoodle}>
+          <button className={buttonClass} disabled={moodleLoading || !moodleUser || !moodlePass} onClick={connectMoodle}>
             {moodleLoading ? "Connecting..." : "Connect"}
           </button>
           <Feedback message={moodleMsg?.text ?? null} isError={moodleMsg?.error} />
         </div>
 
-        {/* TUM Email */}
-        <div className="space-y-2">
+        <div className="space-y-(--spacing-element)">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-zinc-400">TUM Email</h3>
+            <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Email</h3>
             <StatusBadge connected={!!status?.email} />
           </div>
           <input className={inputClass} placeholder="TUM ID (e.g. ge12abc)" value={emailUser} onChange={(e) => setEmailUser(e.target.value)} />
           <input className={inputClass} placeholder="Password" type="password" value={emailPass} onChange={(e) => setEmailPass(e.target.value)} />
-          <button className={btnClass} disabled={emailLoading || !emailUser || !emailPass} onClick={connectEmail}>
+          <button className={buttonClass} disabled={emailLoading || !emailUser || !emailPass} onClick={connectEmail}>
             {emailLoading ? "Verifying..." : "Connect"}
           </button>
           <Feedback message={emailMsg?.text ?? null} isError={emailMsg?.error} />
         </div>
 
-        <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-sm py-2.5 rounded-lg transition-colors" onClick={onClose}>
+        <button
+          className="w-full bg-surface-hover hover:bg-surface-active text-(--text-sm) py-2.5 rounded-(--radius-md) font-medium transition-colors"
+          onClick={onClose}
+        >
           Close
         </button>
       </div>

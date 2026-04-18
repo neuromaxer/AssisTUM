@@ -22,7 +22,6 @@ function bucketTodos(todos: Todo[]): Map<string, Todo[]> {
     }
   }
 
-  // Sort buckets: dated ones first (chronologically), "no-deadline" last
   const sorted = new Map<string, Todo[]>();
   const keys = [...buckets.keys()].sort((a, b) => {
     if (a === "no-deadline") return 1;
@@ -38,9 +37,9 @@ function bucketTodos(todos: Todo[]): Map<string, Todo[]> {
 }
 
 const priorityClass: Record<string, string> = {
-  high: "text-red-400",
-  medium: "text-yellow-400",
-  low: "text-zinc-500",
+  high: "text-danger",
+  medium: "text-warning",
+  low: "text-ink-muted",
 };
 
 export function TodoPanel() {
@@ -49,19 +48,19 @@ export function TodoPanel() {
 
   return (
     <div>
-      <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">
+      <h2 className="text-(--text-xs) font-semibold text-ink-muted uppercase tracking-widest mb-3">
         Todos
       </h2>
 
       {isLoading ? (
-        <p className="text-zinc-600 text-sm">Loading...</p>
+        <p className="text-ink-muted text-(--text-sm)">Loading...</p>
       ) : !todos || todos.length === 0 ? (
-        <p className="text-zinc-600 text-sm">No todos yet</p>
+        <p className="text-ink-muted text-(--text-sm)">No todos yet</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-(--spacing-section)">
           {[...bucketTodos(todos).entries()].map(([dateKey, items]) => (
             <div key={dateKey}>
-              <div className="text-xs font-medium text-zinc-500 pb-1 mb-2 border-b border-zinc-800">
+              <div className="text-(--text-xs) font-medium text-ink-secondary pb-1 mb-2 border-b border-border-subtle">
                 {dateKey === "no-deadline"
                   ? "No deadline"
                   : formatBucketDate(dateKey)}
@@ -70,11 +69,11 @@ export function TodoPanel() {
                 {items.map((todo) => (
                   <label
                     key={todo.id}
-                    className="flex items-start gap-2 hover:bg-zinc-900/50 rounded px-1 py-1 cursor-pointer animate-fade-in-up"
+                    className="flex items-start gap-2 hover:bg-surface-hover rounded-(--radius-sm) px-1.5 py-1 cursor-pointer animate-fade-in-up"
                   >
                     <input
                       type="checkbox"
-                      className="mt-0.5"
+                      className="mt-0.5 accent-accent"
                       checked={!!todo.completed}
                       onChange={() =>
                         toggleTodo.mutate({
@@ -84,18 +83,18 @@ export function TodoPanel() {
                       }
                     />
                     <span
-                      className={`text-sm ${
+                      className={`text-(--text-sm) ${
                         todo.completed
-                          ? "line-through text-zinc-600"
-                          : "text-zinc-200"
+                          ? "line-through text-ink-faint"
+                          : "text-ink"
                       }`}
                     >
                       {todo.title}
                     </span>
                     {todo.priority && (
                       <span
-                        className={`text-xs ml-2 ${
-                          priorityClass[todo.priority] ?? "text-zinc-500"
+                        className={`text-(--text-xs) ml-auto ${
+                          priorityClass[todo.priority] ?? "text-ink-muted"
                         }`}
                       >
                         {todo.priority}
