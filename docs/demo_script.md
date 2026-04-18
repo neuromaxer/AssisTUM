@@ -19,7 +19,7 @@ curl -X DELETE http://localhost:3001/api/reset
 
 ---
 
-## Act 1: The Cascade (~2.5 min)
+## Act 1: The Cascade (~3 min)
 
 **What you say to the audience:**
 "Nico is a CS student at TUM. It's Sunday evening and he wants to plan his week. He opens AssisTUM and types one message."
@@ -28,16 +28,20 @@ curl -X DELETE http://localhost:3001/api/reset
 > Let's plan my next week
 
 **What happens (what to point at):**
-1. Chat shows "Pulling your lectures..." — point at the calendar as lecture blocks appear (blue)
-2. Chat shows "Checking Moodle..." — point at the todo panel as assignments appear with deadlines
-3. Chat shows "Checking inbox..." — todo panel gets email action items
-4. Chat shows "Checking lunch..." — orange lunch blocks appear between lectures
-5. Chat shows "Club events..." — purple blocks if any
-6. Agent delivers summary with conflict warnings
+1. Chat shows "Pulling your lecture schedule..." — point at the calendar as lecture blocks appear (blue)
+2. Chat shows "Adding travel time..." — point at gray commute blocks appearing before Garching lectures. Say: "It looked up each lecture room in TUM's building database and figured out which campus it's on. Now it's adding an hour of travel time before each Garching trip."
+3. Chat shows "Checking Moodle..." — point at the todo panel as assignments appear WITH deadline badges. Say: "Each todo links back to the Moodle assignment and includes the exercise sheets."
+4. Chat shows "Checking inbox..." — point at email todos appearing WITH deadlines (no more 'No deadline' section). Say: "It gives you 48 hours to reply unless the email has a specific deadline."
+5. Chat shows "Checking lunch..." — point at orange lunch blocks. Say: "It picked the mensa closest to where you actually are — Garching on Garching days, Arcisstraße when you're in the city. And it picked a vegetarian option."
+6. Chat shows "Club events..." — purple blocks if any
+7. Agent delivers weekly summary with conflict warnings
+8. Agent delivers "tomorrow's briefing" — point at this. Say: "It tells you exactly when to leave tomorrow and what to bring."
+9. Agent asks about personal events/hobbies
 
 **Talking points while agent works:**
 - "It's pulling real data from 5 different university systems"
-- "Every item you see appearing is a real tool call to a real API"
+- "Every item you see is a real tool call to a real API"
+- "It resolved lecture locations through TUM's room database"
 - "The calendar and task list update in real-time"
 
 **If something goes wrong:**
@@ -47,7 +51,27 @@ curl -X DELETE http://localhost:3001/api/reset
 
 ---
 
-## Act 2: The Personal Touch (~1 min)
+## Act 2: Review Lectures (~1 min)
+
+**What you say:**
+"Now let's have it schedule review sessions for each lecture."
+
+**Type into chat:**
+> /review-lectures
+
+**What happens:**
+- Revision todos appear in the todo panel with linked Moodle materials
+- Green study blocks appear on the calendar after each lecture
+- Agent reports which courses got review slots
+
+**Talking points:**
+- "It created a review todo for each lecture and linked the relevant Moodle materials — click through to the slides"
+- "It found free slots after each lecture to schedule the review"
+- Point at a todo with resources: "See the linked resources? Those are the actual exercise sheets from Moodle with summaries."
+
+---
+
+## Act 3: The Personal Touch (~1 min)
 
 **What you say:**
 "But Nico also has things the university doesn't know about."
@@ -64,7 +88,7 @@ curl -X DELETE http://localhost:3001/api/reset
 
 ---
 
-## Act 3: The Intelligence (~1 min)
+## Act 4: The Intelligence (~1 min)
 
 **What you say:**
 "Now Nico has a busy week. He asks for help studying."
@@ -93,6 +117,9 @@ Agent checks NavigaTUM + live MVV departures, tells you which U-Bahn to take and
 > What's for lunch at Mensa Garching on Thursday?
 
 Agent already has the canteen data, gives a quick answer.
+
+**Option C — Todo deep dive:**
+Click on an assignment todo to show the detail view. Point out: the source link to Moodle, the linked resources with summaries, the deadline badge.
 
 ---
 
