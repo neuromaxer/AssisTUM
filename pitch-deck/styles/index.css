@@ -1,0 +1,91 @@
+/* Capability grid */
+.capability-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.capability-group h4 {
+  color: #60a5fa;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.capability-group ul {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Integration table */
+table {
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+table th {
+  color: #60a5fa;
+  border-bottom: 2px solid #3b82f6;
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+}
+
+table td {
+  border-bottom: 1px solid #1e293b;
+  padding: 0.4rem 0.6rem;
+}
+
+/* Three-column layout */
+.three-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.three-cols .col h4 {
+  color: #60a5fa;
+  margin-bottom: 0.5rem;
+}
+
+.three-cols .col p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Stat callout */
+.stat {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #60a5fa;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+/* Before/after comparison */
+.before-after {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.before-after .before {
+  border-left: 3px solid #ef4444;
+  padding-left: 1rem;
+}
+
+.before-after .after {
+  border-left: 3px solid #22c55e;
+  padding-left: 1rem;
+}
+
+/* Appendix header badge */
+.appendix-badge {
+  display: inline-block;
+  background: #1e293b;
+  color: #94a3b8;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
