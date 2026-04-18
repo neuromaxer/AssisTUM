@@ -18,6 +18,21 @@ agentRouter.post("/session", async (_req: Request, res: Response) => {
   }
 });
 
+/* GET /session — list all sessions */
+agentRouter.get("/session", async (_req: Request, res: Response) => {
+  try {
+    const client = await getOpenCodeClient();
+    const result = await client.session.list();
+    if (result.error) {
+      res.status(500).json({ error: JSON.stringify(result.error) });
+      return;
+    }
+    res.json(result.data);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 /* POST /session/:id/message — send a message (sync, waits for response) */
 agentRouter.post("/session/:id/message", async (req: Request, res: Response) => {
   try {
@@ -134,5 +149,21 @@ agentRouter.get("/events", async (req: Request, res: Response) => {
     if (!closed) {
       res.end();
     }
+  }
+});
+
+/* DELETE /session/:id — delete a session */
+agentRouter.delete("/session/:id", async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const client = await getOpenCodeClient();
+    const result = await client.session.delete({ path: { id } });
+    if (result.error) {
+      res.status(500).json({ error: JSON.stringify(result.error) });
+      return;
+    }
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
   }
 });
