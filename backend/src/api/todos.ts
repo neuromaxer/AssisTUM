@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getDb } from "../db/client.js";
 import { v4 as uuid } from "uuid";
+import { broadcast } from "./sse.js";
 
 export const todosRouter = Router();
 
@@ -60,6 +61,7 @@ todosRouter.post("/", (req, res) => {
   ).run(id, title, description ?? null, type, deadline ?? null, priority ?? null, course_id ?? null, source ?? "user", session_id ?? null);
 
   const row = db.prepare(`SELECT * FROM todos WHERE id = ?`).get(id);
+  broadcast("todo_created", row);
   res.status(201).json(row);
 });
 
@@ -92,6 +94,7 @@ todosRouter.patch("/:id", (req, res) => {
   db.prepare(`UPDATE todos SET ${updates.join(", ")} WHERE id = ?`).run(...params);
 
   const row = db.prepare(`SELECT * FROM todos WHERE id = ?`).get(req.params.id);
+  broadcast("todo_updated", row);
   res.json(row);
 });
 
@@ -105,5 +108,6 @@ todosRouter.delete("/:id", (req, res) => {
   }
 
   db.prepare(`DELETE FROM todos WHERE id = ?`).run(req.params.id);
+  broadcast("todo_deleted", { id: req.params.id });
   res.json({ deleted: true, id: req.params.id });
 });

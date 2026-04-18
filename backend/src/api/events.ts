@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getDb } from "../db/client.js";
 import { v4 as uuid } from "uuid";
+import { broadcast } from "./sse.js";
 
 export const eventsRouter = Router();
 
@@ -60,6 +61,7 @@ eventsRouter.post("/", (req, res) => {
   ).run(id, title, description ?? null, start, end, type, color ?? null, course_id ?? null, source ?? "user", session_id ?? null);
 
   const row = db.prepare(`SELECT * FROM events WHERE id = ?`).get(id);
+  broadcast("event_created", row);
   res.status(201).json(row);
 });
 
@@ -92,6 +94,7 @@ eventsRouter.patch("/:id", (req, res) => {
   db.prepare(`UPDATE events SET ${updates.join(", ")} WHERE id = ?`).run(...params);
 
   const row = db.prepare(`SELECT * FROM events WHERE id = ?`).get(req.params.id);
+  broadcast("event_updated", row);
   res.json(row);
 });
 
@@ -105,5 +108,6 @@ eventsRouter.delete("/:id", (req, res) => {
   }
 
   db.prepare(`DELETE FROM events WHERE id = ?`).run(req.params.id);
+  broadcast("event_deleted", { id: req.params.id });
   res.json({ deleted: true, id: req.params.id });
 });
