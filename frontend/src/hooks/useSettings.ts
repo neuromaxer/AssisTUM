@@ -5,6 +5,7 @@ export type AuthStatus = {
   tum_calendar: boolean;
   moodle: boolean;
   email: boolean;
+  cognee: boolean;
 };
 
 export function useAuthStatus() {

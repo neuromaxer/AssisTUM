@@ -72,6 +72,11 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const [clubUrl, setClubUrl] = useState("");
   const [clubMsg, setClubMsg] = useState<{ text: string; error: boolean } | null>(null);
 
+  const [cogneeUrl, setCogneeUrl] = useState("");
+  const [cogneeKey, setCogneeKey] = useState("");
+  const [cogneeLoading, setCogneeLoading] = useState(false);
+  const [cogneeMsg, setCogneeMsg] = useState<{ text: string; error: boolean } | null>(null);
+
   if (!open) return null;
 
   const tumPending = status?.tum_online === "pending";
@@ -125,6 +130,30 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const tumConfirmed = tumConnected || (results?.tum_online?.ok && results.tum_online.message === "Confirmed!");
   const showConfirmButton = !tumConfirmed && (tumPending || results?.tum_online != null);
 
+  const saveCognee = async () => {
+    setCogneeLoading(true);
+    setCogneeMsg(null);
+    try {
+      await fetch("/api/settings/cognee_url", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: cogneeUrl }),
+      });
+      await fetch("/api/settings/cognee_api_key", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: cogneeKey }),
+      });
+      setCogneeMsg({ text: "Saved!", error: false });
+      setCogneeKey("");
+      refetch();
+    } catch (err: any) {
+      setCogneeMsg({ text: err.message, error: true });
+    } finally {
+      setCogneeLoading(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center"
@@ -173,6 +202,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           <ServiceRow label="Moodle" connected={!!status?.moodle} result={results?.moodle} />
           <ServiceRow label="Email" connected={!!status?.email} result={results?.email} />
           <ServiceRow label="Calendar" connected={!!status?.tum_calendar} result={results?.calendar} />
+          <ServiceRow label="Memory" connected={!!status?.cognee} result={results?.cognee} />
           {results?.general && (
             <Feedback message={results.general.message} isError={!results.general.ok} />
           )}
@@ -184,6 +214,31 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
             <Feedback message={syncMsg?.text ?? null} isError={syncMsg?.error} />
           </div>
         )}
+
+        <div className="space-y-(--spacing-element)">
+          <h3 className="text-(--text-sm) font-medium text-ink-secondary">Cognee Cloud</h3>
+          <input
+            className={inputClass}
+            placeholder="Cognee Cloud URL (e.g. https://your-instance.cognee.ai)"
+            value={cogneeUrl}
+            onChange={(e) => setCogneeUrl(e.target.value)}
+          />
+          <input
+            className={inputClass}
+            placeholder="Cognee API Key"
+            type="password"
+            value={cogneeKey}
+            onChange={(e) => setCogneeKey(e.target.value)}
+          />
+          <button
+            className={`${buttonClass} w-full`}
+            disabled={cogneeLoading || !cogneeUrl || !cogneeKey}
+            onClick={saveCognee}
+          >
+            {cogneeLoading ? "Saving..." : "Save Cognee Settings"}
+          </button>
+          <Feedback message={cogneeMsg?.text ?? null} isError={cogneeMsg?.error} />
+        </div>
 
         <div className="space-y-(--spacing-element)">
           <div className="flex items-center gap-2">
