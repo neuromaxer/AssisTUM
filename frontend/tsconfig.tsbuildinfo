@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/calendar.tsx","./src/components/layout.tsx","./src/hooks/useevents.ts"],"version":"5.9.3"}

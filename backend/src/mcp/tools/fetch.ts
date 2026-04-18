@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDb } from "../../db/client.js";
 import { parseStringPromise } from "xml2js";
-import * as ical from "node-ical";
+import ical from "node-ical";
 import { ImapFlow } from "imapflow";
 
 // ---------------------------------------------------------------------------
