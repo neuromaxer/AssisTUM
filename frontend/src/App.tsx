@@ -6,6 +6,7 @@ import { Calendar } from "./components/Calendar";
 import { TodoPanel } from "./components/TodoPanel";
 import { ChatPanel } from "./components/ChatPanel";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { StatusBar } from "./components/StatusBar";
 
 const queryClient = new QueryClient();
 
@@ -19,14 +20,7 @@ export function App() {
         main={<Calendar />}
         chat={<ChatPanel />}
         onSettingsClick={() => setSettingsOpen(true)}
-        statusBar={
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-              Not connected
-            </span>
-          </div>
-        }
+        statusBar={<StatusBar />}
       />
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </QueryClientProvider>
