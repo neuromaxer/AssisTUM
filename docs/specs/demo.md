@@ -55,3 +55,5 @@ Should it be just one screen with
 3. Assignments - Moodle
 4. Student club events - list of club URLs
 5. Menu - cantene menu
+
+## Object Model

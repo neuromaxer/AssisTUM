@@ -61,48 +61,64 @@ AssisTUM (standalone)
 
 OpenCode runs as a local server spawned via the JS SDK. Campus APIs are exposed to the agent as MCP tools. Agent orchestration workflows are defined as OpenCode skills.
 
-## Data Sync Pipeline
+## Agent Pipeline (On-Demand)
 
-Most data is fetched from external APIs and stored in SQLite. This sync runs:
-- **On startup** — initial data load
-- **Daily** — scheduled refresh
-- **On demand** — when the agent needs it (e.g. `plan-week` skill triggers a full sync as its first step)
+Data fetching and processing happens **on demand only** — no background sync, no scheduled refresh, no staleness detection. The demo starts from a clean slate: Nico has nothing, asks "plan my week," and watches everything populate in real time.
+
+**Core flow (triggered by `plan-week` skill):**
 
 ```
-1. Fetch    → Pull raw data from all synced APIs into SQLite
-2. Detect   → Compare with last sync, flag new/changed items
-3. Agent    → Run agent pass over new/changed data:
-              - Summarize email threads per course
-              - Create todos from Moodle assignments
-              - Generate revision tasks from course content
-              - Link emails to courses by professor/subject
-              - Detect calendar conflicts
-4. Present  → Frontend shows fresh, pre-processed data
+1. Orchestrator agent receives "plan my week"
+2. Spawns subagents in parallel:
+   ├── Lectures subagent    → fetches TUM Online lectures + iCal calendar → creates events
+   ├── Moodle subagent      → fetches courses, assignments, content → creates courses + todos
+   ├── Email subagent       → fetches inbox → summarizes threads, links to courses, creates email_action todos
+   ├── Canteen subagent     → fetches weekly menus → suggests lunch events
+   └── Clubs subagent       → scrapes curated club URLs → creates club events
+3. Each subagent writes to SQLite via tool calls → frontend updates in real time as items appear
+4. Orchestrator collects results, detects conflicts, presents summary to user
 ```
 
-The `plan-week` skill is the core demo flow: user says "plan my week" → agent triggers sync → processes everything → presents a structured weekly plan with events and tasks.
+**Key design choice:** Subagents use **tool calls** (not fenced code blocks) to create events and todos. Tool calls give the agent validation feedback — if parameters are wrong, the tool returns an error and the agent can retry. Each tool call persists immediately to SQLite and the frontend picks up changes via polling/SSE.
 
-**`sync_log` tracks each sync run** for staleness detection. Before fetching, the agent checks when each source was last synced and skips sources that are fresh enough.
+**Frontend streaming:** As subagents work, events and todos appear on the calendar and task list progressively. The user sees the plan being built in real time — this is the core demo moment.
 
 ## MCP Tools
 
-Tools are split into two categories: **synced tools** read from SQLite (fast, pre-processed), **live tools** call APIs directly (real-time data that goes stale in seconds/minutes).
+Three categories: **fetch tools** pull data from external APIs, **action tools** write to SQLite (with validation feedback), **live tools** call APIs for real-time data.
 
-### Synced tools (read from SQLite)
+### Fetch tools (external API → return data to agent)
 
-| Tool | Upstream API | Returns |
+| Tool | API | Returns |
 |---|---|---|
-| `tum_lectures` | TUM Online `veranstaltungenEigene` | User's lectures + times |
-| `tum_calendar` | TUM Online `kalender` | Academic calendar events |
+| `tum_lectures` | TUM Online `veranstaltungenEigene` | User's enrolled lectures with times |
+| `tum_calendar` | iCal feed (`campus.tum.de/tumonlinej/ws/termin/ical`) | Parsed calendar events from `.ics` |
 | `tum_grades` | TUM Online `noten` | Grades list |
-| `tum_email_read` | IMAP (`mail.tum.de:993`) | Emails: subject, sender, date, body, agent summary |
-| `moodle_assignments` | Moodle `mod_assign_get_assignments` | Deadlines + status |
+| `tum_email_read` | IMAP (`mail.tum.de:993`) | Recent emails: subject, sender, date, body |
 | `moodle_courses` | Moodle `core_enrol_get_users_courses` | Enrolled courses |
-| `moodle_course_content` | Moodle `core_course_get_contents` | Materials, readings, slides, agent summary |
+| `moodle_assignments` | Moodle `mod_assign_get_assignments` | Assignment deadlines + status |
+| `moodle_course_content` | Moodle `core_course_get_contents` | Course materials, readings, slides |
 | `canteen_menu` | Eat-API `{location}/{year}/{week}.json` | Weekly meal plan |
-| `student_clubs` | Campus Backend gRPC `ListStudentClub` | Club events/info |
+| `club_events` | Scrape curated club URLs | Upcoming events from user's club list |
 
-### Live tools (direct API calls)
+### Action tools (write to SQLite, return confirmation or error)
+
+| Tool | Params | Effect |
+|---|---|---|
+| `create_event` | `title`, `description` (opt), `start`, `end`, `type`, `color` (opt), `course_id` (opt) | Insert event → returns event with ID |
+| `update_event` | `event_id`, fields to update | Update event → returns updated event |
+| `delete_event` | `event_id` | Delete event → returns confirmation |
+| `create_todo` | `title`, `description` (opt), `type`, `deadline` (opt), `priority`, `course_id` (opt) | Insert todo → returns todo with ID |
+| `update_todo` | `todo_id`, fields to update | Update todo → returns updated todo |
+| `delete_todo` | `todo_id` | Delete todo → returns confirmation |
+| `create_course` | `name`, `description` (opt), `moodle_course_id` (opt), `tum_course_id` (opt), `exam_date` (opt) | Insert course → returns course with ID |
+| `query_events` | `start` (opt), `end` (opt), `course_id` (opt), `type` (opt) | Query events with filters |
+| `query_todos` | `course_id` (opt), `type` (opt), `completed` (opt) | Query todos with filters |
+| `query_courses` | — | All courses with linked event/todo counts |
+
+Action tools validate parameters and return errors for invalid input (e.g. missing required fields, invalid date format, non-existent course_id). This gives agents feedback to self-correct.
+
+### Live tools (direct API calls, real-time data)
 
 | Tool | API | Returns |
 |---|---|---|
@@ -112,15 +128,6 @@ Tools are split into two categories: **synced tools** read from SQLite (fast, pr
 | `study_rooms` | Iris API | Room availability |
 | `navigatum_search` | NavigaTum `api/search` | Building/room locations |
 
-### Internal tools (read/write local SQLite)
-
-| Tool | Table | Returns |
-|---|---|---|
-| `events_query` | `events` | Current calendar events (for conflict detection, gap finding) |
-| `todos_query` | `todos` | Current task list |
-| `courses_query` | `courses` | Courses with linked events/todos/content |
-| `sync_now` | triggers sync pipeline | Refreshes all synced sources |
-
 MCP tools never expose credentials to the agent. Tools read tokens from the SQLite settings table at call time.
 
 ## Skills (Orchestration Workflows)
@@ -129,57 +136,48 @@ Skills are markdown files that instruct the agent on multi-step workflows. They 
 
 | Skill | What it instructs the agent to do |
 |---|---|
-| `plan-week` | Call `sync_now` to refresh all sources → query courses, events, todos → detect conflicts → synthesize into calendar events + tasks. This is the core demo skill — triggers the full pipeline. |
+| `plan-week` | Spawn subagents in parallel to fetch all sources → each subagent uses fetch tools + action tools to populate calendar and todos → orchestrator collects results, calls `query_events` to detect conflicts → presents summary. This is the core demo skill. |
 | `find-study-room` | Take building/lecture context → `navigatum_search` → `study_rooms` → suggest rooms sorted by proximity. |
-| `schedule-study-sessions` | Ask user about workload → query `moodle_course_content` for prep material → query `events_query` for calendar gaps → distribute study blocks before deadlines → output calendar events. |
+| `schedule-study-sessions` | Ask user about workload → `moodle_course_content` for prep material → `query_events` for calendar gaps → distribute study blocks before deadlines → `create_event` for each. |
 | `commute-helper` | `navigatum_search` to resolve location → find nearest MVV stop → `mvv_departures` → suggest when to leave. |
-| `conflict-resolver` | Query `events_query` → identify overlapping events → present conflicts to user → remove or reschedule based on user choice → output updated actions. |
-| `course-brainstorm` | Query course via `courses_query` (gets linked content, todos, emails) → discuss prep strategy with user in natural language → once agreed, output `calendar_event` actions for the study sessions. |
+| `conflict-resolver` | `query_events` → identify overlapping events → present conflicts to user → `delete_event` or `update_event` based on user choice. |
+| `course-brainstorm` | `query_courses` + `moodle_course_content` + `query_todos` for a course → discuss prep strategy with user in natural language → once agreed, `create_event` for study sessions. |
 
 ## Agent Output Protocol
 
-The agent responds conversationally and wraps actionable output in fenced blocks:
+The agent uses **MCP tool calls** (not fenced code blocks) to create and modify events and todos. This gives the agent structured validation feedback — if parameters are wrong or a referenced course doesn't exist, the tool returns an error and the agent can self-correct.
 
-````
-I found 4 lectures and 2 Moodle deadlines. Here's your plan:
+**Example agent interaction:**
 
-```assistum-actions
-[
-  { "type": "calendar_event", "title": "Linear Algebra", "start": "2026-04-20T09:00", "end": "2026-04-20T11:00", "color": "blue" },
-  { "type": "calendar_event", "title": "Lunch — Mensa Garching", "start": "2026-04-20T12:00", "end": "2026-04-20T13:00", "color": "orange" },
-  { "type": "todo", "title": "Submit ML homework", "todo_type": "assignment", "deadline": "2026-04-21T23:59", "priority": "high", "course_id": "..." },
-  { "type": "todo", "title": "Read Chapter 5 for Databases", "todo_type": "revision", "deadline": "2026-04-23T09:00", "priority": "medium", "course_id": "..." }
-]
+```
+Agent thinks: "User wants to plan their week. I'll fetch lectures first."
+→ calls tum_lectures() → gets 4 lectures
+→ calls create_event({ title: "Linear Algebra", start: "2026-04-20T09:00", end: "2026-04-20T11:00", type: "lecture", color: "blue" })
+→ tool returns { id: "evt_1", title: "Linear Algebra", ... } ✓
+→ calls create_event({ title: "Lunch — Mensa Garching", start: "2026-04-20T12:00", end: "2026-04-20T13:00", type: "meal", color: "orange" })
+→ tool returns { id: "evt_2", ... } ✓
+→ calls create_todo({ title: "Submit ML homework", type: "assignment", deadline: "2026-04-21T23:59", priority: "high", course_id: "crs_1" })
+→ tool returns { id: "todo_1", ... } ✓
+
+Agent responds: "I've added 4 lectures, 2 lunch slots, and 3 todos to your week. Want me to find study room slots before the ML deadline?"
 ```
 
-Want me to also find study room slots before the ML deadline?
-````
-
-`parser.ts` extracts `assistum-actions` blocks, validates against a schema, and persists to SQLite. Frontend receives both the chat message and parsed actions via SSE.
-
-**Action types:**
-
-| Type | Fields | Effect |
-|---|---|---|
-| `calendar_event` | `title`, `start`, `end`, `color`, `type`, `course_id` (opt) | Creates/updates event on calendar |
-| `todo` | `title`, `type`, `deadline` (opt), `priority`, `course_id` (opt) | Creates todo in left panel |
-| `delete_event` | `event_id` | Removes event from calendar |
-| `delete_todo` | `todo_id` | Removes todo from list |
+Each tool call persists immediately to SQLite. The frontend picks up new items via SSE and renders them progressively — the user sees the calendar filling up as the agent works.
 
 **Conflict detection flow:**
 
-When the user adds an event manually, the frontend notifies the backend. On the next agent turn (or proactively via the `plan-week` skill), the agent queries `events_query` to get all events, detects overlaps, and presents them conversationally:
+When the user adds an event manually, the frontend notifies the backend. On the next agent turn (or proactively via `plan-week`), the agent calls `query_events` to get all events, detects overlaps, and presents them conversationally:
 
 > "Heads up — your TUM.ai meetup (Thu 14:00–16:00) overlaps with Discrete Structures lecture (Thu 14:15–15:45). Want me to remove one or reschedule?"
 
-The user responds, and the agent outputs `delete_event` or updated `calendar_event` actions.
+The user responds, and the agent calls `delete_event` or `update_event`.
 
 **Brainstorm-to-action flow:**
 
-The agent can discuss a topic in natural language (e.g. "how much time do I need to prep for Discrete Structures?"), then convert the conclusion into actions. This is a two-phase interaction:
+The agent can discuss a topic in natural language (e.g. "how much time do I need to prep for Discrete Structures?"), then convert the conclusion into actions:
 
-1. **Brainstorm phase:** Agent fetches course content via `moodle_course_content`, discusses prep strategy, estimates time needed. No actions emitted — pure conversation.
-2. **Action phase:** Once the user agrees to a plan, agent outputs `calendar_event` actions for the study sessions in an `assistum-actions` block.
+1. **Brainstorm phase:** Agent calls `moodle_course_content` and `query_todos` for the course, discusses prep strategy, estimates time needed. No action tool calls — pure conversation.
+2. **Action phase:** Once the user agrees to a plan, agent calls `create_event` for each study session.
 
 ## Frontend Layout
 
@@ -189,14 +187,16 @@ The agent can discuss a topic in natural language (e.g. "how much time do I need
 ├──────────────┬──────────────────────┬───────────────────┤
 │  TODOS       │  CALENDAR            │  AGENT CHAT       │
 │              │                      │                   │
-│  ☐ Submit ML │  FullCalendar        │  Streaming msgs   │
-│    hw (Mon)  │  timeGridWeek view   │  via SSE          │
-│  ☐ Read Ch.5 │                      │                   │
-│    (Wed)     │  Color-coded:        │  Real-time        │
-│  ☐ TUM.ai   │  - Lectures (blue)   │  calendar/task    │
-│    meetup    │  - Study (green)     │  updates as agent │
-│    (Thu)     │  - Meals (orange)    │  outputs actions  │
-│              │  - Clubs (purple)    │                   │
+│  ── Mon 21 ──│  FullCalendar        │  Streaming msgs   │
+│  ☐ Submit ML │  timeGridWeek view   │  via SSE          │
+│    hw        │                      │                   │
+│  ── Wed 23 ──│  Color-coded:        │  Real-time        │
+│  ☐ Read Ch.5 │  - Lectures (blue)   │  updates as      │
+│  ☐ Revise    │  - Study (green)     │  subagents create │
+│    proofs    │  - Meals (orange)    │  events & todos   │
+│  ── Thu 24 ──│  - Clubs (purple)    │                   │
+│  ☐ TUM.ai   │                      │  Click todo/event │
+│    meetup    │                      │  to see details   │
 ├──────────────┴──────────────────────┴───────────────────┤
 │  ● Connected to TUM Online, TUM Email, Moodle, Eat-API   │
 └─────────────────────────────────────────────────────────┘
@@ -208,12 +208,13 @@ The agent can discuss a topic in natural language (e.g. "how much time do I need
 - Radix UI primitives (dialog, checkbox, dropdown, label)
 
 **Key interactions:**
-- Agent `calendar_event` actions → events appear on calendar in real time
-- Agent `todo` actions → todos appear in left panel in real time
-- Agent `delete_event`/`delete_todo` actions → items removed from UI in real time
-- User edits/drags calendar events → backend updates SQLite → agent sees changes via `events_query`
+- Subagent `create_event` tool calls → events appear on calendar progressively as subagents work
+- Subagent `create_todo` tool calls → todos appear in left panel, bucketed by deadline date, sorted chronologically
+- Agent `delete_event`/`update_event`/`delete_todo`/`update_todo` calls → UI updates in real time
+- Click event or todo → detail view with editable description
+- User edits/drags calendar events → backend updates SQLite → agent sees changes via `query_events`
 - User manually adds events → agent detects conflicts on next turn
-- Agent brainstorms in natural language → converts agreed plan into calendar events
+- Agent brainstorms in natural language → calls `create_event` for agreed study sessions
 - Status bar shows connected services with green/red indicators
 
 ## Backend Structure
@@ -227,34 +228,22 @@ assistum/
 │   │   ├── db/
 │   │   │   ├── schema.ts         # SQLite tables + migrations
 │   │   │   └── client.ts         # better-sqlite3 instance
-│   │   ├── sync/
-│   │   │   ├── pipeline.ts       # Orchestrates full sync: fetch → detect → agent pass
-│   │   │   ├── fetchers/
-│   │   │   │   ├── tum-online.ts # Fetch lectures, grades via API
-│   │   │   │   ├── tum-ical.ts   # Fetch + parse iCal calendar feed
-│   │   │   │   ├── tum-email.ts  # Fetch emails via IMAP
-│   │   │   │   ├── moodle.ts     # Fetch courses, assignments, content
-│   │   │   │   ├── eat-api.ts    # Fetch canteen menus
-│   │   │   │   └── clubs.ts      # Fetch student clubs via gRPC
-│   │   │   └── staleness.ts      # Check sync_log, skip fresh sources
 │   │   ├── api/
 │   │   │   ├── events.ts         # CRUD routes for calendar events
 │   │   │   ├── todos.ts          # CRUD routes for todos
 │   │   │   ├── courses.ts        # CRUD routes for courses
 │   │   │   ├── settings.ts       # Credential management routes
+│   │   │   ├── clubs.ts          # CRUD routes for club URL list
 │   │   │   └── agent.ts          # Proxy to OpenCode sessions + SSE streaming
 │   │   ├── mcp/
 │   │   │   ├── server.ts         # MCP tool server (stdio transport)
 │   │   │   ├── tools/
-│   │   │   │   ├── synced.ts     # Synced tools: query SQLite for events, todos, courses, emails, content, menus, clubs
-│   │   │   │   ├── live.ts       # Live tools: mvv_departures, canteen_occupancy, study_rooms, navigatum_search
-│   │   │   │   ├── email-send.ts # tum_email_send via SMTP
-│   │   │   │   └── sync.ts       # sync_now tool: triggers sync pipeline
+│   │   │   │   ├── fetch.ts      # Fetch tools: tum_lectures, tum_calendar, tum_email_read, moodle_*, canteen_menu, club_events
+│   │   │   │   ├── actions.ts    # Action tools: create/update/delete/query for events, todos, courses
+│   │   │   │   └── live.ts       # Live tools: tum_email_send, mvv_departures, canteen_occupancy, study_rooms, navigatum_search
 │   │   │   └── index.ts          # Register all tools
 │   │   ├── agent/
-│   │   │   ├── opencode.ts       # OpenCode SDK wrapper
-│   │   │   ├── parser.ts         # Parse assistum-actions blocks
-│   │   │   └── actions.ts        # Persist parsed actions to SQLite
+│   │   │   └── opencode.ts       # OpenCode SDK wrapper
 │   │   └── skills/
 │   │       ├── plan-week.md
 │   │       ├── find-study-room.md
@@ -272,18 +261,18 @@ assistum/
 
 ## SQLite Schema
 
-Three core domain objects — **Course**, **Event**, **Todo** — plus supporting tables for synced content, emails, sessions, settings, and sync tracking.
+Three core domain objects — **Course**, **Event**, **Todo** — plus supporting tables for content, emails, clubs, sessions, and settings.
 
 ```sql
 -- Courses: the grouping entity for academic life
 courses (
   id                TEXT PRIMARY KEY,
   name              TEXT NOT NULL,
+  description       TEXT,            -- editable by user and agent
   moodle_course_id  TEXT,            -- links to Moodle for content fetching
   tum_course_id     TEXT,            -- links to TUM Online (LV-Nummer)
-  description       TEXT,
   exam_date         TEXT,            -- ISO 8601
-  source            TEXT NOT NULL,   -- "agent", "user", "sync"
+  source            TEXT NOT NULL,   -- "agent" or "user"
   created_at        TEXT NOT NULL
 )
 
@@ -291,12 +280,13 @@ courses (
 events (
   id          TEXT PRIMARY KEY,
   title       TEXT NOT NULL,
+  description TEXT,                 -- editable by user and agent
   start       TEXT NOT NULL,        -- ISO 8601
   end         TEXT NOT NULL,        -- ISO 8601
   type        TEXT NOT NULL,        -- lecture, study, club, recreation, meal, custom
   color       TEXT,
   course_id   TEXT,                 -- nullable FK → courses
-  source      TEXT NOT NULL,        -- "agent", "user", "sync"
+  source      TEXT NOT NULL,        -- "agent" or "user"
   session_id  TEXT,                 -- OpenCode session that created it
   created_at  TEXT NOT NULL
 )
@@ -305,17 +295,18 @@ events (
 todos (
   id          TEXT PRIMARY KEY,
   title       TEXT NOT NULL,
+  description TEXT,                 -- editable by user and agent
   type        TEXT NOT NULL,        -- assignment, email_action, personal, revision
   deadline    TEXT,                 -- nullable ISO 8601
   priority    TEXT,                 -- high, medium, low
   completed   INTEGER DEFAULT 0,
   course_id   TEXT,                 -- nullable FK → courses
-  source      TEXT NOT NULL,        -- "agent", "user", "sync"
+  source      TEXT NOT NULL,        -- "agent" or "user"
   session_id  TEXT,
   created_at  TEXT NOT NULL
 )
 
--- Course content synced from Moodle (slides, readings, etc.)
+-- Course content fetched from Moodle (slides, readings, etc.)
 course_content (
   id            TEXT PRIMARY KEY,
   course_id     TEXT NOT NULL,      -- FK → courses
@@ -323,10 +314,10 @@ course_content (
   content_type  TEXT NOT NULL,      -- slides, pdf, reading, video
   url           TEXT,
   summary       TEXT,               -- agent-generated summary
-  synced_at     TEXT NOT NULL
+  created_at    TEXT NOT NULL
 )
 
--- Emails synced from TUM IMAP
+-- Emails fetched from TUM IMAP
 emails (
   id            TEXT PRIMARY KEY,
   message_id    TEXT UNIQUE,        -- IMAP message ID for dedup
@@ -337,7 +328,15 @@ emails (
   date          TEXT NOT NULL,
   course_id     TEXT,               -- nullable FK → courses (agent-linked)
   summary       TEXT,               -- agent-generated summary
-  synced_at     TEXT NOT NULL
+  created_at    TEXT NOT NULL
+)
+
+-- Curated list of student club URLs for event scraping
+clubs (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  url         TEXT NOT NULL,        -- club events page URL
+  created_at  TEXT NOT NULL
 )
 
 -- Agent sessions
@@ -353,23 +352,13 @@ settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 )
-
--- Sync tracking for staleness detection
-sync_log (
-  id            TEXT PRIMARY KEY,
-  source        TEXT NOT NULL,      -- tum_online, moodle, email, eat_api, clubs
-  status        TEXT NOT NULL,      -- success, error
-  items_synced  INTEGER,
-  error_message TEXT,
-  started_at    TEXT NOT NULL,
-  finished_at   TEXT
-)
 ```
 
 **Key relationships:**
 - `course_id` on events, todos, course_content, and emails is nullable — personal events, non-course tasks, and unlinked emails don't belong to a course
-- The agent links emails to courses during the sync agent pass (matching by professor name, course name in subject, etc.)
-- `source` tracks origin: `"sync"` for data fetched from APIs, `"agent"` for agent-created items, `"user"` for manually added items
+- The agent links emails to courses during the `plan-week` agent pass (matching by professor name, course name in subject, etc.)
+- `source` tracks origin: `"agent"` for agent-created items, `"user"` for manually added items
+- Todos are displayed **bucketed by deadline date**, sorted chronologically within each bucket
 
 ## Credentials & Settings UI
 
@@ -460,7 +449,7 @@ For the demo: pre-populate settings DB so the flow starts immediately. Settings 
 | `node-ical` | Parse TUM iCal calendar feed |
 | `imapflow` | IMAP client for TUM email reading |
 | `nodemailer` | SMTP client for sending TUM email |
-| `@grpc/grpc-js` + `@grpc/proto-loader` | Campus Backend gRPC (clubs, occupancy) |
+| `@grpc/grpc-js` + `@grpc/proto-loader` | Campus Backend gRPC (canteen occupancy) |
 
 **Frontend:**
 
@@ -485,7 +474,7 @@ For the demo: pre-populate settings DB so the flow starts immediately. Settings 
       "command": ["npx", "tsx", "backend/src/mcp/server.ts"]
     }
   },
-  "instructions": "You are AssisTUM, a campus co-pilot for TUM students. When the user asks you to plan, schedule, or find information, use the available MCP tools to fetch real data. Always output actions as structured JSON in a ```assistum-actions``` code block so the UI can parse them. Be proactive: suggest lunch breaks between lectures, study sessions before deadlines, and efficient commute times."
+  "instructions": "You are AssisTUM, a campus co-pilot for TUM students. When the user asks you to plan, schedule, or find information, use fetch tools to get real data and action tools (create_event, create_todo, etc.) to populate the calendar and task list. Each tool call persists immediately and shows in the UI. Be proactive: suggest lunch breaks between lectures, study sessions before deadlines, and efficient commute times. For planning tasks, spawn subagents to work in parallel."
 }
 ```
 
@@ -509,10 +498,12 @@ PORT=10001 OPENCODE_URL=http://localhost:4096 npm start
 | Service | API | Auth required |
 |---|---|---|
 | TUM Online | REST (`campus.tum.de/tumonline/`) | Yes — TUM token |
+| TUM Calendar | iCal feed (`campus.tum.de/tumonlinej/ws/termin/ical`) | Yes — pStud + pToken in URL |
 | TUM Email | IMAP (`mail.tum.de:993`) + SMTP (`mail.tum.de:587`) | Yes — TUM ID + password |
 | Moodle | REST (`moodle.tum.de`) | Yes — Moodle token |
 | Eat-API | Static JSON (`tum-dev.github.io/eat-api/`) | No |
 | MVV Departures | REST (`efa.mvv-muenchen.de/ng/`) | No |
 | Iris (Study Rooms) | REST (`iris.asta.tum.de`) | No |
 | NavigaTum | REST (`nav.tum.de`) | No |
-| Campus Backend | gRPC (`api.tum.app:443`) | No |
+| Campus Backend | gRPC (`api.tum.app:443`) — canteen occupancy only | No |
+| Student Clubs | Scrape curated URLs (user-managed list) | No |
