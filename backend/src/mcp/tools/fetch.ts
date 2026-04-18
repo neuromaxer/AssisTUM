@@ -4,7 +4,7 @@ import { getDb } from "../../db/client.js";
 import { parseStringPromise } from "xml2js";
 import ical from "node-ical";
 import { ImapFlow } from "imapflow";
-import { getMoodleSession, moodleAjax, moodleLogin } from "../../moodle-session.js";
+import { getMoodleSession, moodleAjax, moodleLogin, decodeHtmlEntities } from "../../moodle-session.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -244,6 +244,80 @@ export function registerFetchTools(server: McpServer) {
         return ok(sections);
       } catch (e: unknown) {
         return err(`Failed to fetch Moodle course content: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    },
+  );
+
+  // =========================================================================
+  // moodle_fetch
+  // =========================================================================
+
+  async function fetchPdfText(buf: Buffer): Promise<string | null> {
+    const { extractText } = await import("unpdf");
+    const { text, totalPages } = await extractText(new Uint8Array(buf));
+    const joined = Array.isArray(text) ? text.join("\n") : String(text);
+    console.log(`[moodle_fetch] PDF: ${totalPages} pages, ${joined.length} chars extracted`);
+    return joined || null;
+  }
+
+  async function fetchMoodleResource(session: string, url: string): Promise<{ type: string; [k: string]: unknown }> {
+    const res = await fetch(url, {
+      headers: { Cookie: `MoodleSession=${session}` },
+      redirect: "follow",
+    });
+    if (!res.ok) throw new Error(`Moodle returned HTTP ${res.status}`);
+    const contentType = res.headers.get("content-type") ?? "";
+
+    if (contentType.includes("application/pdf")) {
+      const buf = Buffer.from(await res.arrayBuffer());
+      const text = await fetchPdfText(buf);
+      if (text) return { type: "pdf", text };
+      return { type: "pdf_binary", size: buf.length, note: "PDF could not be text-extracted (likely scanned/image-based)." };
+    }
+
+    const html = await res.text();
+
+    if (contentType.includes("text/html")) {
+      // Moodle resource pages often wrap the actual file in a redirect link
+      const redirectMatch = html.match(/class="resourceworkaround"[^>]*>.*?<a href="([^"]+)"/s)
+        || html.match(/class="resourcemain"[^>]*>.*?<a href="([^"]+)"/s);
+      if (redirectMatch) {
+        const fileUrl = decodeHtmlEntities(redirectMatch[1]);
+        console.log(`[moodle_fetch] Following resource redirect to: ${fileUrl}`);
+        return fetchMoodleResource(session, fileUrl);
+      }
+      // Embedded object/iframe (e.g. inline PDF viewer)
+      const embedMatch = html.match(/<object[^>]*data="([^"]+\.pdf[^"]*)"/i)
+        || html.match(/<iframe[^>]*src="([^"]+\.pdf[^"]*)"/i)
+        || html.match(/<embed[^>]*src="([^"]+\.pdf[^"]*)"/i);
+      if (embedMatch) {
+        const fileUrl = decodeHtmlEntities(embedMatch[1]);
+        console.log(`[moodle_fetch] Following embedded PDF: ${fileUrl}`);
+        return fetchMoodleResource(session, fileUrl);
+      }
+
+      const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+      const cleaned = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+      const bodyMatch = cleaned.match(/<div[^>]*id="region-main"[^>]*>([\s\S]*?)<\/div>\s*<\/section>/i);
+      return { type: "html", title: titleMatch?.[1], content: bodyMatch?.[1]?.slice(0, 8000) ?? cleaned.slice(0, 8000) };
+    }
+
+    return { type: "text", contentType, text: html.slice(0, 8000) };
+  }
+
+  server.tool(
+    "moodle_fetch",
+    "Fetch any Moodle page or resource using the authenticated session. Returns extracted text for PDFs and cleaned HTML for pages. Use this to read exercise sheets, lecture notes, or any resource behind Moodle login.",
+    {
+      url: z.string().describe("Full Moodle URL to fetch, e.g. https://www.moodle.tum.de/mod/resource/view.php?id=123"),
+    },
+    async (args) => {
+      try {
+        const { session } = await ensureMoodleSession();
+        const data = await fetchMoodleResource(session, args.url);
+        return ok(data);
+      } catch (e: unknown) {
+        return err(`Failed to fetch Moodle resource: ${e instanceof Error ? e.message : String(e)}`);
       }
     },
   );
