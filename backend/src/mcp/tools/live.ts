@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDb } from "../../db/client.js";
+import { config } from "../../config.js";
 import nodemailer from "nodemailer";
 
 // ---------------------------------------------------------------------------
@@ -196,10 +197,10 @@ export function registerLiveTools(server: McpServer) {
       topic: z.string().optional().describe("Optional grouping tag: a course name, 'scheduling', 'food', 'study', etc."),
     },
     async (args) => {
-      const baseUrl = getSetting("cognee_url");
-      const apiKey = getSetting("cognee_api_key");
+      const baseUrl = config.cogneeUrl;
+      const apiKey = config.cogneeApiKey;
       if (!baseUrl || !apiKey) {
-        return err("Cognee not configured. Please set cognee_url and cognee_api_key in Settings.");
+        return err("Cognee not configured. Please set COGNEE_URL and COGNEE_API_KEY in .env.");
       }
 
       try {
@@ -239,10 +240,10 @@ export function registerLiveTools(server: McpServer) {
       topic: z.string().optional().describe("Filter to a specific topic"),
     },
     async (args) => {
-      const baseUrl = getSetting("cognee_url");
-      const apiKey = getSetting("cognee_api_key");
+      const baseUrl = config.cogneeUrl;
+      const apiKey = config.cogneeApiKey;
       if (!baseUrl || !apiKey) {
-        return err("Cognee not configured. Please set cognee_url and cognee_api_key in Settings.");
+        return err("Cognee not configured. Please set COGNEE_URL and COGNEE_API_KEY in .env.");
       }
 
       try {

@@ -13,4 +13,6 @@ export const config = {
   port: parseInt(process.env.PORT || "3001"),
   openCodeUrl: process.env.OPENCODE_URL || "",
   dbPath: process.env.DB_PATH || defaultDbPath,
+  cogneeUrl: process.env.COGNEE_URL || "",
+  cogneeApiKey: process.env.COGNEE_API_KEY || "",
 };
