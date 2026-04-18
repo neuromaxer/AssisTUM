@@ -228,5 +228,6 @@ authRouter.get("/status", (_req, res) => {
     tum_calendar: has("tum_ical_url"),
     moodle: has("moodle_session"),
     email: has("tum_email_user") && has("tum_email_password"),
+    cognee: has("cognee_url") && has("cognee_api_key"),
   });
 });

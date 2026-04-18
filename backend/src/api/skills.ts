@@ -84,7 +84,15 @@ skillsRouter.post("/:name/invoke", async (req: Request, res: Response) => {
       return;
     }
 
-    const prompt = `[Skill: ${skillName}]\n\n${skillContent}\n\n${userMessage || "Please execute this skill."}`;
+    let memoryPreamble = "";
+    const memorySkillPath = resolve(skillsDir, "memory-guidelines.md");
+    try {
+      memoryPreamble = await readFile(memorySkillPath, "utf-8");
+    } catch {}
+
+    const prompt = memoryPreamble
+      ? `[Memory Guidelines]\n\n${memoryPreamble}\n\n[Skill: ${skillName}]\n\n${skillContent}\n\n${userMessage || "Please execute this skill."}`
+      : `[Skill: ${skillName}]\n\n${skillContent}\n\n${userMessage || "Please execute this skill."}`;
 
     const client = await getOpenCodeClient();
     const result = await client.session.promptAsync({

@@ -14,8 +14,8 @@ CRITICAL: Use the Europe/Berlin timezone offset (+02:00 in summer, +01:00 in win
 
 ## Preferences
 
-- Food: vegetarian. When recommending meals, pick vegetarian options.
 - Home campus: assume the student commutes FROM central Munich.
+- Before Phase 5 (meals), call `memory_recall` with query "dietary preferences and food" and type "preference" to check for the student's current dietary preferences. Use whatever you find (e.g., vegetarian, vegan, allergies) when selecting meal options. If memory returns nothing, default to vegetarian.
 
 ## Phase 1: Lectures & Calendar
 
@@ -90,19 +90,21 @@ If email is unavailable, skip gracefully and continue.
 
 Tell the user: "Let me check what's for lunch this week..."
 
+1. Call `memory_recall` with query "dietary preferences and food" and type "preference" to retrieve the student's food preferences (e.g., vegetarian, vegan, allergies, favorite dishes). If no memories are found, default to vegetarian.
+
 Using the campus location map from Phase 1:
 
-1. For each day that has lectures:
+2. For each day that has lectures:
    - Determine where the student is around lunchtime (12:00-13:00). Use the campus of the lecture closest to noon.
    - If in Garching: call `canteen_menu` with location "mensa-garching"
    - If at Stammgelände: call `canteen_menu` with location "mensa-arcisstr"
-2. From the menu, find a vegetarian option for that day. Look for items tagged as vegetarian or items that are clearly meat-free.
+3. From the menu, find a meal option matching the student's dietary preferences. Look for items tagged accordingly or items that clearly fit.
 3. Call `create_event` with:
    - type: "meal", color "#f97316"
    - title: "Lunch @ Mensa Garching" or "Lunch @ Mensa Arcisstraße" depending on campus
-   - description: include the vegetarian pick, e.g., "Veggie pick: Spinach Lasagna (€3.20)"
+   - description: include the meal pick based on dietary preferences, e.g., "Veggie pick: Spinach Lasagna (€3.20)"
    - time: slot into the gap between morning and afternoon lectures. If no clear gap, use 12:00-13:00.
-4. Report: "Added lunch breaks with veggie picks for N campus days."
+5. Report: "Added lunch breaks with meal picks for N campus days."
 
 ## Phase 6: Club Events
 

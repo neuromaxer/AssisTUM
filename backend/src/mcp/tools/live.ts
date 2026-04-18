@@ -183,4 +183,101 @@ export function registerLiveTools(server: McpServer) {
       }
     },
   );
+
+  // =========================================================================
+  // memory_store
+  // =========================================================================
+  server.tool(
+    "memory_store",
+    "Store a fact in the student's long-term memory. Use this to remember user preferences, plans, struggles, and important conversation context across sessions.",
+    {
+      text: z.string().describe("The fact to remember, as a clear standalone statement"),
+      type: z.enum(["preference", "context"]).describe("'preference' for stable traits/likes/dislikes, 'context' for conversation facts/plans/struggles"),
+      topic: z.string().optional().describe("Optional grouping tag: a course name, 'scheduling', 'food', 'study', etc."),
+    },
+    async (args) => {
+      const baseUrl = getSetting("cognee_url");
+      const apiKey = getSetting("cognee_api_key");
+      if (!baseUrl || !apiKey) {
+        return err("Cognee not configured. Please set cognee_url and cognee_api_key in Settings.");
+      }
+
+      try {
+        const taggedText = `[${args.type}]${args.topic ? `[${args.topic}]` : ""} ${args.text}`;
+        const form = new FormData();
+        form.append("data", new Blob([taggedText], { type: "text/plain" }), "data.txt");
+        form.append("datasetName", "assistum-memory");
+
+        const res = await fetch(`${baseUrl}/api/v1/remember`, {
+          method: "POST",
+          headers: { "X-Api-Key": apiKey },
+          body: form,
+        });
+
+        if (!res.ok) {
+          const body = await res.text();
+          return err(`Cognee API returned HTTP ${res.status}: ${body}`);
+        }
+
+        const data = await res.json();
+        return ok({ stored: true, text: args.text, type: args.type, topic: args.topic ?? null, status: data.status });
+      } catch (e: unknown) {
+        return err(`Failed to store memory: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    },
+  );
+
+  // =========================================================================
+  // memory_recall
+  // =========================================================================
+  server.tool(
+    "memory_recall",
+    "Recall relevant facts from the student's long-term memory. Use this before making personalized recommendations, when the student references past conversations, or when planning.",
+    {
+      query: z.string().describe("Natural language query describing what to recall"),
+      type: z.enum(["preference", "context"]).optional().describe("Filter to only preferences or only context"),
+      topic: z.string().optional().describe("Filter to a specific topic"),
+    },
+    async (args) => {
+      const baseUrl = getSetting("cognee_url");
+      const apiKey = getSetting("cognee_api_key");
+      if (!baseUrl || !apiKey) {
+        return err("Cognee not configured. Please set cognee_url and cognee_api_key in Settings.");
+      }
+
+      try {
+        const filters: string[] = [];
+        if (args.type) filters.push(`[${args.type}]`);
+        if (args.topic) filters.push(`[${args.topic}]`);
+        const enrichedQuery = filters.length > 0
+          ? `${filters.join("")} ${args.query}`
+          : args.query;
+
+        const res = await fetch(`${baseUrl}/api/v1/recall`, {
+          method: "POST",
+          headers: {
+            "X-Api-Key": apiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: enrichedQuery,
+            datasets: ["assistum-memory"],
+            searchType: "GRAPH_COMPLETION",
+            topK: 10,
+            onlyContext: true,
+          }),
+        });
+
+        if (!res.ok) {
+          const body = await res.text();
+          return err(`Cognee API returned HTTP ${res.status}: ${body}`);
+        }
+
+        const results = await res.json();
+        return ok({ query: args.query, memories: results });
+      } catch (e: unknown) {
+        return err(`Failed to recall memories: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    },
+  );
 }
