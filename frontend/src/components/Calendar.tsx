@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -50,17 +51,15 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
     },
   }));
 
-  // Add incomplete todos with deadlines
+  // Add incomplete todos with deadlines — always all-day so they don't overlap timed events
   for (const todo of todos ?? []) {
     if (todo.completed || !todo.deadline) continue;
-    const hasTime = todo.deadline.includes("T") && !todo.deadline.endsWith("T23:59:00");
     const datePart = todo.deadline.includes("T") ? todo.deadline.split("T")[0] : todo.deadline;
     fcEvents.push({
       id: `todo-${todo.id}`,
       title: todo.title,
-      start: hasTime ? todo.deadline : datePart,
-      end: hasTime ? new Date(new Date(todo.deadline).getTime() + 30 * 60 * 1000).toISOString() : undefined,
-      allDay: !hasTime,
+      start: datePart,
+      allDay: true,
       backgroundColor: "transparent",
       borderColor: "transparent",
       editable: false,
@@ -94,7 +93,7 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
     function timeFromSlots(slotsEl: Element, mouseY: number): string {
       // FullCalendar renders td[data-time] for each slot lane
       const cells = slotsEl.querySelectorAll("td.fc-timegrid-slot-lane[data-time]");
-      let prevTime = "07:00:00";
+      let prevTime = "00:00:00";
       let prevTop = 0;
 
       for (const cell of cells) {
@@ -291,8 +290,9 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
         selectable={false}
         nowIndicator={true}
         allDaySlot={true}
-        slotMinTime="07:00:00"
-        slotMaxTime="22:00:00"
+        slotMinTime="00:00:00"
+        slotMaxTime="24:00:00"
+        scrollTime="07:00:00"
         height="100%"
         eventDrop={handleEventDrop}
         eventResize={handleEventResize}
@@ -317,7 +317,7 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
         }}
       />
 
-      {popover && (
+      {popover && createPortal(
         <CalendarPopover
           state={popover}
           onClose={() => {
@@ -325,7 +325,8 @@ export function Calendar({ onOpenTodo, onOpenCourse, initialDate, onDateChange }
             setPreview(null);
           }}
           onPreviewChange={setPreview}
-        />
+        />,
+        document.body,
       )}
     </div>
   );
