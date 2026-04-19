@@ -1,7 +1,10 @@
 {
   "name": "assistum",
   "private": true,
-  "workspaces": ["backend", "frontend"],
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w frontend && npm run build -w backend",
@@ -9,5 +12,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
+  },
+  "dependencies": {
+    "task": "^1.3.2"
   }
 }

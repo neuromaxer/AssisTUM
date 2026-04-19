@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStatus } from "../hooks/useSettings";
 import { useSyncCourses } from "../hooks/useCourses";
 import { useClubs, useAddClub, useDeleteClub } from "../hooks/useClubs";
@@ -54,6 +55,7 @@ function ServiceRow({ label, connected, pending, result, action, statusNode }: {
 
 export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: status, refetch } = useAuthStatus();
+  const queryClient = useQueryClient();
 
   const [tumId, setTumId] = useState("");
   const [password, setPassword] = useState("");
@@ -90,6 +92,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
       setResults(data.results);
       setPassword("");
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["emails", "recent"] });
     } catch (err: any) {
       setResults({ general: { ok: false, message: err.message } });
     } finally {

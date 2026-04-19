@@ -15,6 +15,7 @@ import { agentRouter } from "./api/agent.js";
 import { authRouter } from "./api/auth.js";
 import { skillsRouter } from "./api/skills.js";
 import { emailsRouter } from "./api/emails.js";
+import { mensaRouter } from "./api/mensa.js";
 
 const app = express();
 app.use(cors());
@@ -34,6 +35,7 @@ app.use("/api/agent", agentRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/skills", skillsRouter);
 app.use("/api/emails", emailsRouter);
+app.use("/api/mensa", mensaRouter);
 
 const __frontendDist = resolve(
   dirname(fileURLToPath(import.meta.url)),
