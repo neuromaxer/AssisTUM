@@ -17,9 +17,9 @@ type SemesterGroup = {
 
 const GRADE_COLORS = {
   excellent: "#16a34a",
-  good: "#3070b3",
-  satisfactory: "#d97706",
-  sufficient: "#9c9c9c",
+  good: "#65a30d",
+  satisfactory: "#ca8a04",
+  sufficient: "#ea580c",
   fail: "#dc2626",
 };
 
@@ -34,11 +34,11 @@ function gradeColorHex(grade: number | null): string {
 
 function gradeColorClass(grade: number | null): string {
   if (grade === null) return "text-ink-muted";
-  if (grade <= 1.3) return "text-success";
-  if (grade <= 2.0) return "text-accent";
-  if (grade <= 3.0) return "text-warning";
-  if (grade <= 4.0) return "text-ink-secondary";
-  return "text-danger";
+  if (grade <= 1.3) return "text-[#16a34a]";
+  if (grade <= 2.0) return "text-[#65a30d]";
+  if (grade <= 3.0) return "text-[#ca8a04]";
+  if (grade <= 4.0) return "text-[#ea580c]";
+  return "text-[#dc2626]";
 }
 
 function weightedAverage(grades: Grade[]): number | null {

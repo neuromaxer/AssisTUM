@@ -81,7 +81,8 @@ gradesRouter.post("/sync", async (_req, res) => {
 
     const upsertMany = db.transaction(() => {
       for (const row of rows) {
-        const examName = (row.lv_titel ?? "Unknown").trim();
+        const examName = (row.lv_titel ?? "Unknown").trim()
+          .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
 
         const gradeStr = row.uninotenamekurz ?? null;
         const grade = gradeStr ? parseFloat(gradeStr.replace(",", ".")) : null;
