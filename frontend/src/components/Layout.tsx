@@ -9,16 +9,12 @@ export function Layout({
   chat,
   statusBar,
   onSettingsClick,
-  showDashboard,
-  onToggleDashboard,
 }: {
   sidebar: ReactNode;
   main: ReactNode;
   chat: (props: { chatWide: boolean; onToggleChatWide: () => void }) => ReactNode;
   statusBar?: ReactNode;
   onSettingsClick?: () => void;
-  showDashboard?: boolean;
-  onToggleDashboard?: () => void;
 }) {
   const [chatWide, setChatWide] = useState(false);
 
@@ -40,22 +36,12 @@ export function Layout({
       </div>
       <footer className="flex items-center justify-between px-(--spacing-panel) py-1.5 border-t border-border">
         <div>{statusBar}</div>
-        <div className="flex items-center gap-4">
-          {onToggleDashboard && (
-            <button
-              onClick={onToggleDashboard}
-              className="text-(--text-xs) text-ink-muted hover:text-ink-secondary transition-colors duration-150"
-            >
-              {showDashboard ? "Calendar" : "Dashboard"}
-            </button>
-          )}
-          <button
-            onClick={onSettingsClick}
-            className="text-(--text-xs) text-ink-muted hover:text-ink-secondary transition-colors duration-150"
-          >
-            Settings
-          </button>
-        </div>
+        <button
+          onClick={onSettingsClick}
+          className="text-(--text-xs) text-ink-muted hover:text-ink-secondary transition-colors duration-150"
+        >
+          Settings
+        </button>
       </footer>
     </div>
   );
