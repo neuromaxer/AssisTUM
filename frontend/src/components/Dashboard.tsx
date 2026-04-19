@@ -1,5 +1,6 @@
 import { useEvents } from "../hooks/useEvents";
 import { useTodos } from "../hooks/useTodos";
+import { EmailWidget } from "./EmailWidget";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -85,6 +86,11 @@ export function Dashboard() {
           </p>
           <p className="text-(--text-xs) font-mono text-ink-muted mt-1.5">events today</p>
         </div>
+      </div>
+
+      {/* Email widget */}
+      <div className="mb-3">
+        <EmailWidget />
       </div>
 
       <div className="grid grid-cols-5 gap-3">

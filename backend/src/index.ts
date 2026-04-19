@@ -14,6 +14,7 @@ import { sseHandler } from "./api/sse.js";
 import { agentRouter } from "./api/agent.js";
 import { authRouter } from "./api/auth.js";
 import { skillsRouter } from "./api/skills.js";
+import { emailsRouter } from "./api/emails.js";
 
 const app = express();
 app.use(cors());
@@ -32,6 +33,7 @@ app.use("/api/clubs", clubsRouter);
 app.use("/api/agent", agentRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/skills", skillsRouter);
+app.use("/api/emails", emailsRouter);
 
 const __frontendDist = resolve(
   dirname(fileURLToPath(import.meta.url)),
