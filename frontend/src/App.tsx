@@ -26,6 +26,12 @@ export function App() {
 
   const calendarView = (
     <div className="h-full relative">
+      <button
+        onClick={toggleDashboard}
+        className="absolute top-1 right-0 z-10 text-(--text-xs) font-medium text-ink-secondary bg-surface border border-border rounded-(--radius-sm) px-2.5 h-[1.625rem] hover:bg-surface-hover transition-colors"
+      >
+        {showDashboard ? "Open Calendar" : "Open Dashboard"}
+      </button>
       <div className={`absolute inset-0 transition-opacity duration-300 ${showDashboard ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
         <Calendar
           onOpenTodo={setSelectedTodoId}
@@ -33,19 +39,9 @@ export function App() {
           onOpenEvent={setSelectedEventId}
           initialDate={calendarDate}
           onDateChange={setCalendarDate}
-          onToggleDashboard={toggleDashboard}
         />
       </div>
       <div className={`absolute inset-0 overflow-auto transition-opacity duration-300 ${showDashboard ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-(--text-sm) font-semibold text-ink">Dashboard</h2>
-          <button
-            onClick={toggleDashboard}
-            className="text-(--text-xs) font-medium text-ink-secondary bg-surface border border-border rounded-(--radius-sm) px-2 h-[1.625rem] hover:bg-surface-hover transition-colors"
-          >
-            Calendar
-          </button>
-        </div>
         <Dashboard />
       </div>
     </div>

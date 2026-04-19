@@ -19,7 +19,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 
-export function Calendar({ onOpenTodo, onOpenCourse, onOpenEvent, initialDate, onDateChange, onToggleDashboard }: { onOpenTodo?: (id: string) => void; onOpenCourse?: (id: string) => void; onOpenEvent?: (id: string) => void; initialDate?: string | null; onDateChange?: (date: string) => void; onToggleDashboard?: () => void }) {
+export function Calendar({ onOpenTodo, onOpenCourse, onOpenEvent, initialDate, onDateChange }: { onOpenTodo?: (id: string) => void; onOpenCourse?: (id: string) => void; onOpenEvent?: (id: string) => void; initialDate?: string | null; onDateChange?: (date: string) => void }) {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
   const updateEvent = useUpdateEvent();
@@ -318,16 +318,10 @@ export function Calendar({ onOpenTodo, onOpenCourse, onOpenEvent, initialDate, o
         initialDate={initialDate ?? undefined}
         datesSet={(info) => onDateChange?.(info.start.toISOString())}
         buttonText={{ today: "Today" }}
-        customButtons={onToggleDashboard ? {
-          dashboardToggle: {
-            text: "Dashboard",
-            click: onToggleDashboard,
-          },
-        } : undefined}
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: onToggleDashboard ? "dashboardToggle" : "",
+          right: "",
         }}
         events={fcEvents}
         editable={true}
