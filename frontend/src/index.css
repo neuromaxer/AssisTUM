@@ -141,6 +141,20 @@ body {
   border-color: var(--color-accent-hover) !important;
   color: #fff !important;
 }
+.fc .fc-dashboard-button {
+  background: transparent;
+  color: var(--color-ink-secondary);
+}
+.fc .fc-dashboard-button:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-ink);
+}
+.fc .fc-dashboard-button:active,
+.fc .fc-dashboard-button.fc-button-active {
+  background: transparent !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-ink-secondary) !important;
+}
 .fc .fc-today-button {
   background: var(--color-accent) !important;
   border-color: var(--color-accent) !important;
