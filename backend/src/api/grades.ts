@@ -1,7 +1,5 @@
 import { Router } from "express";
 import { getDb } from "../db/client.js";
-import { v4 as uuid } from "uuid";
-import { parseStringPromise } from "xml2js";
 
 export const gradesRouter = Router();
 
@@ -32,11 +30,22 @@ gradesRouter.post("/sync", async (_req, res) => {
       return;
     }
     const xml = await response.text();
-    const parsed = await parseStringPromise(xml);
 
-    const rows = parsed?.rowset?.row ?? [];
+    const rows: Record<string, string>[] = [];
+    const rowRegex = /<row>([\s\S]*?)<\/row>/g;
+    let rowMatch;
+    while ((rowMatch = rowRegex.exec(xml)) !== null) {
+      const fields: Record<string, string> = {};
+      const fieldRegex = /<(\w+)>([\s\S]*?)<\/\1>/g;
+      let fieldMatch;
+      while ((fieldMatch = fieldRegex.exec(rowMatch[1])) !== null) {
+        fields[fieldMatch[1]] = fieldMatch[2].trim();
+      }
+      rows.push(fields);
+    }
+
     if (rows.length === 0) {
-      res.json({ synced: 0, grades: [] });
+      res.json({ synced: 0, grades: [], debug: { xmlLength: xml.length, firstChars: xml.slice(0, 500) } });
       return;
     }
 
@@ -57,36 +66,31 @@ gradesRouter.post("/sync", async (_req, res) => {
       .prepare(`SELECT id, module_code FROM courses WHERE module_code IS NOT NULL`)
       .all() as { id: string; module_code: string }[];
 
+    const fieldNames = rows.length > 0 ? Object.keys(rows[0]) : [];
+
     const upsertMany = db.transaction(() => {
       for (const row of rows) {
-        const val = (field: string) => {
-          const v = row[field];
-          if (!v) return null;
-          return Array.isArray(v) ? v[0] : String(v);
-        };
+        const examName = row.titel ?? row.name ?? row.lv_titel ?? "Unknown";
 
-        const examName = val("pv_konto_nr")
-          ? `${val("titel") ?? "Unknown"}`
-          : val("titel") ?? "Unknown";
-
-        const gradeStr = val("uninote");
+        const gradeStr = row.uninote ?? row.note ?? row.grade;
         const grade = gradeStr ? parseFloat(gradeStr.replace(",", ".")) : null;
-        const gradeText = val("uninotenamekurz") ?? null;
-        const ectsStr = val("ects");
+        const gradeText = row.uninotenamekurz ?? row.notename ?? null;
+
+        const ectsStr = row.ects_credits ?? row.ects ?? row.bonus;
         const ects = ectsStr ? parseFloat(ectsStr.replace(",", ".")) : null;
 
-        const semesterId = val("pv_semester") ?? null;
-        const semesterName = val("semester") ?? null;
-        const examDate = val("datum") ?? null;
-        const examiner = val("pruefer1") ?? null;
-        const moduleCode = val("pv_konto_nr") ?? null;
+        const semesterId = row.pv_semester ?? row.semester_id ?? null;
+        const semesterName = row.semester ?? row.semester_name ?? null;
+        const examDate = row.datum ?? row.pruef_datum ?? null;
+        const examiner = row.pruefer1 ?? row.pruefer ?? null;
+        const moduleCode = row.pv_konto_nr ?? row.modul_nr ?? row.lv_nr ?? null;
 
         const status =
           gradeText === "BE" || grade === 0
             ? "passed"
-            : grade !== null && grade <= 4.0
+            : grade !== null && !isNaN(grade) && grade <= 4.0
               ? "passed"
-              : grade !== null && grade > 4.0
+              : grade !== null && !isNaN(grade) && grade > 4.0
                 ? "failed"
                 : "pending";
 
@@ -99,9 +103,9 @@ gradesRouter.post("/sync", async (_req, res) => {
         upsert.run(
           stableId,
           examName,
-          grade,
+          grade !== null && !isNaN(grade) ? grade : null,
           gradeText,
-          ects,
+          ects !== null && !isNaN(ects) ? ects : null,
           semesterId,
           semesterName,
           examDate,
@@ -118,7 +122,7 @@ gradesRouter.post("/sync", async (_req, res) => {
     const grades = db
       .prepare(`SELECT * FROM grades ORDER BY semester_id DESC, exam_name ASC`)
       .all();
-    res.json({ synced: rows.length, grades });
+    res.json({ synced: rows.length, grades, debug: { fieldNames, sampleRow: rows[0] } });
   } catch (e: unknown) {
     res.status(500).json({
       error: `Failed to sync grades: ${e instanceof Error ? e.message : String(e)}`,
