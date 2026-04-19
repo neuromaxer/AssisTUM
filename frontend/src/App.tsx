@@ -25,7 +25,7 @@ export function App() {
   const toggleDashboard = () => setShowDashboard((v) => !v);
 
   const toggleBtn = (
-    <div className="sticky top-0 z-10 flex justify-end pb-1">
+    <div className="flex justify-end pt-2 pb-1">
       <button
         onClick={toggleDashboard}
         className="text-(--text-xs) font-medium text-ink-secondary bg-surface border border-border rounded-(--radius-sm) px-2.5 h-[1.625rem] hover:bg-surface-hover transition-colors"

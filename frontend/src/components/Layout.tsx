@@ -26,7 +26,7 @@ export function Layout({
         >
           {sidebar}
         </aside>
-        <main className="flex-1 min-w-0 overflow-hidden px-(--spacing-panel) pt-2 pb-(--spacing-panel)">{main}</main>
+        <main className="flex-1 min-w-0 overflow-hidden px-(--spacing-panel)">{main}</main>
         <aside
           className="border-l border-border flex flex-col shrink-0 transition-[width] duration-200"
           style={{ width: chatWide ? CHAT_WIDE : CHAT_NARROW }}
