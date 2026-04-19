@@ -28,9 +28,9 @@ AssisTUM connects to all TUM systems through a single interface with an AI agent
 
 See [features.md](features.md) for detailed feature descriptions.
 
-## Pitch Deck
+## Pitch Deck & Demo
 
-[View the pitch deck (PDF)](pitch-deck/assistum-pitch-deck.pdf)
+[View the pitch deck (PDF)](pitch-deck/assistum-pitch-deck.pdf) | [Watch the demo recording](https://youtu.be/GF9egQOTlLk)
 
 ## Agent Skills
 
