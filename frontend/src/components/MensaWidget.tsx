@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useMensaLocations, useMensaMenu, type MensaDish } from "../hooks/useMensa";
+import { useEffect, useMemo, useState } from "react";
+import { useMensaLocations, useMensaMenu, useMensaAnnotations, type MensaDish } from "../hooks/useMensa";
 
 const STORAGE_KEY = "mensa.location";
 const DEFAULT_LOCATION = "mensa-garching";
@@ -34,6 +34,33 @@ function prettyLabel(l: string) {
   return LABEL_PRETTY[l] ?? l.replace(/_/g, " ").toLowerCase();
 }
 
+type DietFilter = "all" | "vegan" | "vegetarian" | "meat";
+
+const FILTERS: { id: DietFilter; label: string; emoji: string }[] = [
+  { id: "all", label: "All", emoji: "🍽️" },
+  { id: "vegan", label: "Vegan", emoji: "🌱" },
+  { id: "vegetarian", label: "Vegetarian", emoji: "🥗" },
+  { id: "meat", label: "Meat", emoji: "🥩" },
+];
+
+function dishEmoji(d: MensaDish): string {
+  const l = d.labels;
+  if (l.includes("VEGAN")) return "🌱";
+  if (l.includes("VEGETARIAN")) return "🥗";
+  if (l.includes("FISH")) return "🐟";
+  if (l.includes("POULTRY")) return "🐔";
+  if (l.includes("PORK")) return "🥓";
+  if (l.includes("BEEF")) return "🥩";
+  return "🍴";
+}
+
+function matchesFilter(d: MensaDish, f: DietFilter): boolean {
+  if (f === "all") return true;
+  if (f === "vegan") return d.labels.includes("VEGAN");
+  if (f === "vegetarian") return d.labels.includes("VEGETARIAN") || d.labels.includes("VEGAN");
+  return !d.labels.includes("VEGETARIAN") && !d.labels.includes("VEGAN");
+}
+
 function formatPrice(d: MensaDish): string | null {
   const p = d.prices.students;
   if (!p) return null;
@@ -54,6 +81,9 @@ export function MensaWidget() {
   });
   const [open, setOpen] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [filter, setFilter] = useState<DietFilter>("all");
+  const [prefInput, setPrefInput] = useState("");
+  const [preference, setPreference] = useState("");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, location);
@@ -65,7 +95,21 @@ export function MensaWidget() {
   const currentName =
     locations?.find((l) => l.canteen_id === location)?.name ?? location;
 
-  const dishes = menu?.dishes ?? [];
+  const allDishes = menu?.dishes ?? [];
+  const dishes = allDishes.filter((d) => matchesFilter(d, filter));
+
+  const { data: annotations } = useMensaAnnotations(allDishes, preference);
+  const annotationMap = useMemo(() => {
+    const m = new Map<string, { emoji: string; highlight: boolean }>();
+    for (const a of annotations?.annotations ?? []) {
+      m.set(a.name, { emoji: a.emoji, highlight: a.highlight });
+    }
+    return m;
+  }, [annotations]);
+
+  const emojiFor = (d: MensaDish) => annotationMap.get(d.name)?.emoji ?? dishEmoji(d);
+  const isHighlighted = (d: MensaDish) =>
+    preference.length > 0 && (annotationMap.get(d.name)?.highlight ?? false);
   const dateLabel = menu?.date
     ? new Date(menu.date + "T00:00:00").toLocaleDateString("en-GB", {
         weekday: "short",
@@ -76,10 +120,11 @@ export function MensaWidget() {
 
   return (
     <>
-      <div className="bg-surface border border-border rounded-(--radius-lg) p-4 hover:border-accent/50 transition-colors">
-        <div className="flex items-center justify-between mb-2 gap-2">
+      <div className="bg-surface border border-border rounded-(--radius-lg) p-5 hover:border-accent/50 transition-colors">
+        <div className="flex items-center justify-between mb-3 gap-2">
           <h3 className="text-(--text-xs) font-mono uppercase tracking-widest text-ink-muted truncate">
-            {currentName} · {menu?.isToday ? "today" : dateLabel} · {dishes.length} dish{dishes.length !== 1 ? "es" : ""}
+            <span className="mr-1.5">🍽️</span>
+            {currentName} · {menu?.isToday ? "today" : dateLabel} · {dishes.length}/{allDishes.length} dish{allDishes.length !== 1 ? "es" : ""}
           </h3>
           <button
             onClick={(e) => {
@@ -92,6 +137,55 @@ export function MensaWidget() {
           </button>
         </div>
 
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                setFilter(f.id);
+              }}
+              className={`text-(--text-xs) font-medium px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${
+                filter === f.id
+                  ? "bg-accent/10 border-accent/40 text-accent"
+                  : "bg-surface border-border-subtle text-ink-muted hover:bg-surface-hover"
+              }`}
+            >
+              <span>{f.emoji}</span>
+              <span>{f.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1.5 mb-3">
+          <span className="text-(--text-xs) text-ink-muted">✨ Highlight:</span>
+          <input
+            type="text"
+            value={prefInput}
+            onChange={(e) => setPrefInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setPreference(prefInput.trim());
+              }
+            }}
+            placeholder="e.g. high protein, low carb, spicy…"
+            className="flex-1 text-(--text-xs) bg-surface-hover border border-border-subtle rounded-(--radius-sm) px-2 py-1 text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50"
+          />
+          {preference && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPrefInput("");
+                setPreference("");
+              }}
+              className="text-(--text-xs) text-ink-muted hover:text-ink"
+            >
+              clear
+            </button>
+          )}
+        </div>
+
         <button
           onClick={() => dishes.length > 0 && setOpen(true)}
           disabled={dishes.length === 0}
@@ -101,19 +195,36 @@ export function MensaWidget() {
             <p className="text-(--text-xs) font-mono text-ink-faint animate-pulse">Loading menu…</p>
           ) : menu?.error ? (
             <p className="text-(--text-xs) font-mono text-red-400">{menu.error}</p>
-          ) : dishes.length === 0 ? (
+          ) : allDishes.length === 0 ? (
             <p className="text-(--text-sm) font-mono text-ink-faint">No menu available.</p>
+          ) : dishes.length === 0 ? (
+            <p className="text-(--text-sm) font-mono text-ink-faint">No dishes match this filter.</p>
           ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {dishes.map((d, i) => (
-                <span
-                  key={i}
-                  className="text-(--text-xs) text-ink-secondary bg-surface-hover border border-border-subtle rounded-(--radius-sm) px-2 py-1 truncate max-w-[220px]"
-                  title={d.name}
-                >
-                  {d.name}
-                </span>
-              ))}
+            <div className="relative overflow-hidden max-h-[5.5rem]">
+              <div className="flex flex-wrap gap-2">
+                {dishes.map((d, i) => {
+                  const hi = isHighlighted(d);
+                  return (
+                    <span
+                      key={i}
+                      className={`text-(--text-sm) rounded-full px-3 py-1.5 flex items-center gap-1.5 max-w-[260px] border transition-colors ${
+                        hi
+                          ? "bg-success/15 border-success/40 text-ink"
+                          : "bg-surface-hover border-border-subtle text-ink"
+                      }`}
+                      title={d.name}
+                    >
+                      <span className="flex-shrink-0">{emojiFor(d)}</span>
+                      <span className="truncate">{d.name}</span>
+                    </span>
+                  );
+                })}
+              </div>
+              {dishes.length > 6 && (
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-surface to-transparent flex items-end justify-end pr-1">
+                  <span className="text-(--text-sm) text-ink-muted font-mono leading-none">…</span>
+                </div>
+              )}
             </div>
           )}
         </button>
@@ -132,7 +243,7 @@ export function MensaWidget() {
               <div>
                 <h3 className="text-(--text-sm) font-semibold text-ink">{currentName}</h3>
                 <p className="text-(--text-xs) font-mono text-ink-muted mt-0.5">
-                  {menu?.isToday ? "Today" : dateLabel} · {dishes.length} dish{dishes.length !== 1 ? "es" : ""}
+                  {menu?.isToday ? "Today" : dateLabel} · {dishes.length}/{allDishes.length} dish{allDishes.length !== 1 ? "es" : ""}
                 </p>
               </div>
               <button
@@ -145,26 +256,59 @@ export function MensaWidget() {
                 </svg>
               </button>
             </div>
+            <div className="px-5 pt-3 flex flex-wrap gap-1 border-b border-border-subtle pb-3 flex-shrink-0">
+              {FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFilter(f.id)}
+                  className={`text-(--text-xs) font-medium px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1.5 ${
+                    filter === f.id
+                      ? "bg-accent/10 border-accent/40 text-accent"
+                      : "bg-surface border-border-subtle text-ink-muted hover:bg-surface-hover"
+                  }`}
+                >
+                  <span>{f.emoji}</span>
+                  <span>{f.label}</span>
+                </button>
+              ))}
+            </div>
             <div className="px-5 py-4 overflow-y-auto space-y-4">
+              {dishes.length === 0 && (
+                <p className="text-(--text-sm) font-mono text-ink-faint">No dishes match this filter.</p>
+              )}
               {dishes.map((d, i) => {
                 const price = formatPrice(d);
+                const hi = isHighlighted(d);
                 return (
-                  <div key={i} className="pb-3 border-b border-border-subtle last:border-0 last:pb-0">
+                  <div
+                    key={i}
+                    className={`pb-4 border-b border-border-subtle last:border-0 last:pb-0 ${
+                      hi ? "-mx-5 px-5 bg-success/10 border-success/20" : ""
+                    }`}
+                  >
                     <div className="flex items-baseline justify-between gap-3 mb-1">
-                      <p className="text-(--text-sm) font-medium text-ink">{d.name}</p>
+                      <p className="text-(--text-sm) font-medium text-ink flex items-center gap-2">
+                        <span className="text-base leading-none">{emojiFor(d)}</span>
+                        <span>{d.name}</span>
+                        {hi && (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-success/20 text-success">
+                            match
+                          </span>
+                        )}
+                      </p>
                       {price && (
                         <span className="text-(--text-xs) font-mono text-ink-muted flex-shrink-0">{price}</span>
                       )}
                     </div>
-                    <p className="text-(--text-xs) font-mono uppercase tracking-wider text-ink-faint mb-1.5">
+                    <p className="text-(--text-xs) font-mono uppercase tracking-wider text-ink-faint mb-2 ml-7">
                       {d.dish_type}
                     </p>
                     {d.labels.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5 ml-7">
                         {d.labels.map((l) => (
                           <span
                             key={l}
-                            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-hover text-ink-secondary"
+                            className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-surface-hover border border-border-subtle text-ink-secondary"
                           >
                             {prettyLabel(l)}
                           </span>

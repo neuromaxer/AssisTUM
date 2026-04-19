@@ -1,4 +1,5 @@
 import { Router } from "express";
+import Anthropic from "@anthropic-ai/sdk";
 
 export const mensaRouter = Router();
 
@@ -57,6 +58,72 @@ async function fetchWeek(location: string, year: number, week: number): Promise<
   if (!r.ok) return null;
   return (await r.json()) as Week;
 }
+
+const emojiCache = new Map<string, string>();
+
+mensaRouter.post("/annotate", async (req, res) => {
+  const body = req.body as { dishes?: { name: string; labels?: string[] }[]; preference?: string };
+  const dishes = Array.isArray(body?.dishes) ? body.dishes : [];
+  const preference = typeof body?.preference === "string" ? body.preference.trim() : "";
+
+  if (dishes.length === 0) {
+    res.json({ annotations: [] });
+    return;
+  }
+
+  const missingEmojis = dishes.filter((d) => !emojiCache.has(d.name));
+  const needsHighlights = preference.length > 0;
+
+  try {
+    if (missingEmojis.length > 0 || needsHighlights) {
+      const anthropic = new Anthropic();
+      const dishBlock = dishes
+        .map((d, i) => `${i + 1}. ${d.name}${d.labels?.length ? ` [labels: ${d.labels.join(", ")}]` : ""}`)
+        .join("\n");
+      const prompt = `You are annotating dishes from a TUM canteen menu.
+
+For EACH dish below, return:
+- "emoji": a single emoji that visually represents the dish (e.g. pasta → 🍝, soup → 🍲, ravioli → 🥟, pizza → 🍕, salad → 🥗, rice bowl → 🍚, chicken → 🍗, beef/steak → 🥩, fish → 🐟, burger → 🍔, dessert → 🍰, fries → 🍟). Pick the single most representative emoji based on the dish NAME, not just the dietary labels.
+- "highlight": ${needsHighlights ? `boolean — true if the dish matches this user preference: "${preference}". Use the name AND labels to decide. Be reasonably inclusive but honest.` : "always false"}.
+
+Dishes:
+${dishBlock}
+
+Return ONLY JSON of the form:
+{"annotations":[{"name":"...","emoji":"...","highlight":false}, ...]}
+Order must match the input order. No prose, no markdown.`;
+
+      const msg = await anthropic.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1200,
+        messages: [{ role: "user", content: prompt }],
+      });
+      const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as {
+          annotations: { name: string; emoji: string; highlight: boolean }[];
+        };
+        for (const a of parsed.annotations) {
+          if (a.emoji) emojiCache.set(a.name, a.emoji);
+        }
+        res.json({ annotations: parsed.annotations });
+        return;
+      }
+    }
+  } catch (err) {
+    // fall through to cached-only response
+    console.error("mensa annotate error", err);
+  }
+
+  res.json({
+    annotations: dishes.map((d) => ({
+      name: d.name,
+      emoji: emojiCache.get(d.name) ?? "🍴",
+      highlight: false,
+    })),
+  });
+});
 
 mensaRouter.get("/menu", async (req, res) => {
   const location = typeof req.query.location === "string" ? req.query.location : "mensa-garching";

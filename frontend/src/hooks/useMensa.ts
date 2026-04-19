@@ -47,3 +47,25 @@ export function useMensaMenu(location: string) {
     staleTime: 30 * 60 * 1000,
   });
 }
+
+export type MensaAnnotation = { name: string; emoji: string; highlight: boolean };
+
+export function useMensaAnnotations(dishes: MensaDish[], preference: string) {
+  const key = dishes.map((d) => d.name).join("|");
+  return useQuery<{ annotations: MensaAnnotation[] }>({
+    queryKey: ["mensa", "annotations", key, preference],
+    queryFn: async () => {
+      const res = await fetch("/api/mensa/annotate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dishes: dishes.map((d) => ({ name: d.name, labels: d.labels })),
+          preference: preference || undefined,
+        }),
+      });
+      return res.json();
+    },
+    enabled: dishes.length > 0,
+    staleTime: 30 * 60 * 1000,
+  });
+}
