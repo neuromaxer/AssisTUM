@@ -28,11 +28,7 @@ See [features.md](features.md) for detailed feature descriptions.
 
 ## Pitch Deck
 
-The slide deck is built with [Slidev](https://sli.dev) and lives in [`pitch-deck/`](pitch-deck/). To preview:
-
-```bash
-cd pitch-deck && npx slidev --port 3030
-```
+[View the pitch deck (PDF)](pitch-deck/assistum-pitch-deck.pdf)
 
 ## Agent Skills
 
