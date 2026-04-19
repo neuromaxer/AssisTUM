@@ -30,7 +30,9 @@ See [features.md](features.md) for detailed feature descriptions.
 
 ## Pitch Deck & Demo
 
-[View the pitch deck (PDF)](pitch-deck/assistum-pitch-deck.pdf) | [Watch the demo recording](https://youtu.be/GF9egQOTlLk)
+[View the pitch deck (PDF)](pitch-deck/assistum-pitch-deck.pdf)
+
+[![Watch the demo](https://img.youtube.com/vi/GF9egQOTlLk/maxresdefault.jpg)](https://youtu.be/GF9egQOTlLk)
 
 ## Agent Skills
 
