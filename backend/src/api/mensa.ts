@@ -1,5 +1,5 @@
 import { Router } from "express";
-import Anthropic from "@anthropic-ai/sdk";
+import { getOpenCodeClient } from "../agent/opencode.js";
 
 export const mensaRouter = Router();
 
@@ -76,7 +76,10 @@ mensaRouter.post("/annotate", async (req, res) => {
 
   try {
     if (missingEmojis.length > 0 || needsHighlights) {
-      const anthropic = new Anthropic();
+      const client = await getOpenCodeClient();
+      const session = await client.session.create();
+      if (session.error || !session.data?.id) throw new Error("Failed to create OpenCode session");
+
       const dishBlock = dishes
         .map((d, i) => `${i + 1}. ${d.name}${d.labels?.length ? ` [labels: ${d.labels.join(", ")}]` : ""}`)
         .join("\n");
@@ -93,12 +96,18 @@ Return ONLY JSON of the form:
 {"annotations":[{"name":"...","emoji":"...","highlight":false}, ...]}
 Order must match the input order. No prose, no markdown.`;
 
-      const msg = await anthropic.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1200,
-        messages: [{ role: "user", content: prompt }],
+      const result = await client.session.prompt({
+        path: { id: session.data.id },
+        body: { parts: [{ type: "text", text: prompt }] },
       });
-      const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+
+      let text = "";
+      if (!result.error && result.data) {
+        const parts = (result.data as { parts?: { type: string; text?: string }[] }).parts;
+        if (parts) {
+          text = parts.filter((p) => p.type === "text" && p.text).map((p) => p.text).join("\n");
+        }
+      }
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]) as {

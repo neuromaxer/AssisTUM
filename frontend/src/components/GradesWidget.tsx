@@ -1,15 +1,38 @@
 import { useMemo, useState } from "react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  AreaChart, Area, CartesianGrid,
+  RadialBarChart, RadialBar,
+} from "recharts";
 import { useGrades, useSyncGrades, type Grade } from "../hooks/useGrades";
 
 type SemesterGroup = {
   id: string;
   name: string;
+  shortName: string;
   grades: Grade[];
   avg: number | null;
   ects: number;
 };
 
-function gradeColor(grade: number | null): string {
+const GRADE_COLORS = {
+  excellent: "#16a34a",
+  good: "#3070b3",
+  satisfactory: "#d97706",
+  sufficient: "#9c9c9c",
+  fail: "#dc2626",
+};
+
+function gradeColorHex(grade: number | null): string {
+  if (grade === null) return "#c4c4c4";
+  if (grade <= 1.3) return GRADE_COLORS.excellent;
+  if (grade <= 2.0) return GRADE_COLORS.good;
+  if (grade <= 3.0) return GRADE_COLORS.satisfactory;
+  if (grade <= 4.0) return GRADE_COLORS.sufficient;
+  return GRADE_COLORS.fail;
+}
+
+function gradeColorClass(grade: number | null): string {
   if (grade === null) return "text-ink-muted";
   if (grade <= 1.3) return "text-success";
   if (grade <= 2.0) return "text-accent";
@@ -18,25 +41,11 @@ function gradeColor(grade: number | null): string {
   return "text-danger";
 }
 
-function gradeBarWidth(grade: number | null): string {
-  if (grade === null) return "0%";
-  return `${Math.max(5, 100 - (grade - 1) * 25)}%`;
-}
-
-function gradeBarColor(grade: number | null): string {
-  if (grade === null) return "bg-ink-faint";
-  if (grade <= 1.3) return "bg-success";
-  if (grade <= 2.0) return "bg-accent";
-  if (grade <= 3.0) return "bg-warning";
-  if (grade <= 4.0) return "bg-ink-muted";
-  return "bg-danger";
-}
-
 function weightedAverage(grades: Grade[]): number | null {
   let totalWeight = 0;
   let totalGrade = 0;
   for (const g of grades) {
-    if (g.grade === null || g.grade === 0 || g.ects === null) continue;
+    if (g.grade === null || g.grade === 0 || g.ects === null || g.grade > 4.0) continue;
     totalWeight += g.ects;
     totalGrade += g.grade * g.ects;
   }
@@ -44,114 +53,8 @@ function weightedAverage(grades: Grade[]): number | null {
   return Math.round((totalGrade / totalWeight) * 100) / 100;
 }
 
-function cumulativeProgression(semesters: SemesterGroup[]): { semester: string; avg: number }[] {
-  const sorted = [...semesters]
-    .filter((s) => s.avg !== null)
-    .sort((a, b) => (a.id ?? "").localeCompare(b.id ?? ""));
-
-  const points: { semester: string; avg: number }[] = [];
-  const allGrades: Grade[] = [];
-
-  for (const sem of sorted) {
-    allGrades.push(...sem.grades);
-    const avg = weightedAverage(allGrades);
-    if (avg !== null) {
-      points.push({ semester: sem.name, avg });
-    }
-  }
-  return points;
-}
-
-function GradeDistribution({ grades }: { grades: Grade[] }) {
-  const buckets = useMemo(() => {
-    const b = [0, 0, 0, 0, 0];
-    for (const g of grades) {
-      if (g.grade === null || g.grade === 0) continue;
-      if (g.grade <= 1.3) b[0]++;
-      else if (g.grade <= 2.0) b[1]++;
-      else if (g.grade <= 3.0) b[2]++;
-      else if (g.grade <= 4.0) b[3]++;
-      else b[4]++;
-    }
-    return b;
-  }, [grades]);
-
-  const max = Math.max(...buckets, 1);
-  const labels = ["1.0–1.3", "1.7–2.0", "2.3–3.0", "3.3–4.0", ">4.0"];
-  const colors = ["bg-success", "bg-accent", "bg-warning", "bg-ink-muted", "bg-danger"];
-
-  return (
-    <div className="flex items-end gap-1.5 h-16">
-      {buckets.map((count, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <div className="w-full flex justify-center">
-            <div
-              className={`w-full max-w-[28px] rounded-sm ${colors[i]} transition-all`}
-              style={{ height: `${Math.max(4, (count / max) * 48)}px` }}
-            />
-          </div>
-          <span className="text-[9px] font-mono text-ink-muted leading-none">{labels[i]}</span>
-          {count > 0 && (
-            <span className="text-[9px] font-mono text-ink-secondary leading-none">{count}</span>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ProgressionChart({ points }: { points: { semester: string; avg: number }[] }) {
-  if (points.length < 2) return null;
-
-  const minG = Math.min(...points.map((p) => p.avg));
-  const maxG = Math.max(...points.map((p) => p.avg));
-  const padding = 0.3;
-  const low = Math.max(1.0, Math.floor((minG - padding) * 10) / 10);
-  const high = Math.min(5.0, Math.ceil((maxG + padding) * 10) / 10);
-  const range = high - low || 1;
-
-  const w = 100;
-  const h = 48;
-  const stepX = w / (points.length - 1);
-
-  const pathPoints = points.map((p, i) => {
-    const x = i * stepX;
-    const y = ((p.avg - low) / range) * h;
-    return `${x},${y}`;
-  });
-
-  return (
-    <div>
-      <svg viewBox={`-4 -4 ${w + 8} ${h + 8}`} className="w-full h-16" preserveAspectRatio="none">
-        <polyline
-          points={pathPoints.join(" ")}
-          fill="none"
-          stroke="var(--color-accent)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-        {points.map((p, i) => (
-          <circle
-            key={i}
-            cx={i * stepX}
-            cy={((p.avg - low) / range) * h}
-            r="3"
-            fill="var(--color-surface)"
-            stroke="var(--color-accent)"
-            strokeWidth="1.5"
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </svg>
-      <div className="flex justify-between mt-1">
-        {points.map((p, i) => (
-          <span key={i} className="text-[9px] font-mono text-ink-muted">{p.semester.replace("Semester ", "").slice(0, 6)}</span>
-        ))}
-      </div>
-    </div>
-  );
+function shortSemester(name: string): string {
+  return name.replace("Winter ", "W").replace("Summer ", "S").replace(/\//g, "/");
 }
 
 type ViewMode = "overview" | "semester";
@@ -174,23 +77,63 @@ export function GradesWidget() {
       .map(([id, items]): SemesterGroup => ({
         id,
         name: items[0].semester_name ?? id,
+        shortName: shortSemester(items[0].semester_name ?? id),
         grades: items,
         avg: weightedAverage(items),
-        ects: items.reduce((s, g) => s + (g.ects ?? 0), 0),
+        ects: items.filter((g) => g.grade === null || g.grade === 0 || g.grade <= 4.0).reduce((s, g) => s + (g.ects ?? 0), 0),
       }))
       .sort((a, b) => b.id.localeCompare(a.id));
   }, [grades]);
 
   const allGraded = grades?.filter((g) => g.grade !== null && g.grade > 0) ?? [];
-  const overallAvg = weightedAverage(allGraded);
-  const totalEcts = grades?.reduce((s, g) => s + (g.ects ?? 0), 0) ?? 0;
-  const progression = useMemo(() => cumulativeProgression(semesters), [semesters]);
+  const passed = allGraded.filter((g) => g.grade !== null && g.grade <= 4.0);
+  const overallAvg = weightedAverage(passed);
+  const totalEcts = passed.reduce((s, g) => s + (g.ects ?? 0), 0);
+
+  const distributionData = useMemo(() => {
+    const b = [0, 0, 0, 0, 0];
+    for (const g of allGraded) {
+      if (g.grade === null) continue;
+      if (g.grade <= 1.3) b[0]++;
+      else if (g.grade <= 2.0) b[1]++;
+      else if (g.grade <= 3.0) b[2]++;
+      else if (g.grade <= 4.0) b[3]++;
+      else b[4]++;
+    }
+    return [
+      { range: "1.0–1.3", count: b[0], fill: GRADE_COLORS.excellent },
+      { range: "1.7–2.0", count: b[1], fill: GRADE_COLORS.good },
+      { range: "2.3–3.0", count: b[2], fill: GRADE_COLORS.satisfactory },
+      { range: "3.3–4.0", count: b[3], fill: GRADE_COLORS.sufficient },
+      { range: ">4.0", count: b[4], fill: GRADE_COLORS.fail },
+    ];
+  }, [allGraded]);
+
+  const progressionData = useMemo(() => {
+    const sorted = [...semesters]
+      .filter((s) => s.avg !== null)
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const points: { semester: string; semAvg: number; cumAvg: number }[] = [];
+    const all: Grade[] = [];
+    for (const sem of sorted) {
+      all.push(...sem.grades);
+      const cum = weightedAverage(all);
+      if (cum !== null) {
+        points.push({ semester: sem.shortName, semAvg: sem.avg!, cumAvg: cum });
+      }
+    }
+    return points;
+  }, [semesters]);
+
+  const gpaRadial = useMemo(() => {
+    if (overallAvg === null) return [];
+    const pct = Math.max(0, ((5 - overallAvg) / 4) * 100);
+    return [{ name: "GPA", value: pct, fill: gradeColorHex(overallAvg) }];
+  }, [overallAvg]);
 
   const activeSemester = selectedSemester
     ? semesters.find((s) => s.id === selectedSemester)
     : null;
-
-  const displayGrades = activeSemester ? activeSemester.grades : allGraded;
 
   if (isLoading) {
     return (
@@ -222,7 +165,6 @@ export function GradesWidget() {
 
   return (
     <div className="bg-surface border border-border rounded-(--radius-lg) p-5">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-(--text-xs) font-mono uppercase tracking-widest text-ink-muted">
           <span className="mr-1.5">📊</span>Grades
@@ -256,77 +198,153 @@ export function GradesWidget() {
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-4 gap-3 mb-4">
-        <div className="bg-page rounded-(--radius-md) p-3">
-          <p className={`text-2xl font-semibold leading-none ${gradeColor(overallAvg)}`}>
-            {overallAvg?.toFixed(2) ?? "—"}
-          </p>
-          <p className="text-(--text-xs) font-mono text-ink-muted mt-1">Overall GPA</p>
-        </div>
-        <div className="bg-page rounded-(--radius-md) p-3">
-          <p className="text-2xl font-semibold text-accent leading-none">{totalEcts}</p>
-          <p className="text-(--text-xs) font-mono text-ink-muted mt-1">Total ECTS</p>
-        </div>
-        <div className="bg-page rounded-(--radius-md) p-3">
-          <p className="text-2xl font-semibold text-ink leading-none">{allGraded.length}</p>
-          <p className="text-(--text-xs) font-mono text-ink-muted mt-1">Exams passed</p>
-        </div>
-        <div className="bg-page rounded-(--radius-md) p-3">
-          <p className="text-2xl font-semibold text-ink leading-none">{semesters.length}</p>
-          <p className="text-(--text-xs) font-mono text-ink-muted mt-1">Semesters</p>
-        </div>
-      </div>
-
       {view === "overview" ? (
-        <div className="grid grid-cols-2 gap-4">
-          {/* Distribution */}
-          <div className="bg-page rounded-(--radius-md) p-3">
-            <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-wider mb-3">Distribution</p>
-            <GradeDistribution grades={allGraded} />
-          </div>
-
-          {/* Progression */}
-          <div className="bg-page rounded-(--radius-md) p-3">
-            <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-wider mb-3">GPA Progression</p>
-            {progression.length >= 2 ? (
-              <ProgressionChart points={progression} />
-            ) : (
-              <p className="text-(--text-xs) font-mono text-ink-faint">Need at least 2 semesters</p>
-            )}
-          </div>
-
-          {/* Recent grades */}
-          <div className="col-span-2">
-            <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-wider mb-2">All Exams</p>
-            <div className="space-y-1">
-              {displayGrades.map((g) => (
-                <div key={g.id} className="flex items-center gap-3 py-1.5">
-                  <span className={`text-(--text-sm) font-semibold w-10 text-right ${gradeColor(g.grade)}`}>
-                    {g.grade?.toFixed(1) ?? "—"}
+        <div>
+          {/* Top row: GPA gauge + stats + distribution */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            {/* GPA radial gauge */}
+            <div className="bg-page rounded-(--radius-md) p-4 flex flex-col items-center justify-center">
+              <div className="w-28 h-28 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart
+                    cx="50%" cy="50%"
+                    innerRadius="72%" outerRadius="100%"
+                    startAngle={210} endAngle={-30}
+                    data={gpaRadial}
+                    barSize={10}
+                  >
+                    <RadialBar
+                      dataKey="value"
+                      cornerRadius={5}
+                      animationDuration={1200}
+                      animationEasing="ease-out"
+                      background={{ fill: "var(--color-surface-active)" }}
+                    />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className={`text-2xl font-bold leading-none ${gradeColorClass(overallAvg)}`}>
+                    {overallAvg?.toFixed(2) ?? "—"}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-(--text-sm) text-ink truncate">{g.exam_name}</span>
-                      {g.ects && (
-                        <span className="text-[10px] font-mono text-ink-muted flex-shrink-0">{g.ects} ECTS</span>
-                      )}
-                    </div>
-                    <div className="h-1 bg-surface-active rounded-full mt-1 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${gradeBarColor(g.grade)} transition-all`}
-                        style={{ width: gradeBarWidth(g.grade) }}
-                      />
-                    </div>
-                  </div>
+                  <span className="text-[10px] font-mono text-ink-muted mt-1">GPA</span>
                 </div>
-              ))}
+              </div>
+              <div className="flex gap-4 mt-2 text-center">
+                <div>
+                  <p className="text-(--text-sm) font-semibold text-accent">{totalEcts}</p>
+                  <p className="text-[10px] font-mono text-ink-muted">ECTS</p>
+                </div>
+                <div>
+                  <p className="text-(--text-sm) font-semibold text-ink">{allGraded.length}</p>
+                  <p className="text-[10px] font-mono text-ink-muted">Exams</p>
+                </div>
+                <div>
+                  <p className="text-(--text-sm) font-semibold text-ink">{semesters.length}</p>
+                  <p className="text-[10px] font-mono text-ink-muted">Semesters</p>
+                </div>
+              </div>
             </div>
+
+            {/* Distribution bar chart */}
+            <div className="bg-page rounded-(--radius-md) p-4">
+              <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-wider mb-2">Distribution</p>
+              <ResponsiveContainer width="100%" height={130}>
+                <BarChart data={distributionData} barCategoryGap="20%">
+                  <XAxis
+                    dataKey="range"
+                    tick={{ fontSize: 10, fill: "var(--color-ink-muted)", fontFamily: "var(--font-mono)" }}
+                    axisLine={false} tickLine={false}
+                  />
+                  <YAxis hide />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--color-surface)", border: "1px solid var(--color-border)",
+                      borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
+                    }}
+                    cursor={{ fill: "var(--color-surface-hover)" }}
+                  />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]} animationDuration={800} animationEasing="ease-out">
+                    {distributionData.map((d, i) => (
+                      <Cell key={i} fill={d.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* GPA progression */}
+            <div className="bg-page rounded-(--radius-md) p-4">
+              <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-wider mb-2">GPA Progression</p>
+              {progressionData.length >= 2 ? (
+                <ResponsiveContainer width="100%" height={130}>
+                  <AreaChart data={progressionData}>
+                    <defs>
+                      <linearGradient id="gpaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle)" vertical={false} />
+                    <XAxis
+                      dataKey="semester"
+                      tick={{ fontSize: 10, fill: "var(--color-ink-muted)", fontFamily: "var(--font-mono)" }}
+                      axisLine={false} tickLine={false}
+                    />
+                    <YAxis
+                      domain={[1, 4]}
+                      reversed
+                      tick={{ fontSize: 10, fill: "var(--color-ink-muted)", fontFamily: "var(--font-mono)" }}
+                      axisLine={false} tickLine={false}
+                      width={28}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-surface)", border: "1px solid var(--color-border)",
+                        borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
+                      }}
+                      formatter={(v: unknown, name: unknown) => [Number(v).toFixed(2), name === "cumAvg" ? "Cumulative" : "Semester"]}
+                    />
+                    <Area
+                      type="monotone" dataKey="cumAvg"
+                      stroke="var(--color-accent)" strokeWidth={2}
+                      fill="url(#gpaGrad)"
+                      dot={{ r: 4, fill: "var(--color-surface)", stroke: "var(--color-accent)", strokeWidth: 2 }}
+                      activeDot={{ r: 6 }}
+                      animationDuration={1000} animationEasing="ease-out"
+                    />
+                    <Area
+                      type="monotone" dataKey="semAvg"
+                      stroke="var(--color-ink-muted)" strokeWidth={1.5} strokeDasharray="4 3"
+                      fill="none"
+                      dot={{ r: 3, fill: "var(--color-surface)", stroke: "var(--color-ink-muted)", strokeWidth: 1.5 }}
+                      animationDuration={1000} animationEasing="ease-out"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-(--text-xs) font-mono text-ink-faint mt-8 text-center">Need 2+ semesters</p>
+              )}
+            </div>
+          </div>
+
+          {/* Exam list */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+            {allGraded.map((g) => (
+              <div key={g.id} className="flex items-center gap-2.5 py-1.5 border-b border-border-subtle last:border-0">
+                <span
+                  className="text-(--text-sm) font-bold w-9 text-right tabular-nums"
+                  style={{ color: gradeColorHex(g.grade) }}
+                >
+                  {g.grade?.toFixed(1)}
+                </span>
+                <span className="text-(--text-sm) text-ink truncate flex-1">{g.exam_name}</span>
+                <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects}</span>
+              </div>
+            ))}
           </div>
         </div>
       ) : (
         <div>
-          {/* Semester tabs */}
           <div className="flex flex-wrap gap-1.5 mb-4">
             {semesters.map((sem) => (
               <button
@@ -338,41 +356,64 @@ export function GradesWidget() {
                     : "bg-surface border-border-subtle text-ink-muted hover:bg-surface-hover"
                 }`}
               >
-                {sem.name} · {sem.avg?.toFixed(2) ?? "—"} · {sem.ects} ECTS
+                {sem.shortName} · {sem.avg?.toFixed(2) ?? "—"} · {sem.ects} ECTS
               </button>
             ))}
           </div>
 
-          {/* Semester detail or all semesters */}
           {activeSemester ? (
             <div>
               <div className="flex items-baseline gap-3 mb-3">
                 <p className="text-(--text-sm) font-semibold text-ink">{activeSemester.name}</p>
-                <span className={`text-(--text-sm) font-semibold ${gradeColor(activeSemester.avg)}`}>
+                <span className={`text-(--text-sm) font-semibold ${gradeColorClass(activeSemester.avg)}`}>
                   {activeSemester.avg?.toFixed(2) ?? "—"}
                 </span>
                 <span className="text-(--text-xs) font-mono text-ink-muted">{activeSemester.ects} ECTS</span>
               </div>
-              <div className="space-y-1">
+
+              {/* Mini bar chart for this semester */}
+              <div className="mb-4">
+                <ResponsiveContainer width="100%" height={120}>
+                  <BarChart
+                    data={activeSemester.grades.filter((g) => g.grade !== null).map((g) => ({
+                      name: g.exam_name.length > 20 ? g.exam_name.slice(0, 20) + "…" : g.exam_name,
+                      grade: g.grade,
+                      fill: gradeColorHex(g.grade),
+                    }))}
+                    layout="vertical" barCategoryGap="15%"
+                  >
+                    <XAxis type="number" domain={[0, 5]} hide />
+                    <YAxis
+                      type="category" dataKey="name" width={160}
+                      tick={{ fontSize: 11, fill: "var(--color-ink-secondary)", fontFamily: "var(--font-sans)" }}
+                      axisLine={false} tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-surface)", border: "1px solid var(--color-border)",
+                        borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
+                      }}
+                    />
+                    <Bar dataKey="grade" radius={[0, 4, 4, 0]} animationDuration={600} animationEasing="ease-out">
+                      {activeSemester.grades.filter((g) => g.grade !== null).map((g, i) => (
+                        <Cell key={i} fill={gradeColorHex(g.grade)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                 {activeSemester.grades.map((g) => (
-                  <div key={g.id} className="flex items-center gap-3 py-1.5">
-                    <span className={`text-(--text-sm) font-semibold w-10 text-right ${gradeColor(g.grade)}`}>
+                  <div key={g.id} className="flex items-center gap-2.5 py-1.5 border-b border-border-subtle last:border-0">
+                    <span
+                      className="text-(--text-sm) font-bold w-9 text-right tabular-nums"
+                      style={{ color: gradeColorHex(g.grade) }}
+                    >
                       {g.grade?.toFixed(1) ?? "—"}
                     </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-(--text-sm) text-ink truncate">{g.exam_name}</span>
-                        {g.ects && (
-                          <span className="text-[10px] font-mono text-ink-muted flex-shrink-0">{g.ects} ECTS</span>
-                        )}
-                      </div>
-                      <div className="h-1 bg-surface-active rounded-full mt-1 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${gradeBarColor(g.grade)} transition-all`}
-                          style={{ width: gradeBarWidth(g.grade) }}
-                        />
-                      </div>
-                    </div>
+                    <span className="text-(--text-sm) text-ink truncate flex-1">{g.exam_name}</span>
+                    <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects}</span>
                   </div>
                 ))}
               </div>
@@ -380,26 +421,27 @@ export function GradesWidget() {
           ) : (
             <div className="space-y-4">
               {semesters.map((sem) => (
-                <div key={sem.id}>
+                <div key={sem.id} className="border-b border-border-subtle pb-3 last:border-0">
                   <div className="flex items-baseline justify-between mb-2">
                     <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-wider">{sem.name}</p>
                     <div className="flex items-center gap-2">
-                      <span className={`text-(--text-xs) font-semibold ${gradeColor(sem.avg)}`}>
+                      <span className="text-(--text-xs) font-semibold" style={{ color: gradeColorHex(sem.avg) }}>
                         {sem.avg?.toFixed(2) ?? "—"}
                       </span>
                       <span className="text-[10px] font-mono text-ink-faint">{sem.ects} ECTS</span>
                     </div>
                   </div>
-                  <div className="space-y-0.5">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                     {sem.grades.map((g) => (
-                      <div key={g.id} className="flex items-center gap-3 py-1">
-                        <span className={`text-(--text-xs) font-semibold w-8 text-right ${gradeColor(g.grade)}`}>
+                      <div key={g.id} className="flex items-center gap-2.5 py-1">
+                        <span
+                          className="text-(--text-xs) font-bold w-7 text-right tabular-nums"
+                          style={{ color: gradeColorHex(g.grade) }}
+                        >
                           {g.grade?.toFixed(1) ?? "—"}
                         </span>
                         <span className="text-(--text-xs) text-ink truncate flex-1">{g.exam_name}</span>
-                        {g.ects && (
-                          <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects}</span>
-                        )}
+                        <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects}</span>
                       </div>
                     ))}
                   </div>

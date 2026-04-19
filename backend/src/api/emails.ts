@@ -1,6 +1,6 @@
 import { Router } from "express";
-import Anthropic from "@anthropic-ai/sdk";
 import { getSetting } from "./settings.js";
+import { getOpenCodeClient } from "../agent/opencode.js";
 
 export const emailsRouter = Router();
 
@@ -86,22 +86,31 @@ emailsRouter.get("/recent", async (_req, res) => {
       )
       .join("\n\n---\n\n");
 
-    const anthropic = new Anthropic();
-    const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
-      messages: [
-        {
-          role: "user",
-          content: `You are summarizing a student's TUM inbox. Below are ${emails.length} emails from the last 48 hours. Write a concise 2-4 sentence digest covering what's important — deadlines, announcements, replies needed, etc. Be specific, not generic. Do not list every email; focus on what actually matters. Do not use markdown formatting — plain text only.
+    const oc = await getOpenCodeClient();
+    const session = await oc.session.create();
+    if (session.error || !session.data?.id) {
+      throw new Error("Failed to create OpenCode session");
+    }
 
-${emailBlock}`,
-        },
-      ],
+    const prompt = `You are summarizing a student's TUM inbox. Below are ${emails.length} emails from the last 48 hours. Write a concise 2-4 sentence digest covering what's important — deadlines, announcements, replies needed, etc. Be specific, not generic. Do not list every email; focus on what actually matters. Do not use markdown formatting — plain text only.
+
+${emailBlock}`;
+
+    const result = await oc.session.prompt({
+      path: { id: session.data.id },
+      body: { parts: [{ type: "text", text: prompt }] },
     });
 
-    const summary =
-      message.content[0].type === "text" ? message.content[0].text : null;
+    let summary: string | null = null;
+    if (!result.error && result.data) {
+      const parts = (result.data as { parts?: { type: string; text?: string }[] }).parts;
+      if (parts) {
+        summary = parts
+          .filter((p) => p.type === "text" && p.text)
+          .map((p) => p.text)
+          .join("\n") || null;
+      }
+    }
 
     res.json({ configured: true, count: emails.length, summary });
   } catch (err: unknown) {
