@@ -371,49 +371,32 @@ export function GradesWidget() {
                 <span className="text-(--text-xs) font-mono text-ink-muted">{activeSemester.ects} ECTS</span>
               </div>
 
-              {/* Mini bar chart for this semester */}
-              <div className="mb-4">
-                <ResponsiveContainer width="100%" height={120}>
-                  <BarChart
-                    data={activeSemester.grades.filter((g) => g.grade !== null).map((g) => ({
-                      name: g.exam_name.length > 20 ? g.exam_name.slice(0, 20) + "…" : g.exam_name,
-                      grade: g.grade,
-                      fill: gradeColorHex(g.grade),
-                    }))}
-                    layout="vertical" barCategoryGap="15%"
-                  >
-                    <XAxis type="number" domain={[0, 5]} hide />
-                    <YAxis
-                      type="category" dataKey="name" width={160}
-                      tick={{ fontSize: 11, fill: "var(--color-ink-secondary)", fontFamily: "var(--font-sans)" }}
-                      axisLine={false} tickLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: "var(--color-surface)", border: "1px solid var(--color-border)",
-                        borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
-                      }}
-                    />
-                    <Bar dataKey="grade" radius={[0, 4, 4, 0]} animationDuration={600} animationEasing="ease-out">
-                      {activeSemester.grades.filter((g) => g.grade !== null).map((g, i) => (
-                        <Cell key={i} fill={gradeColorHex(g.grade)} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+              <div className="space-y-2">
                 {activeSemester.grades.map((g) => (
-                  <div key={g.id} className="flex items-center gap-2.5 py-1.5 border-b border-border-subtle last:border-0">
+                  <div key={g.id} className="flex items-center gap-3">
                     <span
-                      className="text-(--text-sm) font-bold w-9 text-right tabular-nums"
+                      className="text-(--text-sm) font-bold w-9 text-right tabular-nums flex-shrink-0"
                       style={{ color: gradeColorHex(g.grade) }}
                     >
                       {g.grade?.toFixed(1) ?? "—"}
                     </span>
-                    <span className="text-(--text-sm) text-ink truncate flex-1">{g.exam_name}</span>
-                    <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                        <span className="text-(--text-sm) text-ink truncate">{g.exam_name}</span>
+                        <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects} ECTS</span>
+                      </div>
+                      {g.grade !== null && g.grade > 0 && (
+                        <div className="h-1.5 bg-surface-active rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700 ease-out"
+                            style={{
+                              width: `${Math.max(5, ((5 - g.grade) / 4) * 100)}%`,
+                              backgroundColor: gradeColorHex(g.grade),
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
