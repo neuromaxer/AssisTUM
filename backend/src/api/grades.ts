@@ -1,6 +1,14 @@
 import { Router } from "express";
 import { getDb } from "../db/client.js";
 
+function semesterToName(id: string): string {
+  const match = id.match(/^(\d{2})([WS])$/);
+  if (!match) return id;
+  const year = parseInt("20" + match[1]);
+  if (match[2] === "W") return `Winter ${year}/${(year + 1).toString().slice(-2)}`;
+  return `Summer ${year}`;
+}
+
 export const gradesRouter = Router();
 
 gradesRouter.get("/", (_req, res) => {
@@ -67,23 +75,26 @@ gradesRouter.post("/sync", async (_req, res) => {
       .all() as { id: string; module_code: string }[];
 
     const fieldNames = rows.length > 0 ? Object.keys(rows[0]) : [];
+    console.log("[grades/sync] field names:", fieldNames);
+    console.log("[grades/sync] sample row:", JSON.stringify(rows[0], null, 2));
+    if (rows.length > 1) console.log("[grades/sync] second row:", JSON.stringify(rows[1], null, 2));
 
     const upsertMany = db.transaction(() => {
       for (const row of rows) {
-        const examName = row.titel ?? row.name ?? row.lv_titel ?? "Unknown";
+        const examName = (row.lv_titel ?? "Unknown").trim();
 
-        const gradeStr = row.uninote ?? row.note ?? row.grade;
+        const gradeStr = row.uninotenamekurz ?? null;
         const grade = gradeStr ? parseFloat(gradeStr.replace(",", ".")) : null;
-        const gradeText = row.uninotenamekurz ?? row.notename ?? null;
+        const gradeText = gradeStr;
 
-        const ectsStr = row.ects_credits ?? row.ects ?? row.bonus;
+        const ectsStr = row.lv_credits ?? null;
         const ects = ectsStr ? parseFloat(ectsStr.replace(",", ".")) : null;
 
-        const semesterId = row.pv_semester ?? row.semester_id ?? null;
-        const semesterName = row.semester ?? row.semester_name ?? null;
-        const examDate = row.datum ?? row.pruef_datum ?? null;
-        const examiner = row.pruefer1 ?? row.pruefer ?? null;
-        const moduleCode = row.pv_konto_nr ?? row.modul_nr ?? row.lv_nr ?? null;
+        const semesterId = row.lv_semester ?? null;
+        const semesterName = semesterId ? semesterToName(semesterId) : null;
+        const examDate = row.datum ?? null;
+        const examiner = row.pruefer_nachname ?? null;
+        const moduleCode = row.lv_nummer ?? null;
 
         const status =
           gradeText === "BE" || grade === 0
