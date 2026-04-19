@@ -22,11 +22,11 @@ export function Layout({
     <div className="h-screen flex flex-col bg-page text-ink font-sans">
       <div className="flex flex-1 overflow-hidden">
         <aside
-          className="border-r border-border overflow-y-auto p-(--spacing-panel) shrink-0 w-[280px]"
+          className="border-r border-border overflow-y-auto px-(--spacing-panel) pt-2 pb-(--spacing-panel) shrink-0 w-[280px]"
         >
           {sidebar}
         </aside>
-        <main className="flex-1 min-w-0 overflow-hidden p-(--spacing-panel)">{main}</main>
+        <main className="flex-1 min-w-0 overflow-hidden px-(--spacing-panel) pt-2 pb-(--spacing-panel)">{main}</main>
         <aside
           className="border-l border-border flex flex-col shrink-0 transition-[width] duration-200"
           style={{ width: chatWide ? CHAT_WIDE : CHAT_NARROW }}

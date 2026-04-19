@@ -61,7 +61,7 @@ export function Dashboard() {
     .slice(0, 6);
 
   return (
-    <div className="h-full overflow-y-auto bg-page p-(--spacing-panel)">
+    <div className="h-full overflow-y-auto bg-page">
       {/* Header */}
       <div className="mb-5">
         <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-widest">

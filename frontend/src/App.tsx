@@ -28,7 +28,7 @@ export function App() {
     <div className="h-full relative">
       <button
         onClick={toggleDashboard}
-        className="absolute top-1 right-0 z-10 text-(--text-xs) font-medium text-ink-secondary bg-surface border border-border rounded-(--radius-sm) px-2.5 h-[1.625rem] hover:bg-surface-hover transition-colors"
+        className="absolute top-0 right-0 z-10 text-(--text-xs) font-medium text-ink-secondary bg-surface border border-border rounded-(--radius-sm) px-2.5 h-[1.625rem] hover:bg-surface-hover transition-colors"
       >
         {showDashboard ? "Open Calendar" : "Open Dashboard"}
       </button>
