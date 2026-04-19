@@ -2,6 +2,8 @@
 
 AI-powered student assistant for TUM that unifies scattered university systems into a single agent-driven interface.
 
+![AssisTUM — weekly planner populated by the AI agent](pitch-deck/images/2_populated_calendar.png)
+
 ## Problem
 
 TUM students juggle 5+ disconnected systems daily — Moodle for assignments, TUM Online for lectures and grades, email for deadlines, iCal for schedules, NavigaTUM for rooms, MVV for transit, and Mensa for food. Coordinating all of this manually is tedious, error-prone, and wastes hours every week. There's no single place to see your week, catch conflicts, or act on deadlines.

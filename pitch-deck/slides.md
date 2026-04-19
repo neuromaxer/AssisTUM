@@ -80,23 +80,22 @@ graph LR
 ```mermaid {scale: 0.6}
 graph TD
     Q["'Let's plan my next week'"] --> P1
-    Q --> P2
     Q --> P3
     Q --> P4
     Q --> P5
     Q --> P6
-    P1["Fetch lectures<br/><small>TUM Online + iCal</small>"] --> PLAN
+    P1["Fetch lectures<br/><small>TUM Online + iCal</small>"] --> P2
+    P3["Scan Moodle<br/><small>Materials, assignments, PDFs</small>"] --> P2
+    P4["Triage email<br/><small>IMAP</small>"] --> P2
+    P5["Fetch menus<br/><small>eat-api</small>"] --> P2
+    P6["Scrape clubs<br/><small>Web Scraper</small>"] --> P2
     P2["Resolve rooms<br/><small>NavigaTUM</small>"] --> PLAN
-    P3["Scan Moodle<br/><small>Materials, assignments, PDFs</small>"] --> PLAN
-    P4["Triage email<br/><small>IMAP</small>"] --> PLAN
-    P5["Fetch menus<br/><small>eat-api</small>"] --> PLAN
-    P6["Scrape clubs<br/><small>Web Scraper</small>"] --> PLAN
     PLAN["Plan & schedule<br/><small>Resolve conflicts, assign time slots</small>"] --> LOG
     LOG["Build calendar<br/><small>Commute, meals, study blocks</small>"] --> SUM
     SUM["Summary + briefing"]
     style Q fill:#3070b3,stroke:#25609e,color:#ffffff
     style P1 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
-    style P2 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
+    style P2 fill:#3070b3,stroke:#25609e,color:#ffffff
     style P3 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
     style P4 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
     style P5 fill:#f0efec,stroke:#3070b3,color:#1c1c1c
