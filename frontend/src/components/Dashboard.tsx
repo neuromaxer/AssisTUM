@@ -2,6 +2,7 @@ import { useEvents } from "../hooks/useEvents";
 import { useTodos } from "../hooks/useTodos";
 import { EmailWidget } from "./EmailWidget";
 import { MensaWidget } from "./MensaWidget";
+import { GradesWidget } from "./GradesWidget";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -97,6 +98,11 @@ export function Dashboard() {
       {/* Mensa widget */}
       <div className="mb-3">
         <MensaWidget />
+      </div>
+
+      {/* Grades widget */}
+      <div className="mb-3">
+        <GradesWidget />
       </div>
 
       <div className="grid grid-cols-5 gap-3">

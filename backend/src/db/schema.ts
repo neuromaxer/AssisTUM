@@ -78,6 +78,22 @@ export function runMigrations(db: Database.Database) {
       created_at          TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS grades (
+      id            TEXT PRIMARY KEY,
+      exam_name     TEXT NOT NULL,
+      grade         REAL,
+      grade_text    TEXT,
+      ects          REAL,
+      semester_id   TEXT,
+      semester_name TEXT,
+      exam_date     TEXT,
+      examiner      TEXT,
+      module_code   TEXT,
+      course_id     TEXT REFERENCES courses(id),
+      status        TEXT NOT NULL DEFAULT 'passed',
+      created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS settings (
       key   TEXT PRIMARY KEY,
       value TEXT NOT NULL
