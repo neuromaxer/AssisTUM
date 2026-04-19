@@ -24,34 +24,20 @@ export function App() {
 
   const toggleDashboard = () => setShowDashboard((v) => !v);
 
-  const toggleBtn = (
-    <div className="flex justify-end pt-2 pb-1">
-      <button
-        onClick={toggleDashboard}
-        className="text-(--text-xs) font-medium text-ink-secondary bg-surface border border-border rounded-(--radius-sm) px-2.5 h-[1.625rem] hover:bg-surface-hover transition-colors"
-      >
-        {showDashboard ? "Open Calendar" : "Open Dashboard"}
-      </button>
-    </div>
-  );
-
   const calendarView = (
     <div className="h-full relative">
-      <div className={`absolute inset-0 overflow-auto transition-opacity duration-300 ${showDashboard ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-        {toggleBtn}
-        <div className="h-[calc(100%-2rem)]">
-          <Calendar
-            onOpenTodo={setSelectedTodoId}
-            onOpenCourse={setSelectedCourseId}
-            onOpenEvent={setSelectedEventId}
-            initialDate={calendarDate}
-            onDateChange={setCalendarDate}
-          />
-        </div>
+      <div className={`absolute inset-0 transition-opacity duration-300 ${showDashboard ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+        <Calendar
+          onOpenTodo={setSelectedTodoId}
+          onOpenCourse={setSelectedCourseId}
+          onOpenEvent={setSelectedEventId}
+          initialDate={calendarDate}
+          onDateChange={setCalendarDate}
+          onToggleDashboard={toggleDashboard}
+        />
       </div>
       <div className={`absolute inset-0 overflow-auto transition-opacity duration-300 ${showDashboard ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        {toggleBtn}
-        <Dashboard />
+        <Dashboard onOpenCalendar={toggleDashboard} />
       </div>
     </div>
   );

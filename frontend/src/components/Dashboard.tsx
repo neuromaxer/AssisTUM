@@ -37,7 +37,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 // ── component ─────────────────────────────────────────────────────────────────
 
-export function Dashboard() {
+export function Dashboard({ onOpenCalendar }: { onOpenCalendar?: () => void }) {
   const { data: events } = useEvents();
   const { data: todos } = useTodos();
 
@@ -65,11 +65,22 @@ export function Dashboard() {
   return (
     <div className="h-full overflow-y-auto bg-page">
       {/* Header */}
-      <div className="mb-5">
-        <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-widest">
-          {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-        </p>
-        <h2 className="text-xl font-semibold text-ink mt-0.5">Dashboard</h2>
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <p className="text-(--text-xs) font-mono text-ink-muted uppercase tracking-widest">
+            {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
+          <h2 className="text-xl font-semibold text-ink mt-0.5">Dashboard</h2>
+        </div>
+        {onOpenCalendar && (
+          <button
+            onClick={onOpenCalendar}
+            className="text-ink-secondary border border-border rounded-(--radius-sm) hover:bg-surface-hover"
+            style={{ fontSize: "var(--text-xs)", fontWeight: 500, padding: "0.2rem 0.5rem", height: "1.625rem", lineHeight: 1, transition: "background 0.15s, border-color 0.15s" }}
+          >
+            Open Calendar
+          </button>
+        )}
       </div>
 
       {/* Stats row */}
