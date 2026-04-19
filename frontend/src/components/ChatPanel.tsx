@@ -36,7 +36,7 @@ function renderPart(part: Part) {
 function getSystemTag(parts: Part[]): { type: "skill"; name: string } | { type: "system"; label: string } | null {
   const firstText = parts.find((p) => p.type === "text") as TextPart | undefined;
   if (!firstText) return null;
-  const skillMatch = firstText.text.match(/^\[Skill:\s*([^\]]+)\]/);
+  const skillMatch = firstText.text.match(/\[Skill:\s*([^\]]+)\]/);
   if (skillMatch) return { type: "skill", name: skillMatch[1].trim() };
   const tagMatch = firstText.text.match(/^\[([^\]]+)\]/);
   if (tagMatch) return { type: "system", label: tagMatch[1].trim() };

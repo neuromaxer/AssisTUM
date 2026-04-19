@@ -12,6 +12,8 @@ fonts:
 themeConfig:
   primary: '#3070b3'
 transition: slide-left
+overviewSnapshots: false
+contextMenu: false
 layout: center
 class: text-center
 ---
