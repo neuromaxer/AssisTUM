@@ -12,6 +12,8 @@ interface SessionPickerProps {
   onSelectSession: (id: string) => void;
   onNewSession: () => Promise<void>;
   onDeleteSession?: (id: string) => Promise<void>;
+  chatWide?: boolean;
+  onToggleChatWide?: () => void;
 }
 
 function sessionLabel(session: Session | undefined, id: string | null): string {
@@ -27,6 +29,8 @@ export function SessionPicker({
   onSelectSession,
   onNewSession,
   onDeleteSession,
+  chatWide,
+  onToggleChatWide,
 }: SessionPickerProps) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -77,6 +81,15 @@ export function SessionPicker({
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border" ref={dropdownRef}>
+      {onToggleChatWide && (
+        <button
+          onClick={onToggleChatWide}
+          className="text-(--text-xs) font-mono text-ink-muted hover:text-ink-secondary h-7 w-7 flex items-center justify-center rounded-(--radius-sm) hover:bg-surface-hover transition-colors shrink-0"
+          title={chatWide ? "Narrow chat" : "Wide chat"}
+        >
+          {chatWide ? "><" : "<>"}
+        </button>
+      )}
       <button
         className="flex-1 min-w-0 text-(--text-xs) text-ink bg-surface border border-border rounded-(--radius-sm) px-2 py-1 h-7 cursor-pointer flex items-center gap-1.5 hover:bg-surface-hover transition-colors font-mono truncate"
         onClick={() => setOpen(!open)}

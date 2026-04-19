@@ -54,7 +54,7 @@ export function App() {
             calendarView
           )
         }
-        chat={<ChatPanel />}
+        chat={({ chatWide, onToggleChatWide }) => <ChatPanel chatWide={chatWide} onToggleChatWide={onToggleChatWide} />}
         onSettingsClick={() => setSettingsOpen(true)}
         showDashboard={showDashboard}
         onToggleDashboard={() => setShowDashboard((v) => !v)}
