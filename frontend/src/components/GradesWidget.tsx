@@ -350,10 +350,9 @@ export function GradesWidget() {
           {/* Exam list */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
             {allGraded.map((g) => (
-              <div key={g.id} className="flex items-center gap-2 py-1.5 border-b border-border-subtle last:border-0">
-                <MiniDonut grade={g.grade} ects={g.ects ?? 0} totalEcts={totalEcts} size={26} />
+              <div key={g.id} className="flex items-center gap-2.5 py-1.5 border-b border-border-subtle last:border-0">
                 <span
-                  className="text-(--text-sm) font-bold w-8 text-right tabular-nums flex-shrink-0"
+                  className="text-(--text-sm) font-bold w-9 text-right tabular-nums"
                   style={{ color: gradeColorHex(g.grade) }}
                 >
                   {g.grade?.toFixed(1)}
