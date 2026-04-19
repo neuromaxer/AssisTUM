@@ -58,10 +58,10 @@ function shortSemester(name: string): string {
   return name.replace("Winter ", "W").replace("Summer ", "S").replace(/\//g, "/");
 }
 
-function MiniDonut({ grade, size = 24 }: { grade: number | null; size?: number }) {
+function MiniDonut({ grade, ects, totalEcts, size = 24 }: { grade: number | null; ects: number; totalEcts: number; size?: number }) {
   const r = (size - 4) / 2;
   const circ = 2 * Math.PI * r;
-  const pct = grade !== null && grade > 0 ? Math.max(0, (5 - grade) / 4) : 0;
+  const pct = totalEcts > 0 ? ects / totalEcts : 0;
   const color = gradeColorHex(grade);
   return (
     <svg width={size} height={size} className="flex-shrink-0">
@@ -351,7 +351,7 @@ export function GradesWidget() {
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
             {allGraded.map((g) => (
               <div key={g.id} className="flex items-center gap-2 py-1.5 border-b border-border-subtle last:border-0">
-                <MiniDonut grade={g.grade} size={26} />
+                <MiniDonut grade={g.grade} ects={g.ects ?? 0} totalEcts={totalEcts} size={26} />
                 <span
                   className="text-(--text-sm) font-bold w-8 text-right tabular-nums flex-shrink-0"
                   style={{ color: gradeColorHex(g.grade) }}
@@ -428,7 +428,7 @@ export function GradesWidget() {
                 <div className="flex-1 min-w-0 space-y-0.5">
                   {activeSemester.grades.map((g) => (
                     <div key={g.id} className="flex items-center gap-2 py-1.5 border-b border-border-subtle last:border-0">
-                      <MiniDonut grade={g.grade} size={22} />
+                      <MiniDonut grade={g.grade} ects={g.ects ?? 0} totalEcts={activeSemester.ects} size={22} />
                       <span
                         className="text-(--text-sm) font-bold w-8 text-right tabular-nums flex-shrink-0"
                         style={{ color: gradeColorHex(g.grade) }}
