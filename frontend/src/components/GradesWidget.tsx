@@ -3,6 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   AreaChart, Area, CartesianGrid,
   RadialBarChart, RadialBar,
+  PieChart, Pie,
 } from "recharts";
 import { useGrades, useSyncGrades, type Grade } from "../hooks/useGrades";
 
@@ -55,6 +56,25 @@ function weightedAverage(grades: Grade[]): number | null {
 
 function shortSemester(name: string): string {
   return name.replace("Winter ", "W").replace("Summer ", "S").replace(/\//g, "/");
+}
+
+function MiniDonut({ grade, size = 24 }: { grade: number | null; size?: number }) {
+  const r = (size - 4) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = grade !== null && grade > 0 ? Math.max(0, (5 - grade) / 4) : 0;
+  const color = gradeColorHex(grade);
+  return (
+    <svg width={size} height={size} className="flex-shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-surface-active)" strokeWidth={3} />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none"
+        stroke={color} strokeWidth={3} strokeLinecap="round"
+        strokeDasharray={`${pct * circ} ${circ}`}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: "stroke-dasharray 0.7s ease-out" }}
+      />
+    </svg>
+  );
 }
 
 type ViewMode = "overview" | "semester";
@@ -330,9 +350,10 @@ export function GradesWidget() {
           {/* Exam list */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
             {allGraded.map((g) => (
-              <div key={g.id} className="flex items-center gap-2.5 py-1.5 border-b border-border-subtle last:border-0">
+              <div key={g.id} className="flex items-center gap-2 py-1.5 border-b border-border-subtle last:border-0">
+                <MiniDonut grade={g.grade} size={26} />
                 <span
-                  className="text-(--text-sm) font-bold w-9 text-right tabular-nums"
+                  className="text-(--text-sm) font-bold w-8 text-right tabular-nums flex-shrink-0"
                   style={{ color: gradeColorHex(g.grade) }}
                 >
                   {g.grade?.toFixed(1)}
@@ -371,34 +392,54 @@ export function GradesWidget() {
                 <span className="text-(--text-xs) font-mono text-ink-muted">{activeSemester.ects} ECTS</span>
               </div>
 
-              <div className="space-y-2">
-                {activeSemester.grades.map((g) => (
-                  <div key={g.id} className="flex items-center gap-3">
-                    <span
-                      className="text-(--text-sm) font-bold w-9 text-right tabular-nums flex-shrink-0"
-                      style={{ color: gradeColorHex(g.grade) }}
-                    >
-                      {g.grade?.toFixed(1) ?? "—"}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                        <span className="text-(--text-sm) text-ink truncate">{g.exam_name}</span>
-                        <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects} ECTS</span>
-                      </div>
-                      {g.grade !== null && g.grade > 0 && (
-                        <div className="h-1.5 bg-surface-active rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-700 ease-out"
-                            style={{
-                              width: `${Math.max(5, ((5 - g.grade) / 4) * 100)}%`,
-                              backgroundColor: gradeColorHex(g.grade),
-                            }}
-                          />
-                        </div>
-                      )}
+              <div className="flex gap-4 mb-3">
+                {/* ECTS pie chart */}
+                <div className="flex-shrink-0">
+                  <ResponsiveContainer width={140} height={140}>
+                    <PieChart>
+                      <Pie
+                        data={activeSemester.grades
+                          .filter((g) => g.ects !== null && g.ects > 0)
+                          .map((g) => ({ name: g.exam_name, value: g.ects!, fill: gradeColorHex(g.grade) }))}
+                        cx="50%" cy="50%"
+                        innerRadius={35} outerRadius={60}
+                        dataKey="value" paddingAngle={2}
+                        animationDuration={800} animationEasing="ease-out"
+                      >
+                        {activeSemester.grades
+                          .filter((g) => g.ects !== null && g.ects > 0)
+                          .map((g, i) => (
+                            <Cell key={i} fill={gradeColorHex(g.grade)} />
+                          ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--color-surface)", border: "1px solid var(--color-border)",
+                          borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
+                        }}
+                        formatter={(v: unknown) => [`${v} ECTS`]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <p className="text-[10px] font-mono text-ink-muted text-center -mt-1">ECTS by grade</p>
+                </div>
+
+                {/* Exam list */}
+                <div className="flex-1 min-w-0 space-y-0.5">
+                  {activeSemester.grades.map((g) => (
+                    <div key={g.id} className="flex items-center gap-2 py-1.5 border-b border-border-subtle last:border-0">
+                      <MiniDonut grade={g.grade} size={22} />
+                      <span
+                        className="text-(--text-sm) font-bold w-8 text-right tabular-nums flex-shrink-0"
+                        style={{ color: gradeColorHex(g.grade) }}
+                      >
+                        {g.grade?.toFixed(1) ?? "—"}
+                      </span>
+                      <span className="text-(--text-sm) text-ink truncate flex-1">{g.exam_name}</span>
+                      <span className="text-[10px] font-mono text-ink-faint flex-shrink-0">{g.ects}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           ) : (
