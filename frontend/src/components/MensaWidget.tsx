@@ -1,37 +1,37 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMensaLocations, useMensaMenu, useMensaAnnotations, type MensaDish } from "../hooks/useMensa";
+import { useEffect, useState } from "react";
+import { useMensaLocations, useMensaMenu, type MensaDish } from "../hooks/useMensa";
 
 const STORAGE_KEY = "mensa.location";
 const DEFAULT_LOCATION = "mensa-garching";
 
-const LABEL_PRETTY: Record<string, string> = {
-  VEGAN: "Vegan",
-  VEGETARIAN: "Vegetarian",
-  GLUTEN: "Gluten",
-  WHEAT: "Wheat",
-  MILK: "Milk",
-  LACTOSE: "Lactose",
-  EGG: "Egg",
-  SOY: "Soy",
-  FISH: "Fish",
-  PORK: "Pork",
-  BEEF: "Beef",
-  POULTRY: "Poultry",
-  PEANUTS: "Peanuts",
-  MUSTARD: "Mustard",
-  CELERY: "Celery",
-  SESAME: "Sesame",
-  CEREAL: "Cereal",
-  ALCOHOL: "Alcohol",
-  ANTIOXIDANTS: "Antioxidants",
-  COLORANTS: "Colorants",
-  FLAVOR_ENHANCER: "Flavor enhancer",
-  PRESERVATIVES: "Preservatives",
-  SWEETENERS: "Sweeteners",
+const LABEL_CHIP: Record<string, { emoji: string; text: string }> = {
+  VEGAN: { emoji: "🌱", text: "Vegan" },
+  VEGETARIAN: { emoji: "🥬", text: "Vegetarian" },
+  GLUTEN: { emoji: "🌾", text: "Gluten" },
+  WHEAT: { emoji: "🌾", text: "Wheat" },
+  MILK: { emoji: "🥛", text: "Milk" },
+  LACTOSE: { emoji: "🥛", text: "Lactose" },
+  EGG: { emoji: "🥚", text: "Egg" },
+  SOY: { emoji: "🫘", text: "Soy" },
+  FISH: { emoji: "🐟", text: "Fish" },
+  PORK: { emoji: "🐷", text: "Pork" },
+  BEEF: { emoji: "🐄", text: "Beef" },
+  POULTRY: { emoji: "🐔", text: "Poultry" },
+  PEANUTS: { emoji: "🥜", text: "Peanuts" },
+  MUSTARD: { emoji: "🟡", text: "Mustard" },
+  CELERY: { emoji: "🥬", text: "Celery" },
+  SESAME: { emoji: "🫘", text: "Sesame" },
+  CEREAL: { emoji: "🌾", text: "Cereal" },
+  ALCOHOL: { emoji: "🍷", text: "Alcohol" },
+  ANTIOXIDANTS: { emoji: "🧪", text: "Antioxidants" },
+  COLORANTS: { emoji: "🎨", text: "Colorants" },
+  FLAVOR_ENHANCER: { emoji: "🧂", text: "Flavor enhancer" },
+  PRESERVATIVES: { emoji: "🧪", text: "Preservatives" },
+  SWEETENERS: { emoji: "🍬", text: "Sweeteners" },
 };
 
-function prettyLabel(l: string) {
-  return LABEL_PRETTY[l] ?? l.replace(/_/g, " ").toLowerCase();
+function labelChip(l: string): { emoji: string; text: string } {
+  return LABEL_CHIP[l] ?? { emoji: "📋", text: l.replace(/_/g, " ").toLowerCase() };
 }
 
 type DietFilter = "all" | "vegan" | "vegetarian" | "meat";
@@ -82,8 +82,6 @@ export function MensaWidget() {
   const [open, setOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [filter, setFilter] = useState<DietFilter>("all");
-  const [prefInput, setPrefInput] = useState("");
-  const [preference, setPreference] = useState("");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, location);
@@ -98,18 +96,6 @@ export function MensaWidget() {
   const allDishes = menu?.dishes ?? [];
   const dishes = allDishes.filter((d) => matchesFilter(d, filter));
 
-  const { data: annotations } = useMensaAnnotations(allDishes, preference);
-  const annotationMap = useMemo(() => {
-    const m = new Map<string, { emoji: string; highlight: boolean }>();
-    for (const a of annotations?.annotations ?? []) {
-      m.set(a.name, { emoji: a.emoji, highlight: a.highlight });
-    }
-    return m;
-  }, [annotations]);
-
-  const emojiFor = (d: MensaDish) => annotationMap.get(d.name)?.emoji ?? dishEmoji(d);
-  const isHighlighted = (d: MensaDish) =>
-    preference.length > 0 && (annotationMap.get(d.name)?.highlight ?? false);
   const dateLabel = menu?.date
     ? new Date(menu.date + "T00:00:00").toLocaleDateString("en-GB", {
         weekday: "short",
@@ -157,35 +143,6 @@ export function MensaWidget() {
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5 mb-3">
-          <span className="text-(--text-xs) text-ink-muted">✨ Highlight:</span>
-          <input
-            type="text"
-            value={prefInput}
-            onChange={(e) => setPrefInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                setPreference(prefInput.trim());
-              }
-            }}
-            placeholder="e.g. high protein, low carb, spicy…"
-            className="flex-1 text-(--text-xs) bg-surface-hover border border-border-subtle rounded-(--radius-sm) px-2 py-1 text-ink placeholder-ink-faint focus:outline-none focus:border-accent/50"
-          />
-          {preference && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setPrefInput("");
-                setPreference("");
-              }}
-              className="text-(--text-xs) text-ink-muted hover:text-ink"
-            >
-              clear
-            </button>
-          )}
-        </div>
-
         <button
           onClick={() => dishes.length > 0 && setOpen(true)}
           disabled={dishes.length === 0}
@@ -202,23 +159,16 @@ export function MensaWidget() {
           ) : (
             <div className="relative overflow-hidden max-h-[5.5rem]">
               <div className="flex flex-wrap gap-2">
-                {dishes.map((d, i) => {
-                  const hi = isHighlighted(d);
-                  return (
+                {dishes.map((d, i) => (
                     <span
                       key={i}
-                      className={`text-(--text-sm) rounded-full px-3 py-1.5 flex items-center gap-1.5 max-w-[260px] border transition-colors ${
-                        hi
-                          ? "bg-success/15 border-success/40 text-ink"
-                          : "bg-surface-hover border-border-subtle text-ink"
-                      }`}
+                      className="text-(--text-sm) rounded-full px-3 py-1.5 flex items-center gap-1.5 max-w-[260px] border bg-surface-hover border-border-subtle text-ink"
                       title={d.name}
                     >
-                      <span className="flex-shrink-0">{emojiFor(d)}</span>
+                      <span className="flex-shrink-0">{dishEmoji(d)}</span>
                       <span className="truncate">{d.name}</span>
                     </span>
-                  );
-                })}
+                ))}
               </div>
               {dishes.length > 6 && (
                 <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-surface to-transparent flex items-end justify-end pr-1">
@@ -278,23 +228,15 @@ export function MensaWidget() {
               )}
               {dishes.map((d, i) => {
                 const price = formatPrice(d);
-                const hi = isHighlighted(d);
                 return (
                   <div
                     key={i}
-                    className={`pb-4 border-b border-border-subtle last:border-0 last:pb-0 ${
-                      hi ? "-mx-5 px-5 bg-success/10 border-success/20" : ""
-                    }`}
+                    className="pb-4 border-b border-border-subtle last:border-0 last:pb-0"
                   >
                     <div className="flex items-baseline justify-between gap-3 mb-1">
                       <p className="text-(--text-sm) font-medium text-ink flex items-center gap-2">
-                        <span className="text-base leading-none">{emojiFor(d)}</span>
+                        <span className="text-base leading-none">{dishEmoji(d)}</span>
                         <span>{d.name}</span>
-                        {hi && (
-                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-success/20 text-success">
-                            match
-                          </span>
-                        )}
                       </p>
                       {price && (
                         <span className="text-(--text-xs) font-mono text-ink-muted flex-shrink-0">{price}</span>
@@ -305,14 +247,18 @@ export function MensaWidget() {
                     </p>
                     {d.labels.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 ml-7">
-                        {d.labels.map((l) => (
-                          <span
-                            key={l}
-                            className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-surface-hover border border-border-subtle text-ink-secondary"
-                          >
-                            {prettyLabel(l)}
-                          </span>
-                        ))}
+                        {d.labels.map((l) => {
+                          const chip = labelChip(l);
+                          return (
+                            <span
+                              key={l}
+                              className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-surface-hover border border-border-subtle text-ink-secondary flex items-center gap-1"
+                            >
+                              <span>{chip.emoji}</span>
+                              {chip.text}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
