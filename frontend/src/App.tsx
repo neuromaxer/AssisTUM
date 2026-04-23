@@ -22,6 +22,8 @@ export function App() {
   const [calendarDate, setCalendarDate] = useState<string | null>(null);
   const [showDashboard, setShowDashboard] = useState(false);
 
+  const toggleDashboard = () => setShowDashboard((v) => !v);
+
   const calendarView = (
     <div className="h-full relative">
       <div className={`absolute inset-0 transition-opacity duration-300 ${showDashboard ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
@@ -31,10 +33,11 @@ export function App() {
           onOpenEvent={setSelectedEventId}
           initialDate={calendarDate}
           onDateChange={setCalendarDate}
+          onToggleDashboard={toggleDashboard}
         />
       </div>
       <div className={`absolute inset-0 overflow-auto transition-opacity duration-300 ${showDashboard ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        <Dashboard />
+        <Dashboard onOpenCalendar={toggleDashboard} />
       </div>
     </div>
   );
@@ -54,10 +57,8 @@ export function App() {
             calendarView
           )
         }
-        chat={<ChatPanel />}
+        chat={({ chatWide, onToggleChatWide }) => <ChatPanel chatWide={chatWide} onToggleChatWide={onToggleChatWide} />}
         onSettingsClick={() => setSettingsOpen(true)}
-        showDashboard={showDashboard}
-        onToggleDashboard={() => setShowDashboard((v) => !v)}
         statusBar={<StatusBar />}
       />
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />

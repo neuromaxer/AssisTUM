@@ -12,6 +12,8 @@ interface SessionPickerProps {
   onSelectSession: (id: string) => void;
   onNewSession: () => Promise<void>;
   onDeleteSession?: (id: string) => Promise<void>;
+  chatWide?: boolean;
+  onToggleChatWide?: () => void;
 }
 
 function sessionLabel(session: Session | undefined, id: string | null): string {
@@ -27,6 +29,8 @@ export function SessionPicker({
   onSelectSession,
   onNewSession,
   onDeleteSession,
+  chatWide,
+  onToggleChatWide,
 }: SessionPickerProps) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -76,21 +80,30 @@ export function SessionPicker({
   };
 
   return (
-    <div className="flex items-center gap-2 px-(--spacing-panel) py-3 border-b border-border" ref={dropdownRef}>
+    <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border" ref={dropdownRef}>
+      {onToggleChatWide && (
+        <button
+          onClick={onToggleChatWide}
+          className="text-(--text-xs) font-mono text-ink-muted hover:text-ink-secondary h-7 w-7 flex items-center justify-center rounded-(--radius-sm) hover:bg-surface-hover transition-colors shrink-0"
+          title={chatWide ? "Narrow chat" : "Wide chat"}
+        >
+          {chatWide ? "><" : "<>"}
+        </button>
+      )}
       <button
-        className="flex-1 min-w-0 text-(--text-xs) text-ink bg-surface border border-border rounded-(--radius-sm) px-2 py-1 cursor-pointer flex items-center gap-1.5 hover:bg-surface-hover transition-colors font-mono truncate"
+        className="flex-1 min-w-0 text-(--text-xs) text-ink bg-surface border border-border rounded-(--radius-sm) px-2 py-1 h-7 cursor-pointer flex items-center gap-1.5 hover:bg-surface-hover transition-colors font-mono truncate"
         onClick={() => setOpen(!open)}
       >
         <span className="truncate">{label}</span>
         <span className="text-[8px] text-ink-muted shrink-0 ml-auto">{open ? "\u25BE" : "\u25B8"}</span>
       </button>
       <button
-        className="text-(--text-xs) text-white bg-accent hover:bg-accent-hover rounded-(--radius-md) px-2.5 py-1 cursor-pointer transition-colors shrink-0 font-medium"
+        className="text-(--text-xs) text-white bg-accent hover:bg-accent-hover rounded-(--radius-sm) px-2.5 h-7 cursor-pointer transition-colors shrink-0 font-medium"
         onClick={handleNew}
         disabled={creating}
         title="New session"
       >
-        {creating ? "\u2026" : "+ New"}
+        {creating ? "\u2026" : "New"}
       </button>
 
       {open && (
@@ -119,11 +132,13 @@ export function SessionPicker({
                 </div>
                 {onDeleteSession && (
                   <button
-                    className="text-ink-muted hover:text-danger text-sm bg-transparent border-none cursor-pointer px-1 leading-none"
+                    className="text-ink-muted hover:text-danger w-7 h-7 flex items-center justify-center rounded-(--radius-sm) hover:bg-surface-hover transition-colors bg-transparent border-none cursor-pointer"
                     onClick={(e) => handleDelete(e, s.id)}
                     title="Delete session"
                   >
-                    &times;
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                      <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+                    </svg>
                   </button>
                 )}
               </button>

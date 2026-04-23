@@ -6,6 +6,7 @@ import {
   type TodoResource,
 } from "../hooks/useTodos";
 import { useCourse } from "../hooks/useCourses";
+import { playTodoDone } from "../lib/sound";
 
 const priorityColors: Record<string, { bg: string; text: string }> = {
   high: { bg: "bg-danger/10", text: "text-danger" },
@@ -83,10 +84,12 @@ export function TodoDetail({
   todoId,
   onBack,
   onOpenCourse,
+  backLabel = "Back to calendar",
 }: {
   todoId: string;
   onBack: () => void;
   onOpenCourse?: (id: string) => void;
+  backLabel?: string;
 }) {
   const { data: todo, isLoading } = useTodo(todoId);
   const toggleTodo = useToggleTodo();
@@ -115,16 +118,17 @@ export function TodoDetail({
           className="flex items-center gap-2 text-(--text-sm) text-ink-muted hover:text-ink-secondary transition-colors duration-100 mb-8 cursor-pointer"
         >
           <span>&larr;</span>
-          <span className="font-medium">Back to calendar</span>
+          <span className="font-medium">{backLabel}</span>
         </button>
 
         {/* Header — checkbox, title, pills */}
         <div className="text-center mb-8">
           <button
-            onClick={() =>
-              toggleTodo.mutate({ id: todo.id, completed: !isCompleted })
-            }
-            className={`w-9 h-9 rounded-full border-[2.5px] mx-auto mb-3 flex items-center justify-center transition-colors duration-150 cursor-pointer ${
+            onClick={() => {
+              if (!isCompleted) playTodoDone();
+              toggleTodo.mutate({ id: todo.id, completed: !isCompleted });
+            }}
+            className={`group w-9 h-9 rounded-full border-[2.5px] mx-auto mb-3 flex items-center justify-center transition-colors duration-150 cursor-pointer ${
               isCompleted
                 ? "bg-success border-success"
                 : pc
@@ -132,8 +136,21 @@ export function TodoDetail({
                 : "border-border"
             }`}
           >
-            {isCompleted && (
+            {isCompleted ? (
               <span className="text-white text-sm font-bold">&#10003;</span>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-4 h-4 text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+              >
+                <path d="M3 8.5 6.5 12 13 5" />
+              </svg>
             )}
           </button>
 
@@ -310,9 +327,10 @@ export function TodoDetail({
         {/* Actions */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() =>
-              toggleTodo.mutate({ id: todo.id, completed: !isCompleted })
-            }
+            onClick={() => {
+              if (!isCompleted) playTodoDone();
+              toggleTodo.mutate({ id: todo.id, completed: !isCompleted });
+            }}
             className={`flex-1 text-(--text-sm) font-medium py-2.5 rounded-(--radius-md) transition-colors duration-150 cursor-pointer ${
               isCompleted
                 ? "bg-surface border border-border text-ink-secondary hover:bg-surface-hover"

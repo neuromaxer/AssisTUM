@@ -95,6 +95,15 @@ export function TodoPanel({
 
   return (
     <div className="flex flex-col h-full">
+      {/* Branding */}
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="w-2 h-2 rounded-full bg-accent" />
+        <h1 className="text-(--text-lg) font-semibold tracking-tight">AssisTUM</h1>
+        <span className="text-(--text-xs) font-mono text-ink-muted bg-surface-hover px-1.5 py-0.5 rounded-(--radius-sm)">
+          beta
+        </span>
+      </div>
+
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-baseline justify-between mb-1">
