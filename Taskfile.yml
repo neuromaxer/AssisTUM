@@ -41,10 +41,10 @@ tasks:
   start:appx:
     desc: Start assistum inside appx (production mode, custom ports)
     env:
-      PORT: "{{.APPX_PORT | default \"10000\"}}"
-      OPENCODE_URL: "http://127.0.0.1:{{.APPX_OC_PORT | default \"4097\"}}"
+      PORT: '{{.APPX_PORT | default "10000"}}'
+      OPENCODE_URL: 'http://127.0.0.1:{{.APPX_OC_PORT | default "4097"}}'
     cmds:
-      - npx concurrently --kill-others -n oc,be -c blue,green "opencode serve --port {{.APPX_OC_PORT | default \"4097\"}}" "node backend/dist/index.js"
+      - npx concurrently --kill-others -n oc,be -c blue,green "opencode serve --port {{.APPX_OC_PORT | default "4097"}}" "node backend/dist/index.js"
 
   typecheck:
     desc: Run TypeScript type checking for both workspaces
