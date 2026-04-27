@@ -122,6 +122,7 @@ agentRouter.get("/session/:id/status", async (_req: Request, res: Response) => {
 
 /* GET /events — SSE proxy for OpenCode global event stream */
 agentRouter.get("/events", async (req: Request, res: Response) => {
+  console.log("[sse] /api/agent/events connection opened");
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
@@ -130,18 +131,23 @@ agentRouter.get("/events", async (req: Request, res: Response) => {
 
   let closed = false;
   req.on("close", () => {
+    console.log("[sse] /api/agent/events client disconnected");
     closed = true;
   });
 
   try {
     const client = await getOpenCodeClient();
+    console.log("[sse] connecting to OpenCode global.event()...");
     const sse = await client.global.event();
+    console.log("[sse] connected to OpenCode, streaming events");
 
     for await (const event of sse.stream) {
       if (closed) break;
       res.write(`data: ${JSON.stringify(event)}\n\n`);
     }
+    console.log("[sse] OpenCode stream ended");
   } catch (err) {
+    console.error("[sse] error:", (err as Error).message);
     if (!closed) {
       res.write(`event: error\ndata: ${JSON.stringify({ error: (err as Error).message })}\n\n`);
     }

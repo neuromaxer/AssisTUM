@@ -57,8 +57,8 @@ export function useAgentStream() {
           } as AgentEvent);
         }
       }
-    } catch {
-      // OpenCode may not be running
+    } catch (err) {
+      console.error("[agent-stream] syncMessages failed:", err);
     }
   }, []);
 
@@ -90,7 +90,8 @@ export function useAgentStream() {
       }
     };
 
-    es.onerror = () => {
+    es.onerror = (e) => {
+      console.error("[agent-stream] SSE error, readyState:", es.readyState, e);
       setConnectionStatus("connecting");
     };
 
