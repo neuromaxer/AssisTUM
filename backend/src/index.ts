@@ -8,7 +8,7 @@ import { getDb } from "./db/client.js";
 import { eventsRouter } from "./api/events.js";
 import { todosRouter } from "./api/todos.js";
 import { coursesRouter } from "./api/courses.js";
-import { getSetting, settingsRouter } from "./api/settings.js";
+import { settingsRouter } from "./api/settings.js";
 import { clubsRouter } from "./api/clubs.js";
 import { sseHandler } from "./api/sse.js";
 import { agentRouter } from "./api/agent.js";
@@ -64,33 +64,4 @@ console.log("Database initialized");
 
 app.listen(config.port, () => {
   console.log(`AssisTUM backend listening on port ${config.port}`);
-  injectApiKey();
 });
-
-async function injectApiKey() {
-  const key = getSetting("anthropic_api_key");
-  if (!key) {
-    console.warn("[startup] no anthropic_api_key in settings — agent will not work until one is set");
-    return;
-  }
-  const ocUrl = config.openCodeUrl || "http://127.0.0.1:4096";
-  const maxRetries = 15;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const res = await fetch(`${ocUrl}/auth/anthropic`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "api", key }),
-      });
-      if (res.ok) {
-        console.log("[startup] injected Anthropic API key into OpenCode");
-        return;
-      }
-      console.warn(`[startup] OpenCode auth injection returned ${res.status}, retrying...`);
-    } catch {
-      if (i === 0) console.log("[startup] waiting for OpenCode to be ready...");
-    }
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-  console.error("[startup] failed to inject API key after retries — agent will not work");
-}
