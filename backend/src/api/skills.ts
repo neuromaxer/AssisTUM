@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import { getOpenCodeClient } from "../agent/opencode.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const skillsDir = resolve(__dirname, "../skills");
+const skillsDir = resolve(__dirname, "../../src/skills");
 
 export const skillsRouter = Router();
 
