@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../db/client.js";
+import { config } from "../config.js";
 
 export const settingsRouter = Router();
 
@@ -12,6 +13,24 @@ export function getSetting(key: string): string | undefined {
   return row?.value;
 }
 
+async function injectApiKeyIntoOpenCode(key: string) {
+  const ocUrl = config.openCodeUrl || "http://127.0.0.1:4096";
+  try {
+    const res = await fetch(`${ocUrl}/auth/anthropic`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "api", key }),
+    });
+    if (res.ok) {
+      console.log("[settings] injected Anthropic API key into OpenCode");
+    } else {
+      console.error(`[settings] OpenCode auth injection returned ${res.status}`);
+    }
+  } catch (err) {
+    console.error("[settings] failed to inject API key into OpenCode:", (err as Error).message);
+  }
+}
+
 /* GET / — list all settings, masking sensitive values */
 settingsRouter.get("/", (_req, res) => {
   const db = getDb();
@@ -22,7 +41,7 @@ settingsRouter.get("/", (_req, res) => {
 
   const masked = rows.map((row) => {
     const lower = row.key.toLowerCase();
-    if (lower.includes("password") || lower.includes("token")) {
+    if (lower.includes("password") || lower.includes("token") || lower.includes("api_key")) {
       return { key: row.key, value: "***" };
     }
     return row;
@@ -32,7 +51,7 @@ settingsRouter.get("/", (_req, res) => {
 });
 
 /* PUT /:key — upsert a setting */
-settingsRouter.put("/:key", (req, res) => {
+settingsRouter.put("/:key", async (req, res) => {
   const { value } = req.body;
   if (value === undefined || value === null) {
     res.status(400).json({ error: "Missing required field: value" });
@@ -44,6 +63,10 @@ settingsRouter.put("/:key", (req, res) => {
     `INSERT INTO settings (key, value) VALUES (?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`
   ).run(req.params.key, String(value));
+
+  if (req.params.key === "anthropic_api_key") {
+    await injectApiKeyIntoOpenCode(String(value));
+  }
 
   res.json({ key: req.params.key, value: String(value) });
 });

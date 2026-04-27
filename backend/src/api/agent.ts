@@ -9,11 +9,14 @@ agentRouter.post("/session", async (_req: Request, res: Response) => {
     const client = await getOpenCodeClient();
     const result = await client.session.create();
     if (result.error) {
+      console.error("[agent] session.create error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
+    console.log(`[agent] created session ${result.data?.id}`);
     res.json(result.data);
   } catch (err) {
+    console.error("[agent] session.create exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });
@@ -24,11 +27,13 @@ agentRouter.get("/session", async (_req: Request, res: Response) => {
     const client = await getOpenCodeClient();
     const result = await client.session.list();
     if (result.error) {
+      console.error("[agent] session.list error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
   } catch (err) {
+    console.error("[agent] session.list exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });
@@ -51,11 +56,13 @@ agentRouter.post("/session/:id/message", async (req: Request, res: Response) => 
       },
     });
     if (result.error) {
+      console.error("[agent] prompt error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
   } catch (err) {
+    console.error("[agent] prompt exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });
@@ -78,11 +85,14 @@ agentRouter.post("/session/:id/message/async", async (req: Request, res: Respons
       },
     });
     if (result.error) {
+      console.error("[agent] promptAsync error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
+    console.log(`[agent] promptAsync sent to session ${id}`);
     res.status(204).end();
   } catch (err) {
+    console.error("[agent] promptAsync exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });
@@ -96,11 +106,13 @@ agentRouter.get("/session/:id/messages", async (req: Request, res: Response) => 
       path: { id },
     });
     if (result.error) {
+      console.error("[agent] messages error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
   } catch (err) {
+    console.error("[agent] messages exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });
@@ -111,11 +123,13 @@ agentRouter.get("/session/:id/status", async (_req: Request, res: Response) => {
     const client = await getOpenCodeClient();
     const result = await client.session.status();
     if (result.error) {
+      console.error("[agent] status error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
     res.json(result.data);
   } catch (err) {
+    console.error("[agent] status exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });
@@ -165,11 +179,14 @@ agentRouter.post("/session/:id/abort", async (req: Request, res: Response) => {
     const client = await getOpenCodeClient();
     const result = await client.session.abort({ path: { id } });
     if (result.error) {
+      console.error("[agent] abort error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
+    console.log(`[agent] aborted session ${id}`);
     res.json(result.data);
   } catch (err) {
+    console.error("[agent] abort exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });
@@ -181,11 +198,14 @@ agentRouter.delete("/session/:id", async (req: Request, res: Response) => {
     const client = await getOpenCodeClient();
     const result = await client.session.delete({ path: { id } });
     if (result.error) {
+      console.error("[agent] delete error:", JSON.stringify(result.error));
       res.status(500).json({ error: JSON.stringify(result.error) });
       return;
     }
+    console.log(`[agent] deleted session ${id}`);
     res.status(204).end();
   } catch (err) {
+    console.error("[agent] delete exception:", (err as Error).message);
     res.status(500).json({ error: (err as Error).message });
   }
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStatus } from "../hooks/useSettings";
 import { useSyncCourses } from "../hooks/useCourses";
@@ -67,6 +67,11 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const syncCourses = useSyncCourses();
   const [syncMsg, setSyncMsg] = useState<{ text: string; error: boolean } | null>(null);
 
+  const [apiKey, setApiKey] = useState("");
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
+  const [apiKeyMsg, setApiKeyMsg] = useState<{ text: string; error: boolean } | null>(null);
+  const [apiKeySet, setApiKeySet] = useState<boolean | null>(null);
+
   const { data: clubs } = useClubs();
   const addClub = useAddClub();
   const deleteClub = useDeleteClub();
@@ -74,7 +79,38 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const [clubUrl, setClubUrl] = useState("");
   const [clubMsg, setClubMsg] = useState<{ text: string; error: boolean } | null>(null);
 
+  useEffect(() => {
+    if (!open) return;
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((rows: { key: string; value: string }[]) => {
+        const row = rows.find((r) => r.key === "anthropic_api_key");
+        setApiKeySet(row?.value === "***");
+      })
+      .catch(() => {});
+  }, [open]);
+
   if (!open) return null;
+
+  const saveApiKey = async () => {
+    setApiKeyLoading(true);
+    setApiKeyMsg(null);
+    try {
+      const res = await fetch("/api/settings/anthropic_api_key", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: apiKey }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setApiKeyMsg({ text: "API key saved and injected into agent", error: false });
+      setApiKey("");
+      setApiKeySet(true);
+    } catch (err: any) {
+      setApiKeyMsg({ text: err.message, error: true });
+    } finally {
+      setApiKeyLoading(false);
+    }
+  };
 
   const tumPending = status?.tum_online === "pending";
   const tumConnected = status?.tum_online === "connected";
@@ -138,6 +174,28 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-(--text-lg) font-semibold text-ink">Settings</h2>
+
+        <div className="space-y-(--spacing-element)">
+          <div className="flex items-center gap-2">
+            <h3 className="text-(--text-sm) font-medium text-ink-secondary">Anthropic API Key</h3>
+            {apiKeySet && <Dot color="green" />}
+          </div>
+          <input
+            className={inputClass}
+            type="password"
+            placeholder={apiKeySet ? "••••••••  (saved — enter new key to replace)" : "sk-ant-..."}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+          />
+          <button
+            className={`${buttonClass} w-full`}
+            disabled={apiKeyLoading || !apiKey}
+            onClick={saveApiKey}
+          >
+            {apiKeyLoading ? "Saving..." : apiKeySet ? "Update API Key" : "Save API Key"}
+          </button>
+          <Feedback message={apiKeyMsg?.text ?? null} isError={apiKeyMsg?.error} />
+        </div>
 
         <div className="space-y-(--spacing-element)">
           <h3 className="text-(--text-sm) font-medium text-ink-secondary">TUM Credentials</h3>
