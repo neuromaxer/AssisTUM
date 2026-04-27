@@ -25,7 +25,9 @@ app.use(express.json());
 app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
-    console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`);
+    if (res.statusCode >= 400) {
+      console.error(`${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`);
+    }
   });
   next();
 });
